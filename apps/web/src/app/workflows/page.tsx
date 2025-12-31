@@ -1,65 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { useWorkflows, useCreateWorkflow, useToggleWorkflow } from "@/lib/hooks/use-workflows";
+import { useWorkflows, useToggleWorkflow } from "@/lib/hooks/use-workflows";
 import { BalanceChecker } from "@/components/balance-checker";
 
 export default function WorkflowsPage() {
   const { data, isLoading, error } = useWorkflows();
-  const createWorkflow = useCreateWorkflow();
   const toggleWorkflow = useToggleWorkflow();
-  const [showForm, setShowForm] = useState(false);
-
-  // Form state
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    walletAddress: "",
-    webhookUrl: "",
-  });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      await createWorkflow.mutateAsync({
-        name: formData.name,
-        description: formData.description,
-        trigger: {
-          type: "balance_change",
-          config: {
-            address: formData.walletAddress,
-          },
-        },
-        filter: {
-          conditions: [],
-        },
-        action: {
-          type: "send_sol",
-          config: {
-            toAddress: formData.walletAddress,
-            amount: 1000,
-          },
-        },
-        notify: {
-          type: "discord",
-          webhookUrl: formData.webhookUrl,
-          template: "default",
-        },
-      });
-
-      // Reset form
-      setFormData({
-        name: "",
-        description: "",
-        walletAddress: "",
-        webhookUrl: "",
-      });
-      setShowForm(false);
-    } catch (err) {
-      console.error("Failed to create workflow:", err);
-    }
-  };
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-12">
@@ -72,10 +18,13 @@ export default function WorkflowsPage() {
           </p>
         </div>
         <button
-          onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2.5 bg-black text-white rounded-lg hover:bg-neutral-800 transition-colors text-sm font-medium"
+          onClick={() => window.location.href = "/workflows/builder"}
+          className="px-4 py-2.5 bg-black text-white rounded-lg hover:bg-neutral-800 transition-colors text-sm font-medium flex items-center gap-2"
         >
-          {showForm ? "Cancel" : "+ New Workflow"}
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Create Workflow
         </button>
       </div>
 
