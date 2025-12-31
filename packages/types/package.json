@@ -1,0 +1,23 @@
+{
+  "name": "@repo/types",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./workflows": "./src/workflows.ts",
+    "./triggers": "./src/triggers.ts",
+    "./actions": "./src/actions.ts",
+    "./notifications": "./src/notifications.ts"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "typescript": "^5.3.3"
+  }
+}

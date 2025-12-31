@@ -1,0 +1,25 @@
+{
+  "name": "listener",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.98.0",
+    "bullmq": "^5.35.7",
+    "ioredis": "^5.4.1",
+    "zod": "^3.24.1",
+    "@repo/db": "workspace:*",
+    "drizzle-orm": "^0.36.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "bun-types": "^1.1.38",
+    "typescript": "^5.3.3"
+  }
+}
