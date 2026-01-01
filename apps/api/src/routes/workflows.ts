@@ -1,37 +1,33 @@
-import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { z } from "zod";
 import { db, workflows as workflowsTable } from "@repo/db";
+import {
+  WorkflowGraphSchema,
+  WorkflowMetadataSchema,
+  isExecutableGraph,
+  validateWorkflowGraph,
+} from "@repo/types";
 import { eq, isNull } from "drizzle-orm";
+import { Hono } from "hono";
+import { z } from "zod";
 
 const workflows = new Hono();
 
-// Validation schemas (will be moved to @repo/types)
+// Validation schema for creating/updating workflows
 const createWorkflowSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
-  trigger: z.object({
-    type: z.enum(["balance_change", "token_receipt", "nft_receipt", "transaction_status", "program_log"]),
-    config: z.record(z.any()),
-  }),
-  filter: z.object({
-    conditions: z.array(z.record(z.any())),
-  }),
-  action: z.object({
-    type: z.enum(["send_sol", "send_spl_token", "call_program"]),
-    config: z.record(z.any()),
-  }),
-  notify: z.object({
-    type: z.literal("discord"),
-    webhookUrl: z.string().url(),
-    template: z.string(),
-  }),
+  graph: WorkflowGraphSchema,
+  metadata: WorkflowMetadataSchema.optional(),
 });
 
 // List all workflows
 workflows.get("/", async (c) => {
   try {
-    const allWorkflows = await db.select().from(workflowsTable).where(isNull(workflowsTable.deletedAt));
+    const allWorkflows = await db
+      .select()
+      .from(workflowsTable)
+      .where(isNull(workflowsTable.deletedAt));
+
     return c.json({ workflows: allWorkflows });
   } catch (error) {
     console.error("Error fetching workflows:", error);
@@ -65,19 +61,43 @@ workflows.post("/", zValidator("json", createWorkflowSchema), async (c) => {
   try {
     const data = c.req.valid("json");
 
+    // Validate the graph structure
+    try {
+      validateWorkflowGraph(data.graph);
+    } catch (validationError) {
+      return c.json(
+        {
+          error: "Invalid workflow graph structure",
+          details: (validationError as Error).message,
+        },
+        400
+      );
+    }
+
+    // Check if the graph is executable
+    const { valid, errors } = isExecutableGraph(data.graph);
+    if (!valid) {
+      return c.json(
+        {
+          error: "Workflow graph is not executable",
+          details: errors,
+        },
+        400
+      );
+    }
+
     const [workflow] = await db
       .insert(workflowsTable)
       .values({
         name: data.name,
         description: data.description,
-        triggerType: data.trigger.type,
-        triggerConfig: data.trigger.config,
-        filterConditions: data.filter.conditions,
-        actionType: data.action.type,
-        actionConfig: data.action.config,
-        notifyType: data.notify.type,
-        notifyWebhookUrl: data.notify.webhookUrl,
-        notifyTemplate: data.notify.template,
+        graph: data.graph,
+        metadata: data.metadata || {
+          version: "1.0.0",
+          maxSolPerTx: 1000000,
+          maxExecutionsPerHour: 10,
+          createdWith: "api",
+        },
         enabled: false,
       })
       .returning();
@@ -99,19 +119,41 @@ workflows.patch("/:id", zValidator("json", createWorkflowSchema.partial()), asyn
 
     if (data.name) updateData.name = data.name;
     if (data.description !== undefined) updateData.description = data.description;
-    if (data.trigger) {
-      updateData.triggerType = data.trigger.type;
-      updateData.triggerConfig = data.trigger.config;
+
+    if (data.graph) {
+      // Validate the graph structure
+      try {
+        validateWorkflowGraph(data.graph);
+      } catch (validationError) {
+        return c.json(
+          {
+            error: "Invalid workflow graph structure",
+            details: (validationError as Error).message,
+          },
+          400
+        );
+      }
+
+      // Check if the graph is executable
+      const { valid, errors } = isExecutableGraph(data.graph);
+      if (!valid) {
+        return c.json(
+          {
+            error: "Workflow graph is not executable",
+            details: errors,
+          },
+          400
+        );
+      }
+
+      updateData.graph = data.graph;
     }
-    if (data.filter) updateData.filterConditions = data.filter.conditions;
-    if (data.action) {
-      updateData.actionType = data.action.type;
-      updateData.actionConfig = data.action.config;
-    }
-    if (data.notify) {
-      updateData.notifyType = data.notify.type;
-      updateData.notifyWebhookUrl = data.notify.webhookUrl;
-      updateData.notifyTemplate = data.notify.template;
+
+    if (data.metadata) {
+      updateData.metadata = {
+        ...data.metadata,
+        lastModifiedWith: "api",
+      };
     }
 
     const [workflow] = await db
@@ -131,14 +173,17 @@ workflows.patch("/:id", zValidator("json", createWorkflowSchema.partial()), asyn
   }
 });
 
-// Delete workflow (soft delete)
+// Delete workflow
 workflows.delete("/:id", async (c) => {
   try {
     const id = c.req.param("id");
 
     const [workflow] = await db
       .update(workflowsTable)
-      .set({ deletedAt: new Date() })
+      .set({
+        deletedAt: new Date(),
+        updatedAt: new Date(),
+      })
       .where(eq(workflowsTable.id, id))
       .returning();
 
@@ -146,19 +191,19 @@ workflows.delete("/:id", async (c) => {
       return c.json({ error: "Workflow not found" }, 404);
     }
 
-    return c.json({ success: true });
+    return c.json({ workflow });
   } catch (error) {
     console.error("Error deleting workflow:", error);
     return c.json({ error: "Failed to delete workflow" }, 500);
   }
 });
 
-// Enable/disable workflow
+// Toggle workflow enabled/disabled
 workflows.post("/:id/toggle", async (c) => {
   try {
     const id = c.req.param("id");
 
-    // Get current workflow
+    // Fetch current workflow
     const [current] = await db
       .select()
       .from(workflowsTable)

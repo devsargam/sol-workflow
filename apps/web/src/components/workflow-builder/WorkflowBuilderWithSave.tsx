@@ -1,29 +1,29 @@
 "use client";
 
-import { useState, useCallback, useImperativeHandle, forwardRef } from "react";
 import {
-  ReactFlow,
-  ReactFlowProvider,
   addEdge,
+  Background,
+  BackgroundVariant,
   Controls,
   MiniMap,
-  Background,
   Panel,
-  useNodesState,
+  ReactFlow,
+  ReactFlowProvider,
   useEdgesState,
-  type Node,
-  type Edge,
+  useNodesState,
   type Connection,
+  type Edge,
+  type Node,
   type OnConnect,
-  BackgroundVariant,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { TriggerNode } from "./nodes/TriggerNode";
-import { FilterNode } from "./nodes/FilterNode";
-import { ActionNode } from "./nodes/ActionNode";
-import { NotifyNode } from "./nodes/NotifyNode";
-import { Sidebar } from "./Sidebar";
+import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import { NodeConfigPanel } from "./NodeConfigPanel";
+import { ActionNode } from "./nodes/ActionNode";
+import { FilterNode } from "./nodes/FilterNode";
+import { NotifyNode } from "./nodes/NotifyNode";
+import { TriggerNode } from "./nodes/TriggerNode";
+import { Sidebar } from "./Sidebar";
 
 // Define custom node types
 const nodeTypes = {
@@ -107,302 +107,269 @@ interface WorkflowBuilderRef {
   loadWorkflow: (workflow: any) => void;
 }
 
-const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>(
-  (_, ref) => {
-    const [nodes, setNodes, onNodesChange] = useNodesState(getInitialNodes());
-    const [edges, setEdges, onEdgesChange] = useEdgesState(getInitialEdges());
-    const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-    const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) => {
+  const [nodes, setNodes, onNodesChange] = useNodesState(getInitialNodes());
+  const [edges, setEdges, onEdgesChange] = useEdgesState(getInitialEdges());
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
 
-    // Expose methods via ref
-    useImperativeHandle(ref, () => ({
-      getWorkflowData: () => {
-        // Find nodes by type
-        const triggerNode = nodes.find((n) => n.type === "trigger");
-        const filterNode = nodes.find((n) => n.type === "filter");
-        const actionNode = nodes.find((n) => n.type === "action");
-        const notifyNode = nodes.find((n) => n.type === "notify");
+  // Expose methods via ref
+  useImperativeHandle(ref, () => ({
+    getWorkflowData: () => {
+      // Return the graph structure directly for V2 API
+      return {
+        nodes: nodes.map((n) => ({
+          id: n.id,
+          type: n.type,
+          position: n.position,
+          data: {
+            nodeType: n.type, // Add nodeType field for proper typing
+            ...n.data,
+          },
+        })),
+        edges: edges.map((e) => ({
+          id: e.id,
+          source: e.source,
+          target: e.target,
+          animated: e.animated,
+          style: e.style,
+          type: e.type,
+        })),
+        viewport: {
+          x: 0,
+          y: 0,
+          zoom: 1,
+        },
+      };
+    },
+    loadWorkflow: (workflow: any) => {
+      if (workflow.nodes && workflow.edges) {
+        // Load graph format directly (V2 API)
+        setNodes(workflow.nodes);
+        setEdges(workflow.edges);
+      } else if (workflow._visual) {
+        // Load from saved visual representation (legacy)
+        setNodes(workflow._visual.nodes || getInitialNodes());
+        setEdges(workflow._visual.edges || getInitialEdges());
+      } else {
+        // Convert from API format to visual nodes
+        const newNodes: Node[] = [];
+        const newEdges: Edge[] = [];
 
-        // Build workflow data structure
-        const workflowData: any = {};
-
-        // Extract trigger data
-        if (triggerNode) {
-          workflowData.trigger = {
-            type: triggerNode.data.type || "balance_change",
-            config: triggerNode.data.config || {},
-          };
-        }
-
-        // Extract filter data
-        if (filterNode) {
-          workflowData.filter = {
-            conditions: filterNode.data.conditions || [],
-          };
-        }
-
-        // Extract action data
-        if (actionNode) {
-          workflowData.action = {
-            type: actionNode.data.type || "send_sol",
-            config: actionNode.data.config || {},
-          };
-        }
-
-        // Extract notify data
-        if (notifyNode) {
-          workflowData.notify = {
-            type: notifyNode.data.type || "discord",
-            webhookUrl: notifyNode.data.webhookUrl || "",
-            template: notifyNode.data.template || "default",
-          };
-        }
-
-        // Store visual representation for later loading
-        workflowData._visual = {
-          nodes: nodes.map((n) => ({
-            id: n.id,
-            type: n.type,
-            position: n.position,
-            data: n.data,
-          })),
-          edges: edges.map((e) => ({
-            id: e.id,
-            source: e.source,
-            target: e.target,
-            animated: e.animated,
-            style: e.style,
-          })),
-        };
-
-        return workflowData;
-      },
-      loadWorkflow: (workflow: any) => {
-        if (workflow._visual) {
-          // Load from saved visual representation
-          setNodes(workflow._visual.nodes || getInitialNodes());
-          setEdges(workflow._visual.edges || getInitialEdges());
-        } else {
-          // Convert from API format to visual nodes
-          const newNodes: Node[] = [];
-          const newEdges: Edge[] = [];
-
-          // Create trigger node
-          if (workflow.trigger || workflow.triggerType) {
-            newNodes.push({
-              id: "trigger-1",
-              type: "trigger",
-              position: { x: 100, y: 200 },
-              data: {
-                label: "Trigger",
-                type: workflow.trigger?.type || workflow.triggerType,
-                config: workflow.trigger?.config || workflow.triggerConfig || {},
-              },
-            });
-          }
-
-          // Create filter node
+        // Create trigger node
+        if (workflow.trigger || workflow.triggerType) {
           newNodes.push({
-            id: "filter-1",
-            type: "filter",
-            position: { x: 350, y: 200 },
+            id: "trigger-1",
+            type: "trigger",
+            position: { x: 100, y: 200 },
             data: {
-              label: "Filter",
-              conditions: workflow.filter?.conditions || workflow.filterConditions || [],
+              label: "Trigger",
+              type: workflow.trigger?.type || workflow.triggerType,
+              config: workflow.trigger?.config || workflow.triggerConfig || {},
             },
           });
-
-          // Create action node
-          if (workflow.action || workflow.actionType) {
-            newNodes.push({
-              id: "action-1",
-              type: "action",
-              position: { x: 600, y: 200 },
-              data: {
-                label: "Action",
-                type: workflow.action?.type || workflow.actionType,
-                config: workflow.action?.config || workflow.actionConfig || {},
-              },
-            });
-          }
-
-          // Create notify node
-          if (workflow.notify || workflow.notifyType) {
-            newNodes.push({
-              id: "notify-1",
-              type: "notify",
-              position: { x: 850, y: 200 },
-              data: {
-                label: "Notify",
-                type: workflow.notify?.type || workflow.notifyType || "discord",
-                webhookUrl: workflow.notify?.webhookUrl || workflow.notifyWebhookUrl || "",
-                template: workflow.notify?.template || workflow.notifyTemplate || "default",
-              },
-            });
-          }
-
-          // Create edges between nodes
-          if (newNodes.length > 1) {
-            for (let i = 0; i < newNodes.length - 1; i++) {
-              const sourceNode = newNodes[i];
-              const targetNode = newNodes[i + 1];
-              if (sourceNode && targetNode) {
-                newEdges.push({
-                  id: `e${i}-${i + 1}`,
-                  source: sourceNode.id,
-                  target: targetNode.id,
-                  animated: true,
-                  style: { stroke: "#3b82f6", strokeWidth: 2 },
-                });
-              }
-            }
-          }
-
-          setNodes(newNodes);
-          setEdges(newEdges);
         }
-      },
-    }));
 
-    // Handle new connections
-    const onConnect: OnConnect = useCallback(
-      (connection: Connection) => {
-        setEdges((eds) =>
-          addEdge(
-            {
-              ...connection,
-              animated: true,
-              style: { stroke: "#3b82f6", strokeWidth: 2 },
+        // Create filter node
+        newNodes.push({
+          id: "filter-1",
+          type: "filter",
+          position: { x: 350, y: 200 },
+          data: {
+            label: "Filter",
+            conditions: workflow.filter?.conditions || workflow.filterConditions || [],
+          },
+        });
+
+        // Create action node
+        if (workflow.action || workflow.actionType) {
+          newNodes.push({
+            id: "action-1",
+            type: "action",
+            position: { x: 600, y: 200 },
+            data: {
+              label: "Action",
+              type: workflow.action?.type || workflow.actionType,
+              config: workflow.action?.config || workflow.actionConfig || {},
             },
-            eds
-          )
-        );
-      },
-      [setEdges]
-    );
-
-    // Handle node click
-    const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
-      setSelectedNode(node);
-    }, []);
-
-    // Handle pane click (deselect)
-    const onPaneClick = useCallback(() => {
-      setSelectedNode(null);
-    }, []);
-
-    // Update node data
-    const updateNodeData = useCallback(
-      (nodeId: string, data: any) => {
-        setNodes((nds) =>
-          nds.map((node) => {
-            if (node.id === nodeId) {
-              return {
-                ...node,
-                data: {
-                  ...node.data,
-                  ...data,
-                },
-              };
-            }
-            return node;
-          })
-        );
-      },
-      [setNodes]
-    );
-
-    // Handle drag over
-    const onDragOver = useCallback((event: React.DragEvent) => {
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "move";
-    }, []);
-
-    // Handle drop
-    const onDrop = useCallback(
-      (event: React.DragEvent) => {
-        event.preventDefault();
-
-        const type = event.dataTransfer.getData("application/reactflow");
-
-        // Check if the dropped element is valid
-        if (typeof type === "undefined" || !type) {
-          return;
+          });
         }
 
-        const position = reactFlowInstance?.screenToFlowPosition({
-          x: event.clientX,
-          y: event.clientY,
-        }) ?? { x: 0, y: 0 };
+        // Create notify node
+        if (workflow.notify || workflow.notifyType) {
+          newNodes.push({
+            id: "notify-1",
+            type: "notify",
+            position: { x: 850, y: 200 },
+            data: {
+              label: "Notify",
+              type: workflow.notify?.type || workflow.notifyType || "discord",
+              webhookUrl: workflow.notify?.webhookUrl || workflow.notifyWebhookUrl || "",
+              template: workflow.notify?.template || workflow.notifyTemplate || "default",
+            },
+          });
+        }
 
-        const newNode: Node = {
-          id: `${type}-${Date.now()}`,
-          type,
-          position,
-          data: { label: `${type}` },
-        };
+        // Create edges between nodes
+        if (newNodes.length > 1) {
+          for (let i = 0; i < newNodes.length - 1; i++) {
+            const sourceNode = newNodes[i];
+            const targetNode = newNodes[i + 1];
+            if (sourceNode && targetNode) {
+              newEdges.push({
+                id: `e${i}-${i + 1}`,
+                source: sourceNode.id,
+                target: targetNode.id,
+                animated: true,
+                style: { stroke: "#3b82f6", strokeWidth: 2 },
+              });
+            }
+          }
+        }
 
-        setNodes((nds) => nds.concat(newNode));
-      },
-      [reactFlowInstance, setNodes]
-    );
+        setNodes(newNodes);
+        setEdges(newEdges);
+      }
+    },
+  }));
 
-    return (
-      <div className="h-full w-full flex">
-        <Sidebar />
+  // Handle new connections
+  const onConnect: OnConnect = useCallback(
+    (connection: Connection) => {
+      setEdges((eds) =>
+        addEdge(
+          {
+            ...connection,
+            animated: true,
+            style: { stroke: "#3b82f6", strokeWidth: 2 },
+          },
+          eds
+        )
+      );
+    },
+    [setEdges]
+  );
 
-        <div className="flex-1 relative">
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onNodeClick={onNodeClick}
-            onPaneClick={onPaneClick}
-            onInit={setReactFlowInstance}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            nodeTypes={nodeTypes}
-            fitView
-            attributionPosition="bottom-left"
+  // Handle node click
+  const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
+    setSelectedNode(node);
+  }, []);
+
+  // Handle pane click (deselect)
+  const onPaneClick = useCallback(() => {
+    setSelectedNode(null);
+  }, []);
+
+  // Update node data
+  const updateNodeData = useCallback(
+    (nodeId: string, data: any) => {
+      setNodes((nds) =>
+        nds.map((node) => {
+          if (node.id === nodeId) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                ...data,
+              },
+            };
+          }
+          return node;
+        })
+      );
+    },
+    [setNodes]
+  );
+
+  // Handle drag over
+  const onDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  }, []);
+
+  // Handle drop
+  const onDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault();
+
+      const type = event.dataTransfer.getData("application/reactflow");
+
+      // Check if the dropped element is valid
+      if (typeof type === "undefined" || !type) {
+        return;
+      }
+
+      const position = reactFlowInstance?.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      }) ?? { x: 0, y: 0 };
+
+      const newNode: Node = {
+        id: `${type}-${Date.now()}`,
+        type,
+        position,
+        data: { label: `${type}` },
+      };
+
+      setNodes((nds) => nds.concat(newNode));
+    },
+    [reactFlowInstance, setNodes]
+  );
+
+  return (
+    <div className="h-full w-full flex">
+      <Sidebar />
+
+      <div className="flex-1 relative">
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onNodeClick={onNodeClick}
+          onPaneClick={onPaneClick}
+          onInit={setReactFlowInstance}
+          onDrop={onDrop}
+          onDragOver={onDragOver}
+          nodeTypes={nodeTypes}
+          fitView
+          attributionPosition="bottom-left"
+        >
+          <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+          <Controls />
+          <MiniMap />
+
+          <Panel
+            position="top-left"
+            className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 m-4"
           >
-            <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-            <Controls />
-            <MiniMap />
-
-            <Panel position="top-left" className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 m-4">
-              <h2 className="text-xl font-semibold mb-2">Workflow Builder</h2>
-              <p className="text-sm text-neutral-600">
-                Configure nodes by clicking on them
-              </p>
-            </Panel>
-          </ReactFlow>
-        </div>
-
-        {selectedNode && (
-          <NodeConfigPanel
-            node={selectedNode}
-            onUpdate={updateNodeData}
-            onClose={() => setSelectedNode(null)}
-          />
-        )}
+            <h2 className="text-xl font-semibold mb-2">Workflow Builder</h2>
+            <p className="text-sm text-neutral-600">Configure nodes by clicking on them</p>
+          </Panel>
+        </ReactFlow>
       </div>
-    );
-  }
-);
+
+      {selectedNode && (
+        <NodeConfigPanel
+          node={selectedNode}
+          onUpdate={updateNodeData}
+          onClose={() => setSelectedNode(null)}
+        />
+      )}
+    </div>
+  );
+});
 
 WorkflowBuilderContentInner.displayName = "WorkflowBuilderContentInner";
 
-export const WorkflowBuilderContent = forwardRef<WorkflowBuilderRef, {}>(
-  (props, ref) => {
-    return (
-      <ReactFlowProvider>
-        <WorkflowBuilderContentInner ref={ref} {...props} />
-      </ReactFlowProvider>
-    );
-  }
-);
+export const WorkflowBuilderContent = forwardRef<WorkflowBuilderRef, {}>((props, ref) => {
+  return (
+    <ReactFlowProvider>
+      <WorkflowBuilderContentInner ref={ref} {...props} />
+    </ReactFlowProvider>
+  );
+});
 
 WorkflowBuilderContent.displayName = "WorkflowBuilderContent";
 

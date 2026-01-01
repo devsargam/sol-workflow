@@ -1,19 +1,31 @@
+// API client for graph-based workflows
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+export interface WorkflowGraph {
+  nodes: any[];
+  edges: any[];
+  viewport?: {
+    x: number;
+    y: number;
+    zoom: number;
+  };
+}
+
+export interface WorkflowMetadata {
+  version?: string;
+  maxSolPerTx?: number;
+  maxExecutionsPerHour?: number;
+  createdWith?: string;
+  lastModifiedWith?: string;
+}
 
 export interface Workflow {
   id: string;
   name: string;
   description?: string;
-  triggerType: string;
-  triggerConfig: any;
-  filterConditions: any[];
-  actionType: string;
-  actionConfig: any;
-  notifyType: string;
-  notifyWebhookUrl: string;
-  notifyTemplate: string;
-  maxSolPerTx?: number;
-  maxExecutionsPerHour?: number;
+  graph: WorkflowGraph;
+  metadata: WorkflowMetadata;
   enabled: boolean;
   createdAt: string;
   updatedAt: string;
@@ -22,22 +34,8 @@ export interface Workflow {
 export interface CreateWorkflowData {
   name: string;
   description?: string;
-  trigger: {
-    type: string;
-    config: any;
-  };
-  filter: {
-    conditions: any[];
-  };
-  action: {
-    type: string;
-    config: any;
-  };
-  notify: {
-    type: string;
-    webhookUrl: string;
-    template: string;
-  };
+  graph: WorkflowGraph;
+  metadata?: WorkflowMetadata;
 }
 
 // Workflows API
@@ -57,7 +55,14 @@ export async function createWorkflow(data: CreateWorkflowData): Promise<{ workfl
   const res = await fetch(`${API_URL}/workflows`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    body: JSON.stringify({
+      ...data,
+      metadata: {
+        version: "1.0.0",
+        createdWith: "visual-builder",
+        ...data.metadata,
+      },
+    }),
   });
   if (!res.ok) {
     const error = await res.json();
@@ -73,13 +78,24 @@ export async function updateWorkflow(
   const res = await fetch(`${API_URL}/workflows/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    body: JSON.stringify({
+      ...data,
+      metadata: data.metadata
+        ? {
+            ...data.metadata,
+            lastModifiedWith: "visual-builder",
+          }
+        : undefined,
+    }),
   });
-  if (!res.ok) throw new Error("Failed to update workflow");
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Failed to update workflow");
+  }
   return res.json();
 }
 
-export async function deleteWorkflow(id: string): Promise<{ success: boolean }> {
+export async function deleteWorkflow(id: string): Promise<{ workflow: Workflow }> {
   const res = await fetch(`${API_URL}/workflows/${id}`, {
     method: "DELETE",
   });
@@ -110,11 +126,9 @@ export interface Execution {
   completedAt?: string;
 }
 
-export async function fetchExecutions(
-  workflowId?: string
-): Promise<{ executions: Execution[] }> {
+export async function fetchExecutions(workflowId?: string): Promise<{ executions: Execution[] }> {
   const url = workflowId
-    ? `${API_URL}/executions?workflow_id=${workflowId}`
+    ? `${API_URL}/executions?workflowId=${workflowId}`
     : `${API_URL}/executions`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch executions");

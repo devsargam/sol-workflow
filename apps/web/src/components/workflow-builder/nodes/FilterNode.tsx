@@ -1,7 +1,7 @@
 "use client";
 
-import React, { memo } from "react";
-import { Handle, Position, NodeProps } from "@xyflow/react";
+import { Handle, NodeProps, Position } from "@xyflow/react";
+import { memo } from "react";
 import type { FilterNodeData } from "../types";
 
 export const FilterNode = memo(({ data, selected }: NodeProps) => {
@@ -51,9 +51,7 @@ export const FilterNode = memo(({ data, selected }: NodeProps) => {
               </div>
             ))}
             {conditionsCount > 2 && (
-              <div className="text-xs text-neutral-500">
-                +{conditionsCount - 2} more...
-              </div>
+              <div className="text-xs text-neutral-500">+{conditionsCount - 2} more...</div>
             )}
           </div>
         </div>
@@ -71,3 +69,5 @@ export const FilterNode = memo(({ data, selected }: NodeProps) => {
     </div>
   );
 });
+
+FilterNode.displayName = "FilterNode";

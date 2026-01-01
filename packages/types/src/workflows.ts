@@ -1,9 +1,6 @@
 import { z } from "zod";
-import { TriggerSchema } from "./triggers";
-import { ActionSchema } from "./actions";
-import { NotificationSchema } from "./notifications";
 
-// Filter condition
+// Filter condition (still used in graph nodes)
 export const FilterConditionSchema = z.object({
   field: z.string(),
   operator: z.enum(["equals", "not_equals", "greater_than", "less_than", "contains", "regex"]),
@@ -11,39 +8,6 @@ export const FilterConditionSchema = z.object({
 });
 
 export type FilterCondition = z.infer<typeof FilterConditionSchema>;
-
-// Filter schema
-export const FilterSchema = z.object({
-  conditions: z.array(FilterConditionSchema),
-  logic: z.enum(["AND", "OR"]).default("AND"),
-});
-
-export type Filter = z.infer<typeof FilterSchema>;
-
-// Complete workflow schema
-export const WorkflowSchema = z.object({
-  name: z.string().min(1).max(100),
-  description: z.string().max(500).optional(),
-  trigger: TriggerSchema,
-  filter: FilterSchema,
-  action: ActionSchema,
-  notify: NotificationSchema,
-  maxSolPerTx: z.number().positive().optional().default(1000000), // 0.001 SOL default
-  maxExecutionsPerHour: z.number().int().positive().optional().default(10),
-  enabled: z.boolean().default(false),
-});
-
-export type Workflow = z.infer<typeof WorkflowSchema>;
-
-// Create workflow request
-export const CreateWorkflowSchema = WorkflowSchema.omit({ enabled: true });
-
-export type CreateWorkflow = z.infer<typeof CreateWorkflowSchema>;
-
-// Update workflow request
-export const UpdateWorkflowSchema = WorkflowSchema.partial();
-
-export type UpdateWorkflow = z.infer<typeof UpdateWorkflowSchema>;
 
 // Workflow execution status
 export const ExecutionStatusEnum = z.enum([

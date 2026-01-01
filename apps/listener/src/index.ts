@@ -69,26 +69,26 @@ async function loadActiveWorkflows() {
       .from(workflowsTable)
       .where(eq(workflowsTable.enabled, true));
 
-    return workflows.map((w) => ({
-      id: w.id,
-      name: w.name,
-      trigger: {
-        type: w.triggerType,
-        config: w.triggerConfig,
-      },
-      filter: {
-        conditions: w.filterConditions,
-      },
-      action: {
-        type: w.actionType,
-        config: w.actionConfig,
-      },
-      notify: {
-        type: w.notifyType,
-        webhookUrl: w.notifyWebhookUrl,
-        template: w.notifyTemplate,
-      },
-    }));
+    // Process graph-based workflows
+    return workflows.map((w) => {
+      const graph = w.graph as any;
+
+      // Extract trigger nodes from the graph
+      const triggerNode = graph?.nodes?.find((n: any) => n.type === 'trigger');
+
+      return {
+        id: w.id,
+        name: w.name,
+        graph: graph,
+        metadata: w.metadata,
+        // Legacy format for backward compatibility with SubscriptionManager
+        // TODO: Update SubscriptionManager to work with graph directly
+        trigger: triggerNode ? {
+          type: triggerNode.data?.triggerType,
+          config: triggerNode.data?.config,
+        } : null,
+      };
+    }).filter(w => w.trigger); // Only return workflows with valid triggers
   } catch (error) {
     console.error("Error loading workflows from database:", error);
     return [];

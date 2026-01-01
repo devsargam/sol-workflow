@@ -27,51 +27,56 @@ export default function WorkflowBuilderClientPage() {
       setWorkflowName(workflow.name);
       setWorkflowDescription(workflow.description || "");
 
-      // Load the workflow into the visual builder
-      if (builderRef.current) {
-        builderRef.current.loadWorkflow({
-          trigger: {
-            type: workflow.triggerType,
-            config: workflow.triggerConfig,
-          },
-          filter: {
-            conditions: workflow.filterConditions || [],
-          },
-          action: {
-            type: workflow.actionType,
-            config: workflow.actionConfig,
-          },
-          notify: {
-            type: workflow.notifyType,
-            webhookUrl: workflow.notifyWebhookUrl,
-            template: workflow.notifyTemplate,
-          },
-        });
+      // Load the workflow graph into the visual builder
+      if (builderRef.current && workflow.graph) {
+        // Load the graph directly
+        builderRef.current.loadWorkflow(workflow.graph);
       }
     }
   }, [existingWorkflow]);
 
-  const validateWorkflowData = (data: any) => {
+  const validateWorkflowGraph = (graph: any) => {
     const errors: string[] = [];
 
-    // Validate trigger
-    if (!data.trigger?.config?.address) {
-      errors.push("Trigger: Wallet address is required");
+    // Must have at least one trigger node
+    const triggerNodes = graph.nodes.filter((n: any) => n.type === "trigger");
+    if (triggerNodes.length === 0) {
+      errors.push("Workflow must have at least one trigger node");
     }
 
-    // Validate action
-    if (data.action?.type === "send_sol") {
-      if (!data.action.config?.toAddress) {
-        errors.push("Action: Recipient address is required");
-      }
-      if (!data.action.config?.amount) {
-        errors.push("Action: Amount is required");
+    // Validate trigger nodes
+    for (const trigger of triggerNodes) {
+      const config = trigger.data?.config || {};
+      if (trigger.data?.triggerType === "balance_change" && !config.address) {
+        errors.push(`Trigger node ${trigger.id}: Wallet address is required`);
       }
     }
 
-    // Validate notify
-    if (data.notify?.type === "discord" && !data.notify.webhookUrl) {
-      errors.push("Notify: Discord webhook URL is required");
+    // Must have at least one action node
+    const actionNodes = graph.nodes.filter((n: any) => n.type === "action");
+    if (actionNodes.length === 0) {
+      errors.push("Workflow must have at least one action node");
+    }
+
+    // Validate action nodes
+    for (const action of actionNodes) {
+      const config = action.data?.config || {};
+      if (action.data?.actionType === "send_sol") {
+        if (!config.toAddress) {
+          errors.push(`Action node ${action.id}: Recipient address is required`);
+        }
+        if (!config.amount) {
+          errors.push(`Action node ${action.id}: Amount is required`);
+        }
+      }
+    }
+
+    // Validate notify nodes
+    const notifyNodes = graph.nodes.filter((n: any) => n.type === "notify");
+    for (const notify of notifyNodes) {
+      if (notify.data?.notifyType === "discord" && !notify.data?.webhookUrl) {
+        errors.push(`Notify node ${notify.id}: Discord webhook URL is required`);
+      }
     }
 
     return errors;
@@ -87,17 +92,17 @@ export default function WorkflowBuilderClientPage() {
     setErrors([]);
 
     try {
-      // Get workflow data from React Flow
-      const flowData = builderRef.current?.getWorkflowData();
+      // Get workflow graph from React Flow
+      const graph = builderRef.current?.getWorkflowData();
 
-      if (!flowData) {
-        setErrors(["Unable to extract workflow data"]);
+      if (!graph) {
+        setErrors(["Unable to extract workflow graph"]);
         setIsSaving(false);
         return;
       }
 
-      // Validate the workflow data
-      const validationErrors = validateWorkflowData(flowData);
+      // Validate the workflow graph
+      const validationErrors = validateWorkflowGraph(graph);
       if (validationErrors.length > 0) {
         setErrors(validationErrors);
         setIsSaving(false);
@@ -108,9 +113,16 @@ export default function WorkflowBuilderClientPage() {
       const workflowData = {
         name: workflowName,
         description: workflowDescription,
-        ...flowData,
-        // Remove visual data before sending to API
-        _visual: undefined,
+        graph: {
+          nodes: graph.nodes,
+          edges: graph.edges,
+          viewport: graph.viewport || { x: 0, y: 0, zoom: 1 },
+        },
+        metadata: {
+          version: "1.0.0",
+          maxSolPerTx: 1000000, // 0.001 SOL
+          maxExecutionsPerHour: 10,
+        },
       };
 
       if (editId) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useWorkflows, useToggleWorkflow } from "@/lib/hooks/use-workflows";
+import { useToggleWorkflow, useWorkflows } from "@/lib/hooks/use-workflows";
 
 export default function WorkflowsPage() {
   const { data, isLoading, error } = useWorkflows();
@@ -17,7 +17,7 @@ export default function WorkflowsPage() {
           </p>
         </div>
         <button
-          onClick={() => window.location.href = "/workflows/builder"}
+          onClick={() => (window.location.href = "/workflows/builder")}
           className="px-4 py-2.5 bg-black text-white rounded-lg hover:bg-neutral-800 transition-colors text-sm font-medium flex items-center gap-2"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -26,7 +26,6 @@ export default function WorkflowsPage() {
           Create Workflow
         </button>
       </div>
-
 
       {/* Loading State */}
       {isLoading && (
@@ -50,8 +49,18 @@ export default function WorkflowsPage() {
         <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-12 text-center">
           <div className="max-w-sm mx-auto">
             <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <svg
+                className="w-8 h-8 text-neutral-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
               </svg>
             </div>
             <h3 className="text-lg font-semibold mb-2">No workflows yet</h3>
@@ -59,11 +68,16 @@ export default function WorkflowsPage() {
               Create your first workflow with our visual builder
             </p>
             <button
-              onClick={() => window.location.href = "/workflows/builder"}
+              onClick={() => (window.location.href = "/workflows/builder")}
               className="px-4 py-2 bg-black text-white rounded-lg hover:bg-neutral-800 transition-colors text-sm font-medium flex items-center gap-2 mx-auto"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
               Open Visual Builder
             </button>
@@ -75,7 +89,10 @@ export default function WorkflowsPage() {
       {data?.workflows && data.workflows.length > 0 && (
         <div className="space-y-4">
           {data.workflows.map((workflow) => (
-            <div key={workflow.id} className="rounded-xl border border-neutral-200 bg-white p-6 hover:shadow-md transition-shadow">
+            <div
+              key={workflow.id}
+              className="rounded-xl border border-neutral-200 bg-white p-6 hover:shadow-md transition-shadow"
+            >
               {/* Header */}
               <div className="flex items-start justify-between mb-6">
                 <div className="flex-1">
@@ -86,12 +103,24 @@ export default function WorkflowsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => window.location.href = `/workflows/builder?edit=${workflow.id}`}
+                    onClick={() =>
+                      (window.location.href = `/workflows/builder?edit=${workflow.id}`)
+                    }
                     className="p-2 hover:bg-neutral-100 rounded-lg transition-colors group"
                     title="Edit workflow"
                   >
-                    <svg className="w-4 h-4 text-neutral-600 group-hover:text-neutral-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    <svg
+                      className="w-4 h-4 text-neutral-600 group-hover:text-neutral-900"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
                     </svg>
                   </button>
                   <button
@@ -114,15 +143,33 @@ export default function WorkflowsPage() {
                   <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">Trigger</p>
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      <svg
+                        className="w-4 h-4 text-blue-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
                       </svg>
                     </div>
                     <div>
                       <p className="text-sm font-medium">Balance Change</p>
                       <p className="text-xs font-mono text-neutral-500 truncate max-w-[200px]">
-                        {workflow.triggerConfig?.address}
+                        {
+                          workflow.graph.nodes.find((node: any) => node.type === "trigger")?.data
+                            ?.address
+                        }
                       </p>
                     </div>
                   </div>
@@ -131,8 +178,18 @@ export default function WorkflowsPage() {
                   <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">Action</p>
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-4 h-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      <svg
+                        className="w-4 h-4 text-purple-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                        />
                       </svg>
                     </div>
                     <div>

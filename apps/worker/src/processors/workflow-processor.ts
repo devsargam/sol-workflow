@@ -1,36 +1,34 @@
 import Redis from "ioredis";
-import { Connection, PublicKey, Transaction } from "@solana/web3.js";
+import { Connection } from "@solana/web3.js";
 import { db, executions as executionsTable, workflows as workflowsTable } from "@repo/db";
 import { eq } from "drizzle-orm";
-import { createDiscordClient, getTemplate } from "@repo/discord";
+import { WorkflowEngine } from "../lib/workflow-engine";
+import type { WorkflowGraph } from "@repo/types";
 
 interface WorkflowEventData {
   workflowId: string;
   executionId: string;
-  trigger: {
+  trigger?: {
     type: string;
     data: any;
   };
-  filter: {
-    conditions: any[];
-  };
-  action: {
-    type: string;
-    config: any;
-  };
-  notify: {
-    type: string;
-    webhookUrl: string;
-    template: string;
+  graph: WorkflowGraph;
+  metadata?: {
+    maxSolPerTx?: number;
+    maxExecutionsPerHour?: number;
   };
 }
 
 const redis = new Redis(process.env.REDIS_URL || "redis://localhost:6379");
 
+/**
+ * Process workflow events using the graph-based engine
+ */
 export async function processWorkflowEvent(data: WorkflowEventData) {
-  const { executionId, workflowId, filter, action, notify } = data;
+  const { executionId, workflowId, graph, trigger, metadata } = data;
+  const triggerData = trigger?.data || trigger;
 
-  console.log(`📥 Processing execution ${executionId} for workflow ${workflowId}`);
+  console.log(`📥 Processing execution ${executionId} for workflow ${workflowId} (graph-based)`);
 
   // Step 1: Check idempotency in Redis (fast check)
   const alreadyProcessed = await redis.get(`exec:${executionId}`);
@@ -45,7 +43,7 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
       executionId,
       workflowId,
       status: "processing",
-      triggerData: data.trigger.data,
+      triggerData,
     });
     console.log(`✅ Created execution record in database`);
   } catch (error: any) {
@@ -57,141 +55,86 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
     throw error;
   }
 
-  // Step 3: Evaluate filter conditions
-  const filterPassed = evaluateFilter(filter, data.trigger.data);
-  if (!filterPassed) {
-    console.log(`🚫 Filter conditions not met for execution ${executionId}`);
+  // Step 3: Execute the workflow graph using the engine
+  const connection = new Connection(
+    process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com"
+  );
 
-    // Update execution status
-    await db
-      .update(executionsTable)
-      .set({
-        status: "filtered",
-        completedAt: new Date(),
-      })
-      .where((t) => t.executionId === executionId);
+  const engine = new WorkflowEngine(connection);
 
-    await redis.setex(`exec:${executionId}`, 86400, "filtered");
-    return { status: "filtered" };
-  }
-
-  // Step 4: Execute on-chain action
-  let txSignature: string | null = null;
-  let txError: string | null = null;
+  const context = {
+    workflowId,
+    executionId,
+    triggerData,
+    variables: new Map<string, any>(),
+    executionPath: [],
+  };
 
   try {
-    console.log(`⚡ Executing action: ${action.type}`);
-    txSignature = await executeAction(action);
-    console.log(`✅ Action executed successfully: ${txSignature}`);
-  } catch (error) {
-    console.error(`❌ Action execution failed:`, error);
-    txError = (error as Error).message;
+    const result = await engine.execute(graph, context);
 
-    // Update execution with error
+    if (result.success) {
+      // Mark as successful
+      const txSignature = context.variables.get("txSignature") || null;
+
+      await db
+        .update(executionsTable)
+        .set({
+          status: "success",
+          txSignature,
+          completedAt: new Date(),
+        })
+        .where((t) => t.executionId === executionId);
+
+      await redis.setex(`exec:${executionId}`, 86400, "completed");
+
+      console.log(`🎉 Execution ${executionId} completed successfully`);
+      console.log(`  Execution path: ${result.executionPath.join(" → ")}`);
+
+      return {
+        status: "success",
+        executionId,
+        txSignature,
+        executionPath: result.executionPath,
+      };
+    } else {
+      // Mark as failed
+      const errorMessage = result.errors.join("; ");
+
+      await db
+        .update(executionsTable)
+        .set({
+          status: "failed",
+          txError: errorMessage,
+          completedAt: new Date(),
+        })
+        .where((t) => t.executionId === executionId);
+
+      await redis.setex(`exec:${executionId}`, 86400, "failed");
+
+      console.error(`❌ Execution ${executionId} failed:`, result.errors);
+
+      return {
+        status: "failed",
+        executionId,
+        errors: result.errors,
+        executionPath: result.executionPath,
+      };
+    }
+  } catch (error) {
+    console.error(`❌ Unexpected error in execution ${executionId}:`, error);
+
     await db
       .update(executionsTable)
       .set({
         status: "failed",
-        txError,
+        txError: (error as Error).message,
         completedAt: new Date(),
       })
       .where((t) => t.executionId === executionId);
 
     await redis.setex(`exec:${executionId}`, 86400, "failed");
+
     throw error;
-  }
-
-  // Step 5: Send Discord notification
-  let notificationError: string | null = null;
-  try {
-    console.log(`📢 Sending Discord notification`);
-    await sendNotification(notify, {
-      workflowId,
-      executionId,
-      txSignature,
-      status: "success",
-      triggerData: data.trigger.data,
-    });
-    console.log(`✅ Notification sent successfully`);
-  } catch (error) {
-    console.error(`⚠️  Notification failed (non-fatal):`, error);
-    notificationError = (error as Error).message;
-    // Don't fail the job if notification fails
-  }
-
-  // Step 6: Mark as completed
-  await db
-    .update(executionsTable)
-    .set({
-      status: "success",
-      txSignature,
-      notificationSent: notificationError ? null : new Date(),
-      notificationError,
-      completedAt: new Date(),
-    })
-    .where((t) => t.executionId === executionId);
-
-  await redis.setex(`exec:${executionId}`, 86400, "completed");
-
-  console.log(`🎉 Execution ${executionId} completed successfully`);
-
-  return {
-    status: "success",
-    executionId,
-    txSignature,
-  };
-}
-
-function evaluateFilter(filter: any, triggerData: any): boolean {
-  // TODO: Implement proper filter evaluation logic
-  // For now, pass all filters
-  return true;
-}
-
-async function executeAction(action: any): Promise<string> {
-  // TODO: Implement actual Solana transaction execution
-  // For now, return a mock signature
-  console.log("Executing action:", action.type);
-
-  const connection = new Connection(
-    process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com"
-  );
-
-  // This is a placeholder - actual implementation will be added
-  return "mockSignature_" + Date.now();
-}
-
-async function sendNotification(notify: any, context: any): Promise<void> {
-  console.log("Sending notification:", notify.type);
-
-  if (notify.type === "discord") {
-    // Fetch workflow details to get the name
-    const [workflow] = await db
-      .select()
-      .from(workflowsTable)
-      .where(eq(workflowsTable.id, context.workflowId))
-      .limit(1);
-
-    if (!workflow) {
-      throw new Error(`Workflow ${context.workflowId} not found`);
-    }
-
-    // Create Discord client and send webhook
-    const discordClient = createDiscordClient(notify.webhookUrl);
-
-    // Get the template (default, success, error, minimal, or detailed)
-    const templateName = notify.template || "default";
-    const embed = getTemplate(templateName, {
-      workflowName: workflow.name,
-      executionId: context.executionId,
-      txSignature: context.txSignature,
-      status: context.status,
-      triggerType: workflow.triggerType,
-      triggerData: context.triggerData,
-      error: context.error,
-    });
-
-    await discordClient.sendEmbed(embed);
-    console.log(`✅ Discord notification sent successfully to ${notify.webhookUrl.substring(0, 50)}...`);
   }
 }

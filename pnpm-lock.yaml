@@ -35,6 +35,9 @@ importers:
       '@repo/solana':
         specifier: workspace:*
         version: link:../../packages/solana
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@solana/web3.js':
         specifier: ^1.98.0
         version: 1.98.4(typescript@5.9.3)

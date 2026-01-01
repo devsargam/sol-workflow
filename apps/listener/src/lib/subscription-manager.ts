@@ -4,13 +4,13 @@ import crypto from "crypto";
 
 interface Workflow {
   id: string;
+  name: string;
+  graph: any; // The workflow graph with nodes and edges
+  metadata: any;
   trigger: {
     type: "balance_change" | "token_receipt" | "nft_receipt" | "transaction_status" | "program_log";
     config: any;
-  };
-  filter: any;
-  action: any;
-  notify: any;
+  } | null;
 }
 
 export class SubscriptionManager {
@@ -69,9 +69,8 @@ export class SubscriptionManager {
                 slot: context.slot,
               },
             },
-            filter: workflow.filter,
-            action: workflow.action,
-            notify: workflow.notify,
+            graph: workflow.graph,
+            metadata: workflow.metadata,
           },
           {
             jobId: executionId, // Use execution ID as job ID for deduplication
@@ -113,9 +112,8 @@ export class SubscriptionManager {
                 accountData: accountInfo.data.toString("base64"),
               },
             },
-            filter: workflow.filter,
-            action: workflow.action,
-            notify: workflow.notify,
+            graph: workflow.graph,
+            metadata: workflow.metadata,
           },
           {
             jobId: executionId,
@@ -159,9 +157,8 @@ export class SubscriptionManager {
                 err: logs.err,
               },
             },
-            filter: workflow.filter,
-            action: workflow.action,
-            notify: workflow.notify,
+            graph: workflow.graph,
+            metadata: workflow.metadata,
           },
           {
             jobId: executionId,

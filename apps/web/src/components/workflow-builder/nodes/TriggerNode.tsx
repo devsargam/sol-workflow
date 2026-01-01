@@ -1,7 +1,7 @@
 "use client";
 
-import React, { memo } from "react";
-import { Handle, Position, NodeProps } from "@xyflow/react";
+import { Handle, NodeProps, Position } from "@xyflow/react";
+import { memo } from "react";
 import type { TriggerNodeData } from "../types";
 
 export const TriggerNode = memo(({ data, selected }: NodeProps) => {
@@ -64,9 +64,7 @@ export const TriggerNode = memo(({ data, selected }: NodeProps) => {
         <div className="mt-2 pt-2 border-t border-blue-200">
           <div className="text-xs text-neutral-600">
             <span className="font-medium">Address:</span>
-            <div className="font-mono text-[10px] mt-0.5 truncate">
-              {nodeData.config.address}
-            </div>
+            <div className="font-mono text-[10px] mt-0.5 truncate">{nodeData.config.address}</div>
           </div>
         </div>
       )}
@@ -83,3 +81,5 @@ export const TriggerNode = memo(({ data, selected }: NodeProps) => {
     </div>
   );
 });
+
+TriggerNode.displayName = "TriggerNode";

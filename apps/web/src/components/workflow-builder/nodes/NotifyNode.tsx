@@ -1,7 +1,7 @@
 "use client";
 
-import React, { memo } from "react";
-import { Handle, Position, NodeProps } from "@xyflow/react";
+import { Handle, NodeProps, Position } from "@xyflow/react";
+import { memo } from "react";
 import type { NotifyNodeData } from "../types";
 
 export const NotifyNode = memo(({ data, selected }: NodeProps) => {
@@ -100,3 +100,5 @@ export const NotifyNode = memo(({ data, selected }: NodeProps) => {
     </div>
   );
 });
+
+NotifyNode.displayName = "NotifyNode";

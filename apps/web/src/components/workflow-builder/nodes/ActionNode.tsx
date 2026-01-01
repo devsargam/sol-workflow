@@ -1,7 +1,7 @@
 "use client";
 
-import React, { memo } from "react";
-import { Handle, Position, NodeProps } from "@xyflow/react";
+import { Handle, NodeProps, Position } from "@xyflow/react";
+import { memo } from "react";
 import type { ActionNodeData } from "../types";
 
 export const ActionNode = memo(({ data, selected }: NodeProps) => {
@@ -99,9 +99,7 @@ export const ActionNode = memo(({ data, selected }: NodeProps) => {
         <div className="mt-1">
           <div className="text-xs text-neutral-600">
             <span className="font-medium">To:</span>
-            <div className="font-mono text-[10px] mt-0.5 truncate">
-              {nodeData.config.toAddress}
-            </div>
+            <div className="font-mono text-[10px] mt-0.5 truncate">{nodeData.config.toAddress}</div>
           </div>
         </div>
       )}
@@ -118,3 +116,5 @@ export const ActionNode = memo(({ data, selected }: NodeProps) => {
     </div>
   );
 });
+
+ActionNode.displayName = "ActionNode";

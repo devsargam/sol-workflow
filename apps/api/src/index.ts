@@ -22,7 +22,7 @@ app.use(
 
 // Routes
 app.route("/health", healthRoutes);
-app.route("/workflows", workflowRoutes);
+app.route("/workflows", workflowRoutes); // Graph-based API
 app.route("/executions", executionRoutes);
 app.route("/solana", solanaRoutes);
 
