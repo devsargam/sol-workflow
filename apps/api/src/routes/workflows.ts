@@ -1,12 +1,11 @@
 import { zValidator } from "@hono/zod-validator";
-import { db, workflows as workflowsTable } from "@repo/db";
+import { db, workflows as workflowsTable, eq } from "@repo/db";
 import {
   WorkflowGraphSchema,
   WorkflowMetadataSchema,
   isExecutableGraph,
   validateWorkflowGraph,
 } from "@repo/types";
-import { eq, isNull } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
@@ -23,10 +22,7 @@ const createWorkflowSchema = z.object({
 // List all workflows
 workflows.get("/", async (c) => {
   try {
-    const allWorkflows = await db
-      .select()
-      .from(workflowsTable)
-      .where(isNull(workflowsTable.deletedAt));
+    const allWorkflows = await db.select().from(workflowsTable);
 
     return c.json({ workflows: allWorkflows });
   } catch (error) {
@@ -178,14 +174,7 @@ workflows.delete("/:id", async (c) => {
   try {
     const id = c.req.param("id");
 
-    const [workflow] = await db
-      .update(workflowsTable)
-      .set({
-        deletedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(workflowsTable.id, id))
-      .returning();
+    const [workflow] = await db.delete(workflowsTable).where(eq(workflowsTable.id, id)).returning();
 
     if (!workflow) {
       return c.json({ error: "Workflow not found" }, 404);

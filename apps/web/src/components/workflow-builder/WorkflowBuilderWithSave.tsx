@@ -41,7 +41,7 @@ const getInitialNodes = (): Node[] => [
     position: { x: 100, y: 200 },
     data: {
       label: "Trigger",
-      type: "balance_change",
+      triggerType: "balance_change",
       config: {},
     },
   },
@@ -52,6 +52,7 @@ const getInitialNodes = (): Node[] => [
     data: {
       label: "Filter",
       conditions: [],
+      logic: "and",
     },
   },
   {
@@ -60,7 +61,7 @@ const getInitialNodes = (): Node[] => [
     position: { x: 600, y: 200 },
     data: {
       label: "Action",
-      type: "send_sol",
+      actionType: "send_sol",
       config: {},
     },
   },
@@ -70,7 +71,7 @@ const getInitialNodes = (): Node[] => [
     position: { x: 850, y: 200 },
     data: {
       label: "Notify",
-      type: "discord",
+      notifyType: "discord",
       webhookUrl: "",
       template: "default",
     },
@@ -118,15 +119,39 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
     getWorkflowData: () => {
       // Return the graph structure directly for V2 API
       return {
-        nodes: nodes.map((n) => ({
-          id: n.id,
-          type: n.type,
-          position: n.position,
-          data: {
-            nodeType: n.type, // Add nodeType field for proper typing
-            ...n.data,
-          },
-        })),
+        nodes: nodes.map((n) => {
+          const baseNode = {
+            id: n.id,
+            type: n.type,
+            position: n.position,
+            data: {
+              nodeType: n.type,
+            } as any,
+          };
+
+          // Map fields based on node type
+          switch (n.type) {
+            case 'trigger':
+              baseNode.data.triggerType = n.data.triggerType || n.data.type || 'balance_change';
+              baseNode.data.config = n.data.config || {};
+              break;
+            case 'filter':
+              baseNode.data.conditions = n.data.conditions || [];
+              baseNode.data.logic = n.data.logic || 'and';
+              break;
+            case 'action':
+              baseNode.data.actionType = n.data.actionType || n.data.type || 'send_sol';
+              baseNode.data.config = n.data.config || {};
+              break;
+            case 'notify':
+              baseNode.data.notifyType = n.data.notifyType || n.data.type || 'discord';
+              baseNode.data.webhookUrl = n.data.webhookUrl || '';
+              baseNode.data.template = n.data.template || 'default';
+              break;
+          }
+
+          return baseNode;
+        }),
         edges: edges.map((e) => ({
           id: e.id,
           source: e.source,

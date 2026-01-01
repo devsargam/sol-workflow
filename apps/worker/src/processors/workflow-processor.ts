@@ -1,7 +1,6 @@
 import Redis from "ioredis";
 import { Connection } from "@solana/web3.js";
-import { db, executions as executionsTable, workflows as workflowsTable } from "@repo/db";
-import { eq } from "drizzle-orm";
+import { db, executions as executionsTable, workflows as workflowsTable, eq } from "@repo/db";
 import { WorkflowEngine } from "../lib/workflow-engine";
 import type { WorkflowGraph } from "@repo/types";
 

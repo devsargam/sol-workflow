@@ -2,8 +2,7 @@ import { Connection } from "@solana/web3.js";
 import { Queue } from "bullmq";
 import Redis from "ioredis";
 import { SubscriptionManager } from "./lib/subscription-manager";
-import { db, workflows as workflowsTable } from "@repo/db";
-import { eq } from "drizzle-orm";
+import { db, workflows as workflowsTable, eq } from "@repo/db";
 
 const connection = new Connection(
   process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com",

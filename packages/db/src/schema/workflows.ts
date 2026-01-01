@@ -15,9 +15,6 @@ export const workflows = pgTable("workflows", {
   // Timestamps
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-
-  // Soft delete
-  deletedAt: timestamp("deleted_at"),
 });
 
 export type Workflow = typeof workflows.$inferSelect;

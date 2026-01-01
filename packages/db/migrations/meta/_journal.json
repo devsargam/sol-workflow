@@ -22,6 +22,13 @@
       "when": 1767257541214,
       "tag": "0002_needy_demogoblin",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1767263102388,
+      "tag": "0003_massive_triton",
+      "breakpoints": true
     }
   ]
 }

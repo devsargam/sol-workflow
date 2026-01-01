@@ -1,8 +1,7 @@
 import { Connection, PublicKey, Transaction, Keypair, SystemProgram, sendAndConfirmTransaction } from "@solana/web3.js";
 import type { WorkflowGraph, WorkflowNode, WorkflowEdge, TriggerNodeData, FilterNodeData, ActionNodeData, NotifyNodeData } from "@repo/types";
 import { createDiscordClient, getTemplate } from "@repo/discord";
-import { db, workflows as workflowsTable } from "@repo/db";
-import { eq } from "drizzle-orm";
+import { db, workflows as workflowsTable, eq } from "@repo/db";
 
 interface ExecutionContext {
   workflowId: string;
