@@ -2,8 +2,10 @@
 
 import React, { memo } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
+import type { NotifyNodeData } from "../types";
 
 export const NotifyNode = memo(({ data, selected }: NodeProps) => {
+  const nodeData = data as NotifyNodeData;
   const getNotifyIcon = (type: string) => {
     switch (type) {
       case "discord":
@@ -68,26 +70,26 @@ export const NotifyNode = memo(({ data, selected }: NodeProps) => {
       />
 
       <div className="flex items-center gap-2 mb-1">
-        <span className="text-xl">{getNotifyIcon(data.type)}</span>
+        <span className="text-xl">{getNotifyIcon(nodeData.type || "")}</span>
         <div className="flex-1">
           <div className="text-xs font-semibold text-green-600 uppercase tracking-wider">
             Notify
           </div>
           <div className="text-sm font-medium text-neutral-900">
-            {getNotifyLabel(data.type)}
+            {getNotifyLabel(nodeData.type || "")}
           </div>
         </div>
       </div>
 
-      {(data.webhookUrl || data.template) && (
+      {(nodeData.webhookUrl || nodeData.template) && (
         <div className="mt-2 pt-2 border-t border-green-200 space-y-1">
-          {data.template && (
+          {nodeData.template && (
             <div className="text-xs text-neutral-600">
               <span className="font-medium">Template:</span>{" "}
-              <span className="text-green-600">{getTemplateLabel(data.template)}</span>
+              <span className="text-green-600">{getTemplateLabel(nodeData.template || "")}</span>
             </div>
           )}
-          {data.webhookUrl && (
+          {nodeData.webhookUrl && (
             <div className="text-xs text-neutral-600">
               <span className="font-medium">Webhook:</span>{" "}
               <span className="text-green-600">Configured</span>

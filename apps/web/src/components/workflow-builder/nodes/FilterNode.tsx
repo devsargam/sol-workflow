@@ -2,9 +2,11 @@
 
 import React, { memo } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
+import type { FilterNodeData } from "../types";
 
 export const FilterNode = memo(({ data, selected }: NodeProps) => {
-  const conditionsCount = data.conditions?.length || 0;
+  const nodeData = data as FilterNodeData;
+  const conditionsCount = nodeData.conditions?.length || 0;
 
   return (
     <div
@@ -41,7 +43,7 @@ export const FilterNode = memo(({ data, selected }: NodeProps) => {
       {conditionsCount > 0 && (
         <div className="mt-2 pt-2 border-t border-orange-200">
           <div className="space-y-1">
-            {data.conditions.slice(0, 2).map((condition: any, index: number) => (
+            {nodeData.conditions?.slice(0, 2).map((condition: any, index: number) => (
               <div key={index} className="text-xs text-neutral-600">
                 <span className="font-medium">{condition.field}</span>{" "}
                 <span className="text-orange-600">{condition.operator}</span>{" "}

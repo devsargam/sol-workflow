@@ -2,8 +2,10 @@
 
 import React, { memo } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
+import type { ActionNodeData } from "../types";
 
 export const ActionNode = memo(({ data, selected }: NodeProps) => {
+  const nodeData = data as ActionNodeData;
   const getActionIcon = (type: string) => {
     switch (type) {
       case "send_sol":
@@ -52,7 +54,7 @@ export const ActionNode = memo(({ data, selected }: NodeProps) => {
     return null;
   };
 
-  const actionDetails = getActionDetails(data.type, data.config);
+  const actionDetails = getActionDetails(nodeData.type || "", nodeData.config);
 
   return (
     <div
@@ -73,13 +75,13 @@ export const ActionNode = memo(({ data, selected }: NodeProps) => {
       />
 
       <div className="flex items-center gap-2 mb-1">
-        <span className="text-xl">{getActionIcon(data.type)}</span>
+        <span className="text-xl">{getActionIcon(nodeData.type || "")}</span>
         <div className="flex-1">
           <div className="text-xs font-semibold text-purple-600 uppercase tracking-wider">
             Action
           </div>
           <div className="text-sm font-medium text-neutral-900">
-            {getActionLabel(data.type)}
+            {getActionLabel(nodeData.type || "")}
           </div>
         </div>
       </div>
@@ -93,12 +95,12 @@ export const ActionNode = memo(({ data, selected }: NodeProps) => {
         </div>
       )}
 
-      {data.config?.toAddress && (
+      {nodeData.config?.toAddress && (
         <div className="mt-1">
           <div className="text-xs text-neutral-600">
             <span className="font-medium">To:</span>
             <div className="font-mono text-[10px] mt-0.5 truncate">
-              {data.config.toAddress}
+              {nodeData.config.toAddress}
             </div>
           </div>
         </div>

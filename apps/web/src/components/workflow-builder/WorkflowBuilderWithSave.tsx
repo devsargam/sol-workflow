@@ -244,13 +244,17 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>(
           // Create edges between nodes
           if (newNodes.length > 1) {
             for (let i = 0; i < newNodes.length - 1; i++) {
-              newEdges.push({
-                id: `e${i}-${i + 1}`,
-                source: newNodes[i].id,
-                target: newNodes[i + 1].id,
-                animated: true,
-                style: { stroke: "#3b82f6", strokeWidth: 2 },
-              });
+              const sourceNode = newNodes[i];
+              const targetNode = newNodes[i + 1];
+              if (sourceNode && targetNode) {
+                newEdges.push({
+                  id: `e${i}-${i + 1}`,
+                  source: sourceNode.id,
+                  target: targetNode.id,
+                  animated: true,
+                  style: { stroke: "#3b82f6", strokeWidth: 2 },
+                });
+              }
             }
           }
 
@@ -278,7 +282,7 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>(
     );
 
     // Handle node click
-    const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+    const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
       setSelectedNode(node);
     }, []);
 
@@ -326,10 +330,10 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>(
           return;
         }
 
-        const position = reactFlowInstance.screenToFlowPosition({
+        const position = reactFlowInstance?.screenToFlowPosition({
           x: event.clientX,
           y: event.clientY,
-        });
+        }) ?? { x: 0, y: 0 };
 
         const newNode: Node = {
           id: `${type}-${Date.now()}`,

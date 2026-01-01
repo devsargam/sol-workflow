@@ -1,7 +1,6 @@
 "use client";
 
 import { useWorkflows, useToggleWorkflow } from "@/lib/hooks/use-workflows";
-import { BalanceChecker } from "@/components/balance-checker";
 
 export default function WorkflowsPage() {
   const { data, isLoading, error } = useWorkflows();
@@ -28,100 +27,6 @@ export default function WorkflowsPage() {
         </button>
       </div>
 
-      {/* Create Form */}
-      {showForm && (
-        <div className="rounded-xl border border-neutral-200 bg-white p-8 mb-8 shadow-sm">
-          <h2 className="text-xl font-semibold mb-6">Create Workflow</h2>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium mb-2 text-neutral-700">
-                Workflow Name
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
-                placeholder="My Wallet Monitor"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2 text-neutral-700">
-                Description <span className="text-neutral-400 font-normal">(optional)</span>
-              </label>
-              <input
-                type="text"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
-                placeholder="Alert me when balance changes"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2 text-neutral-700">
-                Solana Wallet Address
-              </label>
-              <input
-                type="text"
-                value={formData.walletAddress}
-                onChange={(e) => setFormData({ ...formData, walletAddress: e.target.value })}
-                className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
-                placeholder="7xKXp7Yh9V5L8ZqN3J6yW2X9F4vK5mR8nT3pQ1cD6bA2"
-                required
-                pattern="[1-9A-HJ-NP-Za-km-z]{32,44}"
-              />
-              <p className="text-xs text-neutral-500 mt-1.5">
-                The wallet address to monitor for balance changes
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2 text-neutral-700">
-                Discord Webhook URL
-              </label>
-              <input
-                type="url"
-                value={formData.webhookUrl}
-                onChange={(e) => setFormData({ ...formData, webhookUrl: e.target.value })}
-                className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
-                placeholder="https://discord.com/api/webhooks/..."
-                required
-              />
-              <p className="text-xs text-neutral-500 mt-1.5">
-                Get from: Server Settings → Integrations → Webhooks
-              </p>
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <button
-                type="submit"
-                disabled={createWorkflow.isPending}
-                className="flex-1 px-4 py-2.5 bg-black text-white rounded-lg hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-              >
-                {createWorkflow.isPending ? "Creating..." : "Create Workflow"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="px-4 py-2.5 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors font-medium"
-              >
-                Cancel
-              </button>
-            </div>
-
-            {createWorkflow.isError && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">
-                  Error: {(createWorkflow.error as Error).message}
-                </p>
-              </div>
-            )}
-          </form>
-        </div>
-      )}
 
       {/* Loading State */}
       {isLoading && (
@@ -141,7 +46,7 @@ export default function WorkflowsPage() {
       )}
 
       {/* Empty State */}
-      {data?.workflows && data.workflows.length === 0 && !showForm && (
+      {data?.workflows && data.workflows.length === 0 && (
         <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-12 text-center">
           <div className="max-w-sm mx-auto">
             <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -151,13 +56,16 @@ export default function WorkflowsPage() {
             </div>
             <h3 className="text-lg font-semibold mb-2">No workflows yet</h3>
             <p className="text-neutral-600 mb-4">
-              Create your first workflow to start monitoring Solana wallets
+              Create your first workflow with our visual builder
             </p>
             <button
-              onClick={() => setShowForm(true)}
-              className="px-4 py-2 bg-black text-white rounded-lg hover:bg-neutral-800 transition-colors text-sm font-medium"
+              onClick={() => window.location.href = "/workflows/builder"}
+              className="px-4 py-2 bg-black text-white rounded-lg hover:bg-neutral-800 transition-colors text-sm font-medium flex items-center gap-2 mx-auto"
             >
-              Create Workflow
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Open Visual Builder
             </button>
           </div>
         </div>
@@ -176,17 +84,28 @@ export default function WorkflowsPage() {
                     <p className="text-sm text-neutral-600">{workflow.description}</p>
                   )}
                 </div>
-                <button
-                  onClick={() => toggleWorkflow.mutate(workflow.id)}
-                  disabled={toggleWorkflow.isPending}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    workflow.enabled
-                      ? "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
-                      : "bg-neutral-100 text-neutral-600 border border-neutral-200 hover:bg-neutral-200"
-                  }`}
-                >
-                  {workflow.enabled ? "● Active" : "○ Disabled"}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => window.location.href = `/workflows/builder?edit=${workflow.id}`}
+                    className="p-2 hover:bg-neutral-100 rounded-lg transition-colors group"
+                    title="Edit workflow"
+                  >
+                    <svg className="w-4 h-4 text-neutral-600 group-hover:text-neutral-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => toggleWorkflow.mutate(workflow.id)}
+                    disabled={toggleWorkflow.isPending}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      workflow.enabled
+                        ? "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
+                        : "bg-neutral-100 text-neutral-600 border border-neutral-200 hover:bg-neutral-200"
+                    }`}
+                  >
+                    {workflow.enabled ? "● Active" : "○ Disabled"}
+                  </button>
+                </div>
               </div>
 
               {/* Workflow Details */}
@@ -223,13 +142,6 @@ export default function WorkflowsPage() {
                   </div>
                 </div>
               </div>
-
-              {/* Balance Display */}
-              {workflow.enabled && workflow.triggerConfig?.address && (
-                <div className="mb-6">
-                  <BalanceChecker address={workflow.triggerConfig.address} />
-                </div>
-              )}
 
               {/* Footer */}
               <div className="pt-4 border-t border-neutral-100 text-xs text-neutral-500">

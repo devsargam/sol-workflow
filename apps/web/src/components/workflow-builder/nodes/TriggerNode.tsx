@@ -2,8 +2,10 @@
 
 import React, { memo } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
+import type { TriggerNodeData } from "../types";
 
 export const TriggerNode = memo(({ data, selected }: NodeProps) => {
+  const nodeData = data as TriggerNodeData;
   const getTriggerIcon = (type: string) => {
     switch (type) {
       case "balance_change":
@@ -47,23 +49,23 @@ export const TriggerNode = memo(({ data, selected }: NodeProps) => {
       }`}
     >
       <div className="flex items-center gap-2 mb-1">
-        <span className="text-xl">{getTriggerIcon(data.type)}</span>
+        <span className="text-xl">{getTriggerIcon(nodeData.type || "")}</span>
         <div className="flex-1">
           <div className="text-xs font-semibold text-blue-600 uppercase tracking-wider">
             Trigger
           </div>
           <div className="text-sm font-medium text-neutral-900">
-            {getTriggerLabel(data.type)}
+            {getTriggerLabel(nodeData.type || "")}
           </div>
         </div>
       </div>
 
-      {data.config?.address && (
+      {nodeData.config?.address && (
         <div className="mt-2 pt-2 border-t border-blue-200">
           <div className="text-xs text-neutral-600">
             <span className="font-medium">Address:</span>
             <div className="font-mono text-[10px] mt-0.5 truncate">
-              {data.config.address}
+              {nodeData.config.address}
             </div>
           </div>
         </div>

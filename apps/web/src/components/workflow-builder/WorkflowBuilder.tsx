@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -15,8 +15,6 @@ import {
   type Edge,
   type Connection,
   type OnConnect,
-  type NodeChange,
-  type EdgeChange,
   BackgroundVariant,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -128,7 +126,7 @@ export function WorkflowBuilderContent() {
   );
 
   // Handle node click
-  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+  const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
     setSelectedNode(node);
   }, []);
 
@@ -176,10 +174,10 @@ export function WorkflowBuilderContent() {
         return;
       }
 
-      const position = reactFlowInstance.screenToFlowPosition({
+      const position = reactFlowInstance?.screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
-      });
+      }) ?? { x: 0, y: 0 };
 
       const newNode: Node = {
         id: `${type}-${Date.now()}`,
