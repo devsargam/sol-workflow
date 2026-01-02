@@ -1,6 +1,22 @@
-import { Connection, PublicKey, Transaction, Keypair, SystemProgram, sendAndConfirmTransaction } from "@solana/web3.js";
-import type { WorkflowGraph, WorkflowNode, WorkflowEdge, TriggerNodeData, FilterNodeData, ActionNodeData, NotifyNodeData } from "@repo/types";
+import {
+  Connection,
+  PublicKey,
+  Transaction,
+  Keypair,
+  SystemProgram,
+  sendAndConfirmTransaction,
+} from "@solana/web3.js";
+import type {
+  WorkflowGraph,
+  WorkflowNode,
+  WorkflowEdge,
+  TriggerNodeData,
+  FilterNodeData,
+  ActionNodeData,
+  NotifyNodeData,
+} from "@repo/types";
 import { createDiscordClient, getTemplate } from "@repo/discord";
+import { createTelegramClient, getTemplate as getTelegramTemplate } from "@repo/telegram";
 import { NodeType } from "utils";
 import { db, workflows as workflowsTable, eq } from "@repo/db";
 
@@ -13,7 +29,10 @@ interface ExecutionContext {
 }
 
 interface NodeExecutor {
-  execute(node: WorkflowNode, context: ExecutionContext): Promise<{ success: boolean; output?: any; error?: string }>;
+  execute(
+    node: WorkflowNode,
+    context: ExecutionContext
+  ): Promise<{ success: boolean; output?: any; error?: string }>;
 }
 
 export class WorkflowEngine {
@@ -34,7 +53,10 @@ export class WorkflowEngine {
   /**
    * Execute a workflow graph
    */
-  async execute(graph: WorkflowGraph, context: ExecutionContext): Promise<{
+  async execute(
+    graph: WorkflowGraph,
+    context: ExecutionContext
+  ): Promise<{
     success: boolean;
     executionPath: string[];
     errors: string[];
@@ -45,7 +67,7 @@ export class WorkflowEngine {
     const adjacencyList = this.buildAdjacencyList(graph);
 
     // Find all trigger nodes (entry points)
-    const triggerNodes = graph.nodes.filter(n => n.type === NodeType.TRIGGER);
+    const triggerNodes = graph.nodes.filter((n) => n.type === NodeType.TRIGGER);
 
     if (triggerNodes.length === 0) {
       return {
@@ -115,7 +137,7 @@ export class WorkflowEngine {
     // Execute downstream nodes
     const downstreamNodeIds = adjacencyList.get(node.id) || [];
     for (const downstreamNodeId of downstreamNodeIds) {
-      const downstreamNode = graph.nodes.find(n => n.id === downstreamNodeId);
+      const downstreamNode = graph.nodes.find((n) => n.id === downstreamNodeId);
       if (!downstreamNode) {
         errors.push(`Downstream node ${downstreamNodeId} not found`);
         continue;
@@ -186,20 +208,20 @@ class FilterNodeExecutor implements NodeExecutor {
     const conditions = data.conditions || [];
     const logic = data.logic || "and";
 
-    console.log(`Filter node ${node.id}: Evaluating ${conditions.length} conditions with ${logic} logic`);
+    console.log(
+      `Filter node ${node.id}: Evaluating ${conditions.length} conditions with ${logic} logic`
+    );
 
     if (conditions.length === 0) {
       // No conditions means pass through
       return { success: true, output: true };
     }
 
-    const results = conditions.map(condition =>
+    const results = conditions.map((condition) =>
       this.evaluateCondition(condition, context.triggerData, context.variables)
     );
 
-    const passed = logic === "and"
-      ? results.every(r => r)
-      : results.some(r => r);
+    const passed = logic === "and" ? results.every((r) => r) : results.some((r) => r);
 
     console.log(`Filter node ${node.id}: Result = ${passed}`);
 
@@ -343,6 +365,8 @@ class NotifyNodeExecutor implements NodeExecutor {
     try {
       if (data.notifyType === "discord" && data.webhookUrl) {
         await this.sendDiscordNotification(data, context);
+      } else if (data.notifyType === "telegram" && data.telegramBotToken && data.telegramChatId) {
+        await this.sendTelegramNotification(data, context);
       } else if (data.notifyType === "webhook" && data.webhookUrl) {
         await this.sendWebhook(data, context);
       } else {
@@ -360,7 +384,10 @@ class NotifyNodeExecutor implements NodeExecutor {
     }
   }
 
-  private async sendDiscordNotification(data: NotifyNodeData & { nodeType: NodeType.NOTIFY }, context: ExecutionContext) {
+  private async sendDiscordNotification(
+    data: NotifyNodeData & { nodeType: NodeType.NOTIFY },
+    context: ExecutionContext
+  ) {
     // Fetch workflow details to get the name
     const [workflow] = await db
       .select()
@@ -377,7 +404,7 @@ class NotifyNodeExecutor implements NodeExecutor {
 
     // Extract trigger type from the graph
     const triggerNode = workflow.graph?.nodes?.find((n: any) => n.type === NodeType.TRIGGER);
-    const triggerType = triggerNode?.data?.triggerType || 'unknown';
+    const triggerType = triggerNode?.data?.triggerType || "unknown";
 
     const embed = getTemplate(data.template || "default", {
       workflowName: workflow.name,
@@ -391,7 +418,50 @@ class NotifyNodeExecutor implements NodeExecutor {
     await discordClient.sendEmbed(embed);
   }
 
-  private async sendWebhook(data: NotifyNodeData & { nodeType: NodeType.NOTIFY }, context: ExecutionContext) {
+  private async sendTelegramNotification(
+    data: NotifyNodeData & { nodeType: NodeType.NOTIFY },
+    context: ExecutionContext
+  ) {
+    const [workflow] = await db
+      .select()
+      .from(workflowsTable)
+      .where(eq(workflowsTable.id, context.workflowId))
+      .limit(1);
+
+    if (!workflow) {
+      throw new Error(`Workflow ${context.workflowId} not found`);
+    }
+
+    const telegramClient = createTelegramClient(data.telegramBotToken!);
+    const txSignature = context.variables.get("txSignature");
+
+    const triggerNode = workflow.graph?.nodes?.find((n: any) => n.type === NodeType.TRIGGER);
+    const triggerType = triggerNode?.data?.triggerType || "unknown";
+
+    const template = getTelegramTemplate(data.template || "default", {
+      workflowName: workflow.name,
+      executionId: context.executionId,
+      txSignature,
+      status: txSignature ? "success" : "failed",
+      triggerType,
+      triggerData: context.triggerData,
+      network: process.env.SOLANA_NETWORK || "devnet",
+    });
+
+    const customPrefix = data.customMessage ? `${data.customMessage}\n\n` : "";
+
+    await telegramClient.sendMessage({
+      chat_id: data.telegramChatId!,
+      text: `${customPrefix}${template.text}`,
+      parse_mode: data.telegramParseMode,
+      disable_web_page_preview: data.telegramDisableWebPreview ?? template.disableWebPagePreview,
+    });
+  }
+
+  private async sendWebhook(
+    data: NotifyNodeData & { nodeType: NodeType.NOTIFY },
+    context: ExecutionContext
+  ) {
     const response = await fetch(data.webhookUrl!, {
       method: "POST",
       headers: {
