@@ -1,6 +1,7 @@
 "use client";
 
 import { Handle, NodeProps, Position } from "@xyflow/react";
+import { ZapIcon } from "lucide-react";
 import { memo } from "react";
 import type { TriggerNodeData } from "../types";
 
@@ -19,7 +20,7 @@ export const TriggerNode = memo(({ data, selected }: NodeProps) => {
       case "program_log":
         return "📝";
       default:
-        return "⚡";
+        return <ZapIcon className="w-6 h-6" />;
     }
   };
 
@@ -42,27 +43,22 @@ export const TriggerNode = memo(({ data, selected }: NodeProps) => {
 
   return (
     <div
-      className={`px-4 py-3 rounded-lg border-2 bg-blue-50 min-w-[180px] transition-all ${
-        selected
-          ? "border-blue-500 shadow-lg shadow-blue-100"
-          : "border-blue-200 hover:border-blue-300"
+      className={`px-4 py-3 rounded-lg border-2 bg-white min-w-[180px] transition-all ${
+        selected ? "border-gray-900 shadow-lg" : "border-gray-300 hover:border-gray-400"
       }`}
     >
       <div className="flex items-center gap-2 mb-1">
         <span className="text-xl">{getTriggerIcon(nodeData.type || "")}</span>
         <div className="flex-1">
-          <div className="text-xs font-semibold text-blue-600 uppercase tracking-wider">
-            Trigger
-          </div>
-          <div className="text-sm font-medium text-neutral-900">
+          <div className="text-base font-semibold text-black">
             {getTriggerLabel(nodeData.type || "")}
           </div>
         </div>
       </div>
 
       {nodeData.config?.address && (
-        <div className="mt-2 pt-2 border-t border-blue-200">
-          <div className="text-xs text-neutral-600">
+        <div className="mt-2 pt-2 border-t border-gray-200">
+          <div className="text-xs text-gray-600">
             <span className="font-medium">Address:</span>
             <div className="font-mono text-[10px] mt-0.5 truncate">{nodeData.config.address}</div>
           </div>
@@ -73,7 +69,7 @@ export const TriggerNode = memo(({ data, selected }: NodeProps) => {
         type="source"
         position={Position.Right}
         style={{
-          background: "#3b82f6",
+          background: "#000000",
           width: 10,
           height: 10,
         }}

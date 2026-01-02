@@ -1,34 +1,35 @@
 "use client";
 
 import React from "react";
+import { ZapIcon, SearchIcon, RocketIcon, MegaphoneIcon } from "lucide-react";
 
 const nodeTypes = [
   {
     type: "trigger",
     label: "Trigger",
     description: "Start your workflow",
-    icon: "⚡",
+    icon: <ZapIcon className="text-2xl" />,
     color: "bg-blue-100 text-blue-600 border-blue-200",
   },
   {
     type: "filter",
     label: "Filter",
     description: "Add conditions",
-    icon: "🔍",
+    icon: <SearchIcon className="text-2xl" />,
     color: "bg-orange-100 text-orange-600 border-orange-200",
   },
   {
     type: "action",
     label: "Action",
     description: "Execute on-chain",
-    icon: "🚀",
+    icon: <RocketIcon className="text-2xl" />,
     color: "bg-purple-100 text-purple-600 border-purple-200",
   },
   {
     type: "notify",
     label: "Notify",
     description: "Send notifications",
-    icon: "📢",
+    icon: <MegaphoneIcon className="text-2xl" />,
     color: "bg-green-100 text-green-600 border-green-200",
   },
 ];
@@ -43,21 +44,19 @@ export function Sidebar() {
     <aside className="w-64 bg-white border-r border-neutral-200 p-4">
       <div className="mb-6">
         <h3 className="text-sm font-semibold text-neutral-900 mb-2">Workflow Nodes</h3>
-        <p className="text-xs text-neutral-600">
-          Drag and drop nodes to build your workflow
-        </p>
+        <p className="text-xs text-neutral-600">Drag and drop nodes to build your workflow</p>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         {nodeTypes.map((node) => (
           <div
             key={node.type}
-            className={`p-3 rounded-lg border-2 border-dashed cursor-move transition-all hover:shadow-md ${node.color}`}
+            className="flex gap-x-4 p-3 border-2 border-black rounded-sm items-center"
             draggable
             onDragStart={(e) => onDragStart(e, node.type)}
           >
+            <span className="text-2xl">{node.icon}</span>
             <div className="flex items-start gap-3">
-              <span className="text-2xl">{node.icon}</span>
               <div className="flex-1">
                 <h4 className="font-medium text-sm">{node.label}</h4>
                 <p className="text-xs opacity-80 mt-0.5">{node.description}</p>

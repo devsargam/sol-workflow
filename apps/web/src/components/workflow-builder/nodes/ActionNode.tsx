@@ -1,6 +1,7 @@
 "use client";
 
 import { Handle, NodeProps, Position } from "@xyflow/react";
+import { RocketIcon } from "lucide-react";
 import { memo } from "react";
 import type { ActionNodeData } from "../types";
 
@@ -15,7 +16,7 @@ export const ActionNode = memo(({ data, selected }: NodeProps) => {
       case "call_program":
         return "📋";
       default:
-        return "🚀";
+        return <RocketIcon className="w-6 h-6" />;
     }
   };
 
@@ -58,17 +59,15 @@ export const ActionNode = memo(({ data, selected }: NodeProps) => {
 
   return (
     <div
-      className={`px-4 py-3 rounded-lg border-2 bg-purple-50 min-w-[180px] transition-all ${
-        selected
-          ? "border-purple-500 shadow-lg shadow-purple-100"
-          : "border-purple-200 hover:border-purple-300"
+      className={`px-4 py-3 rounded-lg border-2 bg-white min-w-[180px] transition-all ${
+        selected ? "border-gray-900 shadow-lg" : "border-gray-300 hover:border-gray-400"
       }`}
     >
       <Handle
         type="target"
         position={Position.Left}
         style={{
-          background: "#a855f7",
+          background: "#000000",
           width: 10,
           height: 10,
         }}
@@ -77,18 +76,15 @@ export const ActionNode = memo(({ data, selected }: NodeProps) => {
       <div className="flex items-center gap-2 mb-1">
         <span className="text-xl">{getActionIcon(nodeData.type || "")}</span>
         <div className="flex-1">
-          <div className="text-xs font-semibold text-purple-600 uppercase tracking-wider">
-            Action
-          </div>
-          <div className="text-sm font-medium text-neutral-900">
+          <div className="text-base font-semibold text-black">
             {getActionLabel(nodeData.type || "")}
           </div>
         </div>
       </div>
 
       {actionDetails && (
-        <div className="mt-2 pt-2 border-t border-purple-200">
-          <div className="text-xs text-neutral-600">
+        <div className="mt-2 pt-2 border-t border-gray-200">
+          <div className="text-xs text-gray-600">
             <span className="font-medium">Amount:</span>{" "}
             <span className="font-mono">{actionDetails}</span>
           </div>
@@ -97,7 +93,7 @@ export const ActionNode = memo(({ data, selected }: NodeProps) => {
 
       {nodeData.config?.toAddress && (
         <div className="mt-1">
-          <div className="text-xs text-neutral-600">
+          <div className="text-xs text-gray-600">
             <span className="font-medium">To:</span>
             <div className="font-mono text-[10px] mt-0.5 truncate">{nodeData.config.toAddress}</div>
           </div>
@@ -108,7 +104,7 @@ export const ActionNode = memo(({ data, selected }: NodeProps) => {
         type="source"
         position={Position.Right}
         style={{
-          background: "#a855f7",
+          background: "#000000",
           width: 10,
           height: 10,
         }}

@@ -1,6 +1,7 @@
 "use client";
 
 import { Handle, NodeProps, Position } from "@xyflow/react";
+import { MegaphoneIcon } from "lucide-react";
 import { memo } from "react";
 import type { NotifyNodeData } from "../types";
 
@@ -17,7 +18,7 @@ export const NotifyNode = memo(({ data, selected }: NodeProps) => {
       case "webhook":
         return "🔔";
       default:
-        return "📢";
+        return <MegaphoneIcon className="w-6 h-6" />;
     }
   };
 
@@ -53,17 +54,15 @@ export const NotifyNode = memo(({ data, selected }: NodeProps) => {
 
   return (
     <div
-      className={`px-4 py-3 rounded-lg border-2 bg-green-50 min-w-[180px] transition-all ${
-        selected
-          ? "border-green-500 shadow-lg shadow-green-100"
-          : "border-green-200 hover:border-green-300"
+      className={`px-4 py-3 rounded-lg border-2 bg-white min-w-[180px] transition-all ${
+        selected ? "border-gray-900 shadow-lg" : "border-gray-300 hover:border-gray-400"
       }`}
     >
       <Handle
         type="target"
         position={Position.Left}
         style={{
-          background: "#22c55e",
+          background: "#000000",
           width: 10,
           height: 10,
         }}
@@ -72,27 +71,24 @@ export const NotifyNode = memo(({ data, selected }: NodeProps) => {
       <div className="flex items-center gap-2 mb-1">
         <span className="text-xl">{getNotifyIcon(nodeData.type || "")}</span>
         <div className="flex-1">
-          <div className="text-xs font-semibold text-green-600 uppercase tracking-wider">
-            Notify
-          </div>
-          <div className="text-sm font-medium text-neutral-900">
+          <div className="text-base font-semibold text-black">
             {getNotifyLabel(nodeData.type || "")}
           </div>
         </div>
       </div>
 
       {(nodeData.webhookUrl || nodeData.template) && (
-        <div className="mt-2 pt-2 border-t border-green-200 space-y-1">
+        <div className="mt-2 pt-2 border-t border-gray-200 space-y-1">
           {nodeData.template && (
-            <div className="text-xs text-neutral-600">
+            <div className="text-xs text-gray-600">
               <span className="font-medium">Template:</span>{" "}
-              <span className="text-green-600">{getTemplateLabel(nodeData.template || "")}</span>
+              <span className="text-gray-900">{getTemplateLabel(nodeData.template || "")}</span>
             </div>
           )}
           {nodeData.webhookUrl && (
-            <div className="text-xs text-neutral-600">
+            <div className="text-xs text-gray-600">
               <span className="font-medium">Webhook:</span>{" "}
-              <span className="text-green-600">Configured</span>
+              <span className="text-gray-900">Configured</span>
             </div>
           )}
         </div>

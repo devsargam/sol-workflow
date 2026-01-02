@@ -1,6 +1,7 @@
 "use client";
 
 import { Handle, NodeProps, Position } from "@xyflow/react";
+import { SearchIcon } from "lucide-react";
 import { memo } from "react";
 import type { FilterNodeData } from "../types";
 
@@ -10,48 +11,48 @@ export const FilterNode = memo(({ data, selected }: NodeProps) => {
 
   return (
     <div
-      className={`px-4 py-3 rounded-lg border-2 bg-orange-50 min-w-[180px] transition-all ${
-        selected
-          ? "border-orange-500 shadow-lg shadow-orange-100"
-          : "border-orange-200 hover:border-orange-300"
+      className={`px-4 py-3 rounded-lg border-2 bg-white min-w-[180px] transition-all ${
+        selected ? "border-gray-900 shadow-lg" : "border-gray-300 hover:border-gray-400"
       }`}
     >
       <Handle
         type="target"
         position={Position.Left}
         style={{
-          background: "#fb923c",
+          background: "#000000",
           width: 10,
           height: 10,
         }}
       />
 
       <div className="flex items-center gap-2 mb-1">
-        <span className="text-xl">🔍</span>
+        <span className="text-xl">
+          <SearchIcon className="w-6 h-6" />
+        </span>
         <div className="flex-1">
-          <div className="text-xs font-semibold text-orange-600 uppercase tracking-wider">
+          <div className="text-base font-semibold text-black">
             Filter
-          </div>
-          <div className="text-sm font-medium text-neutral-900">
-            {conditionsCount > 0
-              ? `${conditionsCount} Condition${conditionsCount > 1 ? "s" : ""}`
-              : "No Conditions"}
+            {conditionsCount > 0 && (
+              <span className="text-sm font-normal text-gray-600 ml-2">
+                {conditionsCount} condition{conditionsCount > 1 ? "s" : ""}
+              </span>
+            )}
           </div>
         </div>
       </div>
 
       {conditionsCount > 0 && (
-        <div className="mt-2 pt-2 border-t border-orange-200">
+        <div className="mt-2 pt-2 border-t border-gray-200">
           <div className="space-y-1">
             {nodeData.conditions?.slice(0, 2).map((condition: any, index: number) => (
-              <div key={index} className="text-xs text-neutral-600">
+              <div key={index} className="text-xs text-gray-600">
                 <span className="font-medium">{condition.field}</span>{" "}
-                <span className="text-orange-600">{condition.operator}</span>{" "}
+                <span className="text-gray-900">{condition.operator}</span>{" "}
                 <span className="font-mono">{condition.value}</span>
               </div>
             ))}
             {conditionsCount > 2 && (
-              <div className="text-xs text-neutral-500">+{conditionsCount - 2} more...</div>
+              <div className="text-xs text-gray-500">+{conditionsCount - 2} more...</div>
             )}
           </div>
         </div>
@@ -61,7 +62,7 @@ export const FilterNode = memo(({ data, selected }: NodeProps) => {
         type="source"
         position={Position.Right}
         style={{
-          background: "#fb923c",
+          background: "#000000",
           width: 10,
           height: 10,
         }}
