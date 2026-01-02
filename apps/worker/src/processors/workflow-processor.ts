@@ -3,6 +3,7 @@ import { Connection } from "@solana/web3.js";
 import { db, executions as executionsTable, workflows as workflowsTable, eq } from "@repo/db";
 import { WorkflowEngine } from "../lib/workflow-engine";
 import type { WorkflowGraph } from "@repo/types";
+import { ExecutionStatus, REDIS, DATABASE, ENV_DEFAULTS, getExecutionRedisKey } from "utils";
 
 interface WorkflowEventData {
   workflowId: string;
@@ -30,7 +31,7 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
   console.log(`📥 Processing execution ${executionId} for workflow ${workflowId} (graph-based)`);
 
   // Step 1: Check idempotency in Redis (fast check)
-  const alreadyProcessed = await redis.get(`exec:${executionId}`);
+  const alreadyProcessed = await redis.get(getExecutionRedisKey(executionId));
   if (alreadyProcessed) {
     console.log(`⏭️  Execution ${executionId} already processed, skipping`);
     return { status: "skipped", reason: "already_processed" };
@@ -41,13 +42,13 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
     await db.insert(executionsTable).values({
       executionId,
       workflowId,
-      status: "processing",
+      status: ExecutionStatus.PROCESSING,
       triggerData,
     });
     console.log(`✅ Created execution record in database`);
   } catch (error: any) {
     // If unique constraint fails, it means another worker processed it
-    if (error.code === "23505") {
+    if (error.code === DATABASE.ERROR_CODES.UNIQUE_CONSTRAINT_VIOLATION) {
       console.log(`⏭️  Execution ${executionId} already exists in DB, skipping`);
       return { status: "skipped", reason: "already_processed" };
     }
@@ -56,7 +57,7 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
 
   // Step 3: Execute the workflow graph using the engine
   const connection = new Connection(
-    process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com"
+    process.env.SOLANA_RPC_URL || ENV_DEFAULTS.SOLANA_RPC_URL
   );
 
   const engine = new WorkflowEngine(connection);
@@ -79,19 +80,19 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
       await db
         .update(executionsTable)
         .set({
-          status: "success",
+          status: ExecutionStatus.SUCCESS,
           txSignature,
           completedAt: new Date(),
         })
         .where((t) => t.executionId === executionId);
 
-      await redis.setex(`exec:${executionId}`, 86400, "completed");
+      await redis.setex(getExecutionRedisKey(executionId), REDIS.TTL.EXECUTION_CACHE, REDIS.VALUES.COMPLETED);
 
       console.log(`🎉 Execution ${executionId} completed successfully`);
       console.log(`  Execution path: ${result.executionPath.join(" → ")}`);
 
       return {
-        status: "success",
+        status: ExecutionStatus.SUCCESS,
         executionId,
         txSignature,
         executionPath: result.executionPath,
@@ -103,18 +104,18 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
       await db
         .update(executionsTable)
         .set({
-          status: "failed",
+          status: ExecutionStatus.FAILED,
           txError: errorMessage,
           completedAt: new Date(),
         })
         .where((t) => t.executionId === executionId);
 
-      await redis.setex(`exec:${executionId}`, 86400, "failed");
+      await redis.setex(getExecutionRedisKey(executionId), REDIS.TTL.EXECUTION_CACHE, ExecutionStatus.FAILED);
 
       console.error(`❌ Execution ${executionId} failed:`, result.errors);
 
       return {
-        status: "failed",
+        status: ExecutionStatus.FAILED,
         executionId,
         errors: result.errors,
         executionPath: result.executionPath,
@@ -126,13 +127,13 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
     await db
       .update(executionsTable)
       .set({
-        status: "failed",
+        status: ExecutionStatus.FAILED,
         txError: (error as Error).message,
         completedAt: new Date(),
       })
       .where((t) => t.executionId === executionId);
 
-    await redis.setex(`exec:${executionId}`, 86400, "failed");
+    await redis.setex(getExecutionRedisKey(executionId), REDIS.TTL.EXECUTION_CACHE, ExecutionStatus.FAILED);
 
     throw error;
   }

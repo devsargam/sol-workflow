@@ -1,14 +1,15 @@
 import { Worker, Job } from "bullmq";
 import Redis from "ioredis";
 import { processWorkflowEvent } from "./processors/workflow-processor";
+import { ENV_DEFAULTS, QUEUES } from "utils";
 
-const connection = new Redis(process.env.REDIS_URL || "redis://localhost:6379", {
+const connection = new Redis(process.env.REDIS_URL || ENV_DEFAULTS.REDIS_URL, {
   maxRetriesPerRequest: null,
 });
 
 // Workflow event processor
 const workflowWorker = new Worker(
-  "workflow-events",
+  QUEUES.WORKFLOW_EVENTS,
   async (job: Job) => {
     console.log(`Processing job ${job.id} for workflow ${job.data.workflowId}`);
 
@@ -22,10 +23,10 @@ const workflowWorker = new Worker(
   },
   {
     connection,
-    concurrency: Number(process.env.WORKER_CONCURRENCY) || 5,
+    concurrency: Number(process.env.WORKER_CONCURRENCY) || ENV_DEFAULTS.WORKER_CONCURRENCY,
     limiter: {
-      max: Number(process.env.RATE_LIMIT_MAX) || 10,
-      duration: Number(process.env.RATE_LIMIT_DURATION) || 1000,
+      max: Number(process.env.RATE_LIMIT_MAX) || ENV_DEFAULTS.RATE_LIMIT_MAX,
+      duration: Number(process.env.RATE_LIMIT_DURATION) || ENV_DEFAULTS.RATE_LIMIT_DURATION,
     },
   }
 );

@@ -3,20 +3,18 @@ import { Queue } from "bullmq";
 import Redis from "ioredis";
 import { SubscriptionManager } from "./lib/subscription-manager";
 import { db, workflows as workflowsTable, eq } from "@repo/db";
+import { ENV_DEFAULTS, QUEUES, SOLANA, INTERVALS, NodeType } from "utils";
 
-const connection = new Connection(
-  process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com",
-  {
-    wsEndpoint: process.env.SOLANA_WS_URL,
-    commitment: "confirmed",
-  }
-);
+const connection = new Connection(process.env.SOLANA_RPC_URL || ENV_DEFAULTS.SOLANA_RPC_URL, {
+  wsEndpoint: process.env.SOLANA_WS_URL || ENV_DEFAULTS.SOLANA_WS_URL,
+  commitment: SOLANA.COMMITMENT,
+});
 
-const redis = new Redis(process.env.REDIS_URL || "redis://localhost:6379", {
+const redis = new Redis(process.env.REDIS_URL || ENV_DEFAULTS.REDIS_URL, {
   maxRetriesPerRequest: null,
 });
 
-const workflowQueue = new Queue("workflow-events", { connection: redis });
+const workflowQueue = new Queue(QUEUES.WORKFLOW_EVENTS, { connection: redis });
 
 const subscriptionManager = new SubscriptionManager(connection, workflowQueue);
 
@@ -44,7 +42,7 @@ async function start() {
   setInterval(() => {
     const stats = subscriptionManager.getStats();
     console.log(`📊 Active subscriptions: ${stats.activeSubscriptions}`);
-  }, 60000); // Every minute
+  }, INTERVALS.MONITOR_CONNECTION);
 
   // Periodically reload workflows (check for new/updated workflows)
   setInterval(async () => {
@@ -58,7 +56,7 @@ async function start() {
     } catch (error) {
       console.error("❌ Failed to reload workflows:", error);
     }
-  }, 30000); // Every 30 seconds
+  }, INTERVALS.RELOAD_WORKFLOWS);
 }
 
 async function loadActiveWorkflows() {
@@ -69,25 +67,29 @@ async function loadActiveWorkflows() {
       .where(eq(workflowsTable.enabled, true));
 
     // Process graph-based workflows
-    return workflows.map((w) => {
-      const graph = w.graph as any;
+    return workflows
+      .map((w) => {
+        const graph = w.graph as any;
 
-      // Extract trigger nodes from the graph
-      const triggerNode = graph?.nodes?.find((n: any) => n.type === 'trigger');
+        // Extract trigger nodes from the graph
+        const triggerNode = graph?.nodes?.find((n: any) => n.type === NodeType.TRIGGER);
 
-      return {
-        id: w.id,
-        name: w.name,
-        graph: graph,
-        metadata: w.metadata,
-        // Legacy format for backward compatibility with SubscriptionManager
-        // TODO: Update SubscriptionManager to work with graph directly
-        trigger: triggerNode ? {
-          type: triggerNode.data?.triggerType,
-          config: triggerNode.data?.config,
-        } : null,
-      };
-    }).filter(w => w.trigger); // Only return workflows with valid triggers
+        return {
+          id: w.id,
+          name: w.name,
+          graph: graph,
+          metadata: w.metadata,
+          // Legacy format for backward compatibility with SubscriptionManager
+          // TODO: Update SubscriptionManager to work with graph directly
+          trigger: triggerNode
+            ? {
+                type: triggerNode.data?.triggerType,
+                config: triggerNode.data?.config,
+              }
+            : null,
+        };
+      })
+      .filter((w) => w.trigger); // Only return workflows with valid triggers
   } catch (error) {
     console.error("Error loading workflows from database:", error);
     return [];

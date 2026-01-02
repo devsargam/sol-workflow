@@ -1,6 +1,7 @@
 import { Connection, PublicKey, Transaction, Keypair, SystemProgram, sendAndConfirmTransaction } from "@solana/web3.js";
 import type { WorkflowGraph, WorkflowNode, WorkflowEdge, TriggerNodeData, FilterNodeData, ActionNodeData, NotifyNodeData } from "@repo/types";
 import { createDiscordClient, getTemplate } from "@repo/discord";
+import { NodeType } from "utils";
 import { db, workflows as workflowsTable, eq } from "@repo/db";
 
 interface ExecutionContext {
@@ -24,10 +25,10 @@ export class WorkflowEngine {
     this.nodeExecutors = new Map();
 
     // Register node executors
-    this.registerNodeExecutor("trigger", new TriggerNodeExecutor());
-    this.registerNodeExecutor("filter", new FilterNodeExecutor());
-    this.registerNodeExecutor("action", new ActionNodeExecutor(connection));
-    this.registerNodeExecutor("notify", new NotifyNodeExecutor());
+    this.registerNodeExecutor(NodeType.TRIGGER, new TriggerNodeExecutor());
+    this.registerNodeExecutor(NodeType.FILTER, new FilterNodeExecutor());
+    this.registerNodeExecutor(NodeType.ACTION, new ActionNodeExecutor(connection));
+    this.registerNodeExecutor(NodeType.NOTIFY, new NotifyNodeExecutor());
   }
 
   /**
@@ -44,7 +45,7 @@ export class WorkflowEngine {
     const adjacencyList = this.buildAdjacencyList(graph);
 
     // Find all trigger nodes (entry points)
-    const triggerNodes = graph.nodes.filter(n => n.type === "trigger");
+    const triggerNodes = graph.nodes.filter(n => n.type === NodeType.TRIGGER);
 
     if (triggerNodes.length === 0) {
       return {
@@ -106,7 +107,7 @@ export class WorkflowEngine {
     }
 
     // Special handling for filter nodes
-    if (node.type === "filter" && result.output === false) {
+    if (node.type === NodeType.FILTER && result.output === false) {
       console.log(`Filter node ${node.id} evaluated to false, stopping execution`);
       return false; // Stop execution if filter fails
     }
@@ -181,7 +182,7 @@ class TriggerNodeExecutor implements NodeExecutor {
  */
 class FilterNodeExecutor implements NodeExecutor {
   async execute(node: WorkflowNode, context: ExecutionContext) {
-    const data = node.data as FilterNodeData & { nodeType: "filter" };
+    const data = node.data as FilterNodeData & { nodeType: NodeType.FILTER };
     const conditions = data.conditions || [];
     const logic = data.logic || "and";
 
@@ -265,7 +266,7 @@ class ActionNodeExecutor implements NodeExecutor {
   constructor(private connection: Connection) {}
 
   async execute(node: WorkflowNode, context: ExecutionContext) {
-    const data = node.data as ActionNodeData & { nodeType: "action" };
+    const data = node.data as ActionNodeData & { nodeType: NodeType.ACTION };
 
     console.log(`Action node ${node.id}: Executing ${data.actionType}`);
 
@@ -335,7 +336,7 @@ class ActionNodeExecutor implements NodeExecutor {
  */
 class NotifyNodeExecutor implements NodeExecutor {
   async execute(node: WorkflowNode, context: ExecutionContext) {
-    const data = node.data as NotifyNodeData & { nodeType: "notify" };
+    const data = node.data as NotifyNodeData & { nodeType: NodeType.NOTIFY };
 
     console.log(`Notify node ${node.id}: Sending ${data.notifyType} notification`);
 
@@ -359,7 +360,7 @@ class NotifyNodeExecutor implements NodeExecutor {
     }
   }
 
-  private async sendDiscordNotification(data: NotifyNodeData & { nodeType: "notify" }, context: ExecutionContext) {
+  private async sendDiscordNotification(data: NotifyNodeData & { nodeType: NodeType.NOTIFY }, context: ExecutionContext) {
     // Fetch workflow details to get the name
     const [workflow] = await db
       .select()
@@ -375,7 +376,7 @@ class NotifyNodeExecutor implements NodeExecutor {
     const txSignature = context.variables.get("txSignature");
 
     // Extract trigger type from the graph
-    const triggerNode = workflow.graph?.nodes?.find((n: any) => n.type === 'trigger');
+    const triggerNode = workflow.graph?.nodes?.find((n: any) => n.type === NodeType.TRIGGER);
     const triggerType = triggerNode?.data?.triggerType || 'unknown';
 
     const embed = getTemplate(data.template || "default", {
@@ -390,7 +391,7 @@ class NotifyNodeExecutor implements NodeExecutor {
     await discordClient.sendEmbed(embed);
   }
 
-  private async sendWebhook(data: NotifyNodeData & { nodeType: "notify" }, context: ExecutionContext) {
+  private async sendWebhook(data: NotifyNodeData & { nodeType: NodeType.NOTIFY }, context: ExecutionContext) {
     const response = await fetch(data.webhookUrl!, {
       method: "POST",
       headers: {

@@ -1,6 +1,7 @@
 import { Connection, PublicKey, Commitment } from "@solana/web3.js";
 import { Queue } from "bullmq";
 import crypto from "crypto";
+import { TriggerType, JOB_NAMES, JOB_OPTIONS, SOLANA } from "utils";
 
 interface Workflow {
   id: string;
@@ -8,7 +9,7 @@ interface Workflow {
   graph: any; // The workflow graph with nodes and edges
   metadata: any;
   trigger: {
-    type: "balance_change" | "token_receipt" | "nft_receipt" | "transaction_status" | "program_log";
+    type: TriggerType;
     config: any;
   } | null;
 }
@@ -27,14 +28,14 @@ export class SubscriptionManager {
     const { trigger } = workflow;
 
     switch (trigger.type) {
-      case "balance_change":
+      case TriggerType.BALANCE_CHANGE:
         await this.subscribeToBalanceChange(workflow);
         break;
-      case "token_receipt":
-      case "nft_receipt":
+      case TriggerType.TOKEN_RECEIPT:
+      case TriggerType.NFT_RECEIPT:
         await this.subscribeToTokenReceipt(workflow);
         break;
-      case "program_log":
+      case TriggerType.PROGRAM_LOG:
         await this.subscribeToProgramLogs(workflow);
         break;
       default:
@@ -57,12 +58,12 @@ export class SubscriptionManager {
         );
 
         await this.queue.add(
-          "workflow-event",
+          JOB_NAMES.WORKFLOW_EVENT,
           {
             workflowId: workflow.id,
             executionId,
             trigger: {
-              type: "balance_change",
+              type: TriggerType.BALANCE_CHANGE,
               data: {
                 address: address.toBase58(),
                 lamports: accountInfo.lamports,
@@ -74,12 +75,11 @@ export class SubscriptionManager {
           },
           {
             jobId: executionId, // Use execution ID as job ID for deduplication
-            removeOnComplete: 100,
-            removeOnFail: 1000,
+            ...JOB_OPTIONS.DEFAULT,
           }
         );
       },
-      "confirmed"
+      SOLANA.COMMITMENT
     );
 
     this.subscriptions.set(`${workflow.id}:account`, subscriptionId);
@@ -100,7 +100,7 @@ export class SubscriptionManager {
         );
 
         await this.queue.add(
-          "workflow-event",
+          JOB_NAMES.WORKFLOW_EVENT,
           {
             workflowId: workflow.id,
             executionId,
@@ -117,12 +117,11 @@ export class SubscriptionManager {
           },
           {
             jobId: executionId,
-            removeOnComplete: 100,
-            removeOnFail: 1000,
+            ...JOB_OPTIONS.DEFAULT,
           }
         );
       },
-      "confirmed"
+      SOLANA.COMMITMENT
     );
 
     this.subscriptions.set(`${workflow.id}:token`, subscriptionId);
@@ -143,12 +142,12 @@ export class SubscriptionManager {
         );
 
         await this.queue.add(
-          "workflow-event",
+          JOB_NAMES.WORKFLOW_EVENT,
           {
             workflowId: workflow.id,
             executionId,
             trigger: {
-              type: "program_log",
+              type: TriggerType.PROGRAM_LOG,
               data: {
                 programId: programId.toBase58(),
                 signature: logs.signature,
@@ -162,12 +161,11 @@ export class SubscriptionManager {
           },
           {
             jobId: executionId,
-            removeOnComplete: 100,
-            removeOnFail: 1000,
+            ...JOB_OPTIONS.DEFAULT,
           }
         );
       },
-      "confirmed"
+      SOLANA.COMMITMENT
     );
 
     this.subscriptions.set(`${workflow.id}:logs`, subscriptionId);

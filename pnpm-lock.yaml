@@ -53,6 +53,9 @@ importers:
       ioredis:
         specifier: ^5.4.1
         version: 5.8.2
+      utils:
+        specifier: workspace:*
+        version: link:../../packages/utils
       zod:
         specifier: ^3.24.1
         version: 3.25.76
@@ -84,6 +87,9 @@ importers:
       ioredis:
         specifier: ^5.4.1
         version: 5.8.2
+      utils:
+        specifier: workspace:*
+        version: link:../../packages/utils
       zod:
         specifier: ^3.24.1
         version: 3.25.76
@@ -145,6 +151,9 @@ importers:
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@3.4.19)
+      utils:
+        specifier: workspace:*
+        version: link:../../packages/utils
       zod:
         specifier: ^3.24.1
         version: 3.25.76
@@ -206,6 +215,9 @@ importers:
       ioredis:
         specifier: ^5.4.1
         version: 5.8.2
+      utils:
+        specifier: workspace:*
+        version: link:../../packages/utils
       zod:
         specifier: ^3.24.1
         version: 3.25.76
@@ -272,6 +284,15 @@ importers:
       zod:
         specifier: ^3.24.1
         version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^20.11.5
+        version: 20.19.27
+      typescript:
+        specifier: ^5.3.3
+        version: 5.9.3
+
+  packages/utils:
     devDependencies:
       '@types/node':
         specifier: ^20.11.5

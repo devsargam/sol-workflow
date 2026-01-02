@@ -17,7 +17,8 @@
     "zod": "^3.24.1",
     "@repo/db": "workspace:*",
     "@repo/discord": "workspace:*",
-    "drizzle-orm": "^0.36.4"
+    "drizzle-orm": "^0.36.4",
+    "utils": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.11.5",

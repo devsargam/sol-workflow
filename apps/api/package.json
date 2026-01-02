@@ -20,6 +20,7 @@
     "drizzle-orm": "^0.36.4",
     "hono": "^4.11.3",
     "ioredis": "^5.4.1",
+    "utils": "workspace:*",
     "zod": "^3.24.1"
   },
   "devDependencies": {
