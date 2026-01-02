@@ -6,7 +6,6 @@ import {
   BackgroundVariant,
   Controls,
   MiniMap,
-  Panel,
   ReactFlow,
   ReactFlowProvider,
   useEdgesState,
@@ -85,21 +84,21 @@ const getInitialEdges = (): Edge[] => [
     source: "trigger-1",
     target: "filter-1",
     animated: true,
-    style: { stroke: "#3b82f6", strokeWidth: 2 },
+    style: { stroke: "#000000", strokeWidth: 2 },
   },
   {
     id: "e2-3",
     source: "filter-1",
     target: "action-1",
     animated: true,
-    style: { stroke: "#3b82f6", strokeWidth: 2 },
+    style: { stroke: "#000000", strokeWidth: 2 },
   },
   {
     id: "e3-4",
     source: "action-1",
     target: "notify-1",
     animated: true,
-    style: { stroke: "#3b82f6", strokeWidth: 2 },
+    style: { stroke: "#000000", strokeWidth: 2 },
   },
 ];
 
@@ -246,7 +245,7 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
                 source: sourceNode.id,
                 target: targetNode.id,
                 animated: true,
-                style: { stroke: "#3b82f6", strokeWidth: 2 },
+                style: { stroke: "#000000", strokeWidth: 2 },
               });
             }
           }
