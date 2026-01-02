@@ -1,6 +1,6 @@
 import Redis from "ioredis";
 import { Connection } from "@solana/web3.js";
-import { db, executions as executionsTable, workflows as workflowsTable, eq } from "@repo/db";
+import { db, executions as executionsTable, eq } from "@repo/db";
 import { WorkflowEngine } from "../lib/workflow-engine";
 import type { WorkflowGraph } from "@repo/types";
 import { ExecutionStatus, REDIS, DATABASE, ENV_DEFAULTS, getExecutionRedisKey } from "utils";
@@ -23,7 +23,7 @@ const redis = new Redis(process.env.REDIS_URL || "redis://localhost:6379");
  * Process workflow events using the graph-based engine
  */
 export async function processWorkflowEvent(data: WorkflowEventData) {
-  const { executionId, workflowId, graph, triggerNodeId, triggerData, metadata } = data;
+  const { executionId, workflowId, graph, triggerNodeId, triggerData } = data;
 
   console.log(`📥 Processing execution ${executionId} for workflow ${workflowId} (graph-based)`);
 
@@ -53,9 +53,7 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
   }
 
   // Step 3: Execute the workflow graph using the engine
-  const connection = new Connection(
-    process.env.SOLANA_RPC_URL || ENV_DEFAULTS.SOLANA_RPC_URL
-  );
+  const connection = new Connection(process.env.SOLANA_RPC_URL || ENV_DEFAULTS.SOLANA_RPC_URL);
 
   const engine = new WorkflowEngine(connection);
 
@@ -82,9 +80,13 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
           txSignature,
           completedAt: new Date(),
         })
-        .where((t) => t.executionId === executionId);
+        .where(eq(executionsTable.id, executionId));
 
-      await redis.setex(getExecutionRedisKey(executionId), REDIS.TTL.EXECUTION_CACHE, REDIS.VALUES.COMPLETED);
+      await redis.setex(
+        getExecutionRedisKey(executionId),
+        REDIS.TTL.EXECUTION_CACHE,
+        REDIS.VALUES.COMPLETED
+      );
 
       console.log(`🎉 Execution ${executionId} completed successfully`);
       console.log(`  Execution path: ${result.executionPath.join(" → ")}`);
@@ -106,9 +108,13 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
           txError: errorMessage,
           completedAt: new Date(),
         })
-        .where((t) => t.executionId === executionId);
+        .where(eq(executionsTable.id, executionId));
 
-      await redis.setex(getExecutionRedisKey(executionId), REDIS.TTL.EXECUTION_CACHE, ExecutionStatus.FAILED);
+      await redis.setex(
+        getExecutionRedisKey(executionId),
+        REDIS.TTL.EXECUTION_CACHE,
+        ExecutionStatus.FAILED
+      );
 
       console.error(`❌ Execution ${executionId} failed:`, result.errors);
 
@@ -129,9 +135,13 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
         txError: (error as Error).message,
         completedAt: new Date(),
       })
-      .where((t) => t.executionId === executionId);
+      .where(eq(executionsTable.id, executionId));
 
-    await redis.setex(getExecutionRedisKey(executionId), REDIS.TTL.EXECUTION_CACHE, ExecutionStatus.FAILED);
+    await redis.setex(
+      getExecutionRedisKey(executionId),
+      REDIS.TTL.EXECUTION_CACHE,
+      ExecutionStatus.FAILED
+    );
 
     throw error;
   }

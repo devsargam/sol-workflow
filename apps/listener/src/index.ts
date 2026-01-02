@@ -29,7 +29,6 @@ async function start() {
   // Subscribe to Solana events for each workflow
   for (const workflow of activeWorkflows) {
     try {
-      // @ts-ignore
       await subscriptionManager.subscribe(workflow);
       console.log(`✅ Subscribed to events for workflow: ${workflow.id} (${workflow.name})`);
     } catch (error) {

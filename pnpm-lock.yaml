@@ -206,6 +206,9 @@ importers:
       '@repo/discord':
         specifier: workspace:*
         version: link:../../packages/discord
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@solana/web3.js':
         specifier: ^1.98.0
         version: 1.98.4(typescript@5.9.3)
