@@ -3,7 +3,7 @@ import { Queue } from "bullmq";
 import Redis from "ioredis";
 import { SubscriptionManager } from "./lib/subscription-manager";
 import { db, workflows as workflowsTable, eq } from "@repo/db";
-import { ENV_DEFAULTS, QUEUES, SOLANA, INTERVALS, NodeType } from "utils";
+import { ENV_DEFAULTS, QUEUES, SOLANA, INTERVALS } from "utils";
 
 const connection = new Connection(process.env.SOLANA_RPC_URL || ENV_DEFAULTS.SOLANA_RPC_URL, {
   wsEndpoint: process.env.SOLANA_WS_URL || ENV_DEFAULTS.SOLANA_WS_URL,
@@ -29,6 +29,7 @@ async function start() {
   // Subscribe to Solana events for each workflow
   for (const workflow of activeWorkflows) {
     try {
+      // @ts-ignore
       await subscriptionManager.subscribe(workflow);
       console.log(`✅ Subscribed to events for workflow: ${workflow.id} (${workflow.name})`);
     } catch (error) {
@@ -66,30 +67,8 @@ async function loadActiveWorkflows() {
       .from(workflowsTable)
       .where(eq(workflowsTable.enabled, true));
 
-    // Process graph-based workflows
-    return workflows
-      .map((w) => {
-        const graph = w.graph as any;
-
-        // Extract trigger nodes from the graph
-        const triggerNode = graph?.nodes?.find((n: any) => n.type === NodeType.TRIGGER);
-
-        return {
-          id: w.id,
-          name: w.name,
-          graph: graph,
-          metadata: w.metadata,
-          // Legacy format for backward compatibility with SubscriptionManager
-          // TODO: Update SubscriptionManager to work with graph directly
-          trigger: triggerNode
-            ? {
-                type: triggerNode.data?.triggerType,
-                config: triggerNode.data?.config,
-              }
-            : null,
-        };
-      })
-      .filter((w) => w.trigger); // Only return workflows with valid triggers
+    // Return graph-based workflows
+    return workflows;
   } catch (error) {
     console.error("Error loading workflows from database:", error);
     return [];

@@ -8,10 +8,8 @@ import { ExecutionStatus, REDIS, DATABASE, ENV_DEFAULTS, getExecutionRedisKey } 
 interface WorkflowEventData {
   workflowId: string;
   executionId: string;
-  trigger?: {
-    type: string;
-    data: any;
-  };
+  triggerNodeId: string;
+  triggerData: any;
   graph: WorkflowGraph;
   metadata?: {
     maxSolPerTx?: number;
@@ -25,8 +23,7 @@ const redis = new Redis(process.env.REDIS_URL || "redis://localhost:6379");
  * Process workflow events using the graph-based engine
  */
 export async function processWorkflowEvent(data: WorkflowEventData) {
-  const { executionId, workflowId, graph, trigger, metadata } = data;
-  const triggerData = trigger?.data || trigger;
+  const { executionId, workflowId, graph, triggerNodeId, triggerData, metadata } = data;
 
   console.log(`📥 Processing execution ${executionId} for workflow ${workflowId} (graph-based)`);
 
@@ -65,6 +62,7 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
   const context = {
     workflowId,
     executionId,
+    triggerNodeId,
     triggerData,
     variables: new Map<string, any>(),
     executionPath: [],
