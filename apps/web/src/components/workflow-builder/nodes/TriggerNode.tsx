@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { Handle, NodeProps, Position } from "@xyflow/react";
-import { ZapIcon } from "lucide-react";
+import { CircleDollarSignIcon, ZapIcon } from "lucide-react";
 import { memo } from "react";
 import type { TriggerNodeData } from "../types";
 
@@ -11,7 +11,7 @@ export const TriggerNode = memo(({ data, selected }: NodeProps) => {
   const getTriggerIcon = (type: string) => {
     switch (type) {
       case "balance_change":
-        return "💰";
+        return <CircleDollarSignIcon className="w-6 h-6" />;
       case "token_receipt":
         return "🪙";
       case "nft_receipt":
