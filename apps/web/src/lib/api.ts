@@ -1,6 +1,7 @@
 // API client for graph-based workflows
+import { ENV_DEFAULTS, WORKFLOW_METADATA, API } from "utils";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || ENV_DEFAULTS.NEXT_PUBLIC_API_URL;
 
 export interface WorkflowGraph {
   nodes: any[];
@@ -40,26 +41,26 @@ export interface CreateWorkflowData {
 
 // Workflows API
 export async function fetchWorkflows(): Promise<{ workflows: Workflow[] }> {
-  const res = await fetch(`${API_URL}/workflows`);
+  const res = await fetch(`${API_URL}${API.ROUTES.WORKFLOWS}`);
   if (!res.ok) throw new Error("Failed to fetch workflows");
   return res.json();
 }
 
 export async function fetchWorkflow(id: string): Promise<{ workflow: Workflow }> {
-  const res = await fetch(`${API_URL}/workflows/${id}`);
+  const res = await fetch(`${API_URL}${API.ROUTES.WORKFLOWS}/${id}`);
   if (!res.ok) throw new Error("Failed to fetch workflow");
   return res.json();
 }
 
 export async function createWorkflow(data: CreateWorkflowData): Promise<{ workflow: Workflow }> {
-  const res = await fetch(`${API_URL}/workflows`, {
+  const res = await fetch(`${API_URL}${API.ROUTES.WORKFLOWS}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       ...data,
       metadata: {
-        version: "1.0.0",
-        createdWith: "visual-builder",
+        version: WORKFLOW_METADATA.VERSION,
+        createdWith: WORKFLOW_METADATA.CREATED_WITH.VISUAL_BUILDER,
         ...data.metadata,
       },
     }),
@@ -75,7 +76,7 @@ export async function updateWorkflow(
   id: string,
   data: Partial<CreateWorkflowData>
 ): Promise<{ workflow: Workflow }> {
-  const res = await fetch(`${API_URL}/workflows/${id}`, {
+  const res = await fetch(`${API_URL}${API.ROUTES.WORKFLOWS}/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -83,7 +84,7 @@ export async function updateWorkflow(
       metadata: data.metadata
         ? {
             ...data.metadata,
-            lastModifiedWith: "visual-builder",
+            lastModifiedWith: WORKFLOW_METADATA.CREATED_WITH.VISUAL_BUILDER,
           }
         : undefined,
     }),
@@ -96,7 +97,7 @@ export async function updateWorkflow(
 }
 
 export async function deleteWorkflow(id: string): Promise<{ workflow: Workflow }> {
-  const res = await fetch(`${API_URL}/workflows/${id}`, {
+  const res = await fetch(`${API_URL}${API.ROUTES.WORKFLOWS}/${id}`, {
     method: "DELETE",
   });
   if (!res.ok) throw new Error("Failed to delete workflow");
@@ -104,7 +105,7 @@ export async function deleteWorkflow(id: string): Promise<{ workflow: Workflow }
 }
 
 export async function toggleWorkflow(id: string): Promise<{ workflow: Workflow }> {
-  const res = await fetch(`${API_URL}/workflows/${id}/toggle`, {
+  const res = await fetch(`${API_URL}${API.ROUTES.WORKFLOWS}/${id}/toggle`, {
     method: "POST",
   });
   if (!res.ok) throw new Error("Failed to toggle workflow");
@@ -128,15 +129,15 @@ export interface Execution {
 
 export async function fetchExecutions(workflowId?: string): Promise<{ executions: Execution[] }> {
   const url = workflowId
-    ? `${API_URL}/executions?workflowId=${workflowId}`
-    : `${API_URL}/executions`;
+    ? `${API_URL}${API.ROUTES.EXECUTIONS}?workflowId=${workflowId}`
+    : `${API_URL}${API.ROUTES.EXECUTIONS}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch executions");
   return res.json();
 }
 
 export async function fetchExecution(id: string): Promise<{ execution: Execution }> {
-  const res = await fetch(`${API_URL}/executions/${id}`);
+  const res = await fetch(`${API_URL}${API.ROUTES.EXECUTIONS}/${id}`);
   if (!res.ok) throw new Error("Failed to fetch execution");
   return res.json();
 }

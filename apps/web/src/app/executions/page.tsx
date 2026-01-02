@@ -2,6 +2,7 @@
 
 import { useExecutions } from "@/lib/hooks/use-executions";
 import { useWorkflows } from "@/lib/hooks/use-workflows";
+import { ExecutionStatus } from "utils";
 
 export default function ExecutionsPage() {
   const { data: executionsData, isLoading, error } = useExecutions();
@@ -14,28 +15,28 @@ export default function ExecutionsPage() {
 
   const getStatusConfig = (status: string) => {
     switch (status) {
-      case "success":
+      case ExecutionStatus.SUCCESS:
         return {
           bg: "bg-green-50",
           border: "border-green-200",
           text: "text-green-700",
           icon: "✓",
         };
-      case "failed":
+      case ExecutionStatus.FAILED:
         return {
           bg: "bg-red-50",
           border: "border-red-200",
           text: "text-red-700",
           icon: "✗",
         };
-      case "filtered":
+      case ExecutionStatus.FILTERED:
         return {
           bg: "bg-yellow-50",
           border: "border-yellow-200",
           text: "text-yellow-700",
           icon: "⊘",
         };
-      case "processing":
+      case ExecutionStatus.PROCESSING:
         return {
           bg: "bg-blue-50",
           border: "border-blue-200",

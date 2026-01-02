@@ -1,3 +1,4 @@
+import { SOLANA } from "utils";
 import { Connection, ConnectionConfig, Commitment } from "@solana/web3.js";
 
 export interface SolanaConnectionConfig {
@@ -18,7 +19,7 @@ export function createConnection(config: SolanaConnectionConfig): Connection {
 }
 
 export function getDefaultConnection(): Connection {
-  const rpcUrl = process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
+  const rpcUrl = process.env.SOLANA_RPC_URL || SOLANA.RPC_URLS.DEVNET;
   const wsUrl = process.env.SOLANA_WS_URL;
 
   return createConnection({ rpcUrl, wsUrl });

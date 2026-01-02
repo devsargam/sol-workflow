@@ -240,6 +240,9 @@ importers:
       postgres:
         specifier: ^3.4.5
         version: 3.4.7
+      utils:
+        specifier: workspace:*
+        version: link:../utils
     devDependencies:
       '@types/node':
         specifier: ^20.11.5
@@ -271,6 +274,9 @@ importers:
       '@solana/web3.js':
         specifier: ^1.98.0
         version: 1.98.4(typescript@5.9.3)
+      utils:
+        specifier: workspace:*
+        version: link:../utils
     devDependencies:
       '@types/node':
         specifier: ^20.11.5

@@ -1,5 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { db, workflows as workflowsTable, eq } from "@repo/db";
+import { WORKFLOW_METADATA } from "utils";
 import {
   WorkflowGraphSchema,
   WorkflowMetadataSchema,
@@ -89,10 +90,10 @@ workflows.post("/", zValidator("json", createWorkflowSchema), async (c) => {
         description: data.description,
         graph: data.graph,
         metadata: data.metadata || {
-          version: "1.0.0",
-          maxSolPerTx: 1000000,
-          maxExecutionsPerHour: 10,
-          createdWith: "api",
+          version: WORKFLOW_METADATA.VERSION,
+          maxSolPerTx: WORKFLOW_METADATA.LIMITS.MAX_SOL_PER_TX,
+          maxExecutionsPerHour: WORKFLOW_METADATA.LIMITS.MAX_EXECUTIONS_PER_HOUR,
+          createdWith: WORKFLOW_METADATA.CREATED_WITH.API,
         },
         enabled: false,
       })

@@ -133,6 +133,11 @@ export const SOLANA = {
     DEVNET: "devnet",
     TESTNET: "testnet",
   },
+  RPC_URLS: {
+    MAINNET: "https://api.mainnet-beta.solana.com",
+    DEVNET: "https://api.devnet.solana.com",
+    TESTNET: "https://api.testnet.solana.com",
+  },
   EXPLORERS: {
     SOLSCAN: {
       BASE_URL: "https://solscan.io",

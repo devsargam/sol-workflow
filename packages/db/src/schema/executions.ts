@@ -1,3 +1,4 @@
+import { ExecutionStatus } from "utils";
 import { pgTable, text, timestamp, jsonb, uuid, varchar } from "drizzle-orm/pg-core";
 import { workflows } from "./workflows";
 
@@ -13,7 +14,7 @@ export const executions = pgTable("executions", {
     .references(() => workflows.id, { onDelete: "cascade" }),
 
   // Execution status
-  status: text("status").notNull().default("pending"), // pending, processing, success, failed, filtered
+  status: text("status").notNull().default(ExecutionStatus.PENDING), // pending, processing, success, failed, filtered
 
   // Trigger data
   triggerData: jsonb("trigger_data").notNull(),

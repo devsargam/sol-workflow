@@ -2,12 +2,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { fetchExecutions, fetchExecution } from "@/lib/api";
+import { INTERVALS } from "utils";
 
 export function useExecutions(workflowId?: string) {
   return useQuery({
     queryKey: workflowId ? ["executions", workflowId] : ["executions"],
     queryFn: () => fetchExecutions(workflowId),
-    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
+    refetchInterval: INTERVALS.REFETCH_EXECUTIONS,
   });
 }
 
