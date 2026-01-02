@@ -131,22 +131,22 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
 
           // Map fields based on node type
           switch (n.type) {
-            case 'trigger':
-              baseNode.data.triggerType = n.data.triggerType || n.data.type || 'balance_change';
+            case "trigger":
+              baseNode.data.triggerType = n.data.triggerType || n.data.type || "balance_change";
               baseNode.data.config = n.data.config || {};
               break;
-            case 'filter':
+            case "filter":
               baseNode.data.conditions = n.data.conditions || [];
-              baseNode.data.logic = n.data.logic || 'and';
+              baseNode.data.logic = n.data.logic || "and";
               break;
-            case 'action':
-              baseNode.data.actionType = n.data.actionType || n.data.type || 'send_sol';
+            case "action":
+              baseNode.data.actionType = n.data.actionType || n.data.type || "send_sol";
               baseNode.data.config = n.data.config || {};
               break;
-            case 'notify':
-              baseNode.data.notifyType = n.data.notifyType || n.data.type || 'discord';
-              baseNode.data.webhookUrl = n.data.webhookUrl || '';
-              baseNode.data.template = n.data.template || 'default';
+            case "notify":
+              baseNode.data.notifyType = n.data.notifyType || n.data.type || "discord";
+              baseNode.data.webhookUrl = n.data.webhookUrl || "";
+              baseNode.data.template = n.data.template || "default";
               break;
           }
 
@@ -365,13 +365,13 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
           <Controls />
           <MiniMap />
 
-          <Panel
+          {/*<Panel
             position="top-left"
             className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 m-4"
           >
             <h2 className="text-xl font-semibold mb-2">Workflow Builder</h2>
             <p className="text-sm text-neutral-600">Configure nodes by clicking on them</p>
-          </Panel>
+          </Panel>*/}
         </ReactFlow>
       </div>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import { Handle, NodeProps, Position } from "@xyflow/react";
 import { SearchIcon } from "lucide-react";
 import { memo } from "react";
@@ -11,9 +12,10 @@ export const FilterNode = memo(({ data, selected }: NodeProps) => {
 
   return (
     <div
-      className={`px-4 py-3 rounded-lg border-2 bg-white min-w-[180px] transition-all ${
-        selected ? "border-gray-900 shadow-lg" : "border-gray-300 hover:border-gray-400"
-      }`}
+      className={cn(
+        "px-4 py-3 rounded-lg border-2 bg-white min-w-[180px] transition-all border-black",
+        selected && "shadow-lg"
+      )}
     >
       <Handle
         type="target"

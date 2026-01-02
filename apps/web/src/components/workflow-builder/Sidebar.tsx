@@ -1,7 +1,7 @@
 "use client";
 
+import { MegaphoneIcon, RocketIcon, SearchIcon, ZapIcon } from "lucide-react";
 import React from "react";
-import { ZapIcon, SearchIcon, RocketIcon, MegaphoneIcon } from "lucide-react";
 
 const nodeTypes = [
   {
@@ -42,8 +42,8 @@ export function Sidebar() {
 
   return (
     <aside className="w-64 bg-white border-r border-neutral-200 p-4">
-      <div className="mb-6">
-        <h3 className="text-sm font-semibold text-neutral-900 mb-2">Workflow Nodes</h3>
+      <div className="mb-2">
+        <h3 className="text-sm font-semibold text-neutral-900">Workflow Nodes</h3>
         <p className="text-xs text-neutral-600">Drag and drop nodes to build your workflow</p>
       </div>
 
@@ -66,14 +66,14 @@ export function Sidebar() {
         ))}
       </div>
 
-      <div className="mt-8 p-4 bg-neutral-50 rounded-lg">
+      {/*<div className="mt-8 p-4 bg-neutral-50 rounded-lg">
         <h4 className="text-xs font-semibold text-neutral-700 mb-2">Tips:</h4>
         <ul className="text-xs text-neutral-600 space-y-1">
           <li>• Connect nodes by dragging from handles</li>
           <li>• Click on a node to configure it</li>
           <li>• Use the minimap for navigation</li>
         </ul>
-      </div>
+      </div>*/}
     </aside>
   );
 }

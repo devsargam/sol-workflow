@@ -211,11 +211,14 @@ export function WorkflowBuilderContent() {
           fitView
           attributionPosition="bottom-left"
         >
-          <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+          <Background variant={BackgroundVariant.Cross} gap={12} size={1} />
           <Controls />
           <MiniMap />
 
-          <Panel position="top-left" className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 m-4">
+          <Panel
+            position="top-left"
+            className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 m-4"
+          >
             <h2 className="text-xl font-semibold mb-2">Workflow Builder</h2>
             <p className="text-sm text-neutral-600">
               Drag nodes from the sidebar to build your workflow
