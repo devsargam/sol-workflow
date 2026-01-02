@@ -78,6 +78,12 @@ export default function WorkflowBuilderClientPage() {
       if (notify.data?.notifyType === "discord" && !notify.data?.webhookUrl) {
         errors.push(`Notify node ${notify.id}: Discord webhook URL is required`);
       }
+      if (notify.data?.notifyType === "telegram" && !notify.data?.telegramBotToken) {
+        errors.push(`Notify node ${notify.id}: Telegram bot token is required`);
+      }
+      if (notify.data?.notifyType === "telegram" && !notify.data?.telegramChatId) {
+        errors.push(`Notify node ${notify.id}: Telegram chat ID is required`);
+      }
     }
 
     return errors;

@@ -1,16 +1,30 @@
 import { z } from "zod";
 
 // Notification types
-export const NotificationTypeEnum = z.enum(["discord"]);
+export const NotificationTypeEnum = z.enum(["discord", "telegram"]);
 
 export type NotificationType = z.infer<typeof NotificationTypeEnum>;
+
+export const TelegramNotificationConfigSchema = z.object({
+  botToken: z.string().min(1),
+  chatId: z.string().min(1),
+  template: z.string().default("default"),
+  customMessage: z.string().optional(),
+  parseMode: z.enum(["Markdown", "MarkdownV2", "HTML"]).optional(),
+  disableWebPreview: z.boolean().default(true),
+});
+
+export type TelegramNotificationConfig = z.infer<typeof TelegramNotificationConfigSchema>;
 
 // Discord Notification Config
 export const DiscordNotificationConfigSchema = z.object({
   webhookUrl: z.string().url(),
   template: z.string().default("default"),
   customMessage: z.string().optional(),
-  embedColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).default("#5865F2"), // Hex color
+  embedColor: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/)
+    .default("#5865F2"), // Hex color
   includeTransactionLink: z.boolean().default(true),
   includeTriggerData: z.boolean().default(true),
 });
@@ -28,13 +42,7 @@ export const NotificationSchema = z.object({
 export type Notification = z.infer<typeof NotificationSchema>;
 
 // Discord template types
-export const DiscordTemplateEnum = z.enum([
-  "default",
-  "success",
-  "error",
-  "minimal",
-  "detailed",
-]);
+export const DiscordTemplateEnum = z.enum(["default", "success", "error", "minimal", "detailed"]);
 
 export type DiscordTemplate = z.infer<typeof DiscordTemplateEnum>;
 

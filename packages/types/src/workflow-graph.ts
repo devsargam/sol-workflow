@@ -15,7 +15,13 @@ export const BaseNodeSchema = z.object({
 
 // Trigger node data schema
 export const TriggerNodeDataSchema = z.object({
-  triggerType: z.enum(["balance_change", "token_receipt", "nft_receipt", "transaction_status", "program_log"]),
+  triggerType: z.enum([
+    "balance_change",
+    "token_receipt",
+    "nft_receipt",
+    "transaction_status",
+    "program_log",
+  ]),
   config: z.object({
     // Common fields
     address: z.string().optional(),
@@ -48,11 +54,21 @@ export const TriggerNodeDataSchema = z.object({
 
 // Filter node data schema
 export const FilterNodeDataSchema = z.object({
-  conditions: z.array(z.object({
-    field: z.string(),
-    operator: z.enum(["equals", "not_equals", "greater_than", "less_than", "contains", "starts_with", "ends_with"]),
-    value: z.any(),
-  })),
+  conditions: z.array(
+    z.object({
+      field: z.string(),
+      operator: z.enum([
+        "equals",
+        "not_equals",
+        "greater_than",
+        "less_than",
+        "contains",
+        "starts_with",
+        "ends_with",
+      ]),
+      value: z.any(),
+    })
+  ),
   logic: z.enum(["and", "or"]).default("and"),
 });
 
@@ -86,19 +102,53 @@ export const ActionNodeDataSchema = z.object({
 });
 
 // Notify node data schema
-export const NotifyNodeDataSchema = z.object({
-  notifyType: z.enum(["discord", "slack", "email", "webhook"]),
-  webhookUrl: z.string().optional(),
-  template: z.enum(["default", "success", "error", "minimal", "detailed"]),
-  customMessage: z.string().optional(),
-});
+export const NotifyNodeDataSchema = z
+  .object({
+    notifyType: z.enum(["discord", "telegram", "slack", "email", "webhook"]),
+
+    webhookUrl: z.string().optional(),
+
+    telegramBotToken: z.string().min(1).optional(),
+    telegramChatId: z.string().min(1).optional(),
+    telegramParseMode: z.enum(["Markdown", "MarkdownV2", "HTML"]).optional(),
+    telegramDisableWebPreview: z.boolean().optional(),
+
+    template: z.enum(["default", "success", "error", "minimal", "detailed"]),
+    customMessage: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if ((data.notifyType === "discord" || data.notifyType === "webhook") && !data.webhookUrl) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["webhookUrl"],
+        message: "webhookUrl is required for discord/webhook notifications",
+      });
+    }
+
+    if (data.notifyType === "telegram") {
+      if (!data.telegramBotToken) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["telegramBotToken"],
+          message: "telegramBotToken is required for telegram notifications",
+        });
+      }
+      if (!data.telegramChatId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["telegramChatId"],
+          message: "telegramChatId is required for telegram notifications",
+        });
+      }
+    }
+  });
 
 // Union of all node data types
 export const NodeDataSchema = z.union([
   z.object({ nodeType: z.literal("trigger"), ...TriggerNodeDataSchema.shape }),
   z.object({ nodeType: z.literal("filter"), ...FilterNodeDataSchema.shape }),
   z.object({ nodeType: z.literal("action"), ...ActionNodeDataSchema.shape }),
-  z.object({ nodeType: z.literal("notify"), ...NotifyNodeDataSchema.shape }),
+  z.object({ nodeType: z.literal("notify") }).and(NotifyNodeDataSchema),
 ]);
 
 // Complete node schema
@@ -125,11 +175,13 @@ export const WorkflowEdgeSchema = z.object({
 export const WorkflowGraphSchema = z.object({
   nodes: z.array(WorkflowNodeSchema),
   edges: z.array(WorkflowEdgeSchema),
-  viewport: z.object({
-    x: z.number(),
-    y: z.number(),
-    zoom: z.number(),
-  }).optional(),
+  viewport: z
+    .object({
+      x: z.number(),
+      y: z.number(),
+      zoom: z.number(),
+    })
+    .optional(),
 });
 
 // Workflow metadata schema
@@ -177,19 +229,19 @@ export function isExecutableGraph(graph: WorkflowGraph): { valid: boolean; error
   const errors: string[] = [];
 
   // Must have at least one trigger node
-  const triggerNodes = graph.nodes.filter(n => n.type === "trigger");
+  const triggerNodes = graph.nodes.filter((n) => n.type === "trigger");
   if (triggerNodes.length === 0) {
     errors.push("Workflow must have at least one trigger node");
   }
 
   // Must have at least one action node
-  const actionNodes = graph.nodes.filter(n => n.type === "action");
+  const actionNodes = graph.nodes.filter((n) => n.type === "action");
   if (actionNodes.length === 0) {
     errors.push("Workflow must have at least one action node");
   }
 
   // Check that all edges reference valid nodes
-  const nodeIds = new Set(graph.nodes.map(n => n.id));
+  const nodeIds = new Set(graph.nodes.map((n) => n.id));
   for (const edge of graph.edges) {
     if (!nodeIds.has(edge.source)) {
       errors.push(`Edge ${edge.id} references non-existent source node: ${edge.source}`);
@@ -200,7 +252,7 @@ export function isExecutableGraph(graph: WorkflowGraph): { valid: boolean; error
   }
 
   // Check for cycles (simplified check - just ensure no node points back to trigger)
-  const triggerIds = new Set(triggerNodes.map(n => n.id));
+  const triggerIds = new Set(triggerNodes.map((n) => n.id));
   for (const edge of graph.edges) {
     if (triggerIds.has(edge.target) && !triggerIds.has(edge.source)) {
       errors.push("Workflow contains a cycle: non-trigger node points back to trigger");
