@@ -80,7 +80,7 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
           txSignature,
           completedAt: new Date(),
         })
-        .where(eq(executionsTable.id, executionId));
+        .where(eq(executionsTable.executionId, executionId));
 
       await redis.setex(
         getExecutionRedisKey(executionId),
@@ -108,7 +108,7 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
           txError: errorMessage,
           completedAt: new Date(),
         })
-        .where(eq(executionsTable.id, executionId));
+        .where(eq(executionsTable.executionId, executionId));
 
       await redis.setex(
         getExecutionRedisKey(executionId),
@@ -135,7 +135,7 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
         txError: (error as Error).message,
         completedAt: new Date(),
       })
-      .where(eq(executionsTable.id, executionId));
+      .where(eq(executionsTable.executionId, executionId));
 
     await redis.setex(
       getExecutionRedisKey(executionId),
