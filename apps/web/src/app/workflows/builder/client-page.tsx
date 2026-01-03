@@ -2,6 +2,8 @@
 
 import { WorkflowBuilderContent } from "@/components/workflow-builder/WorkflowBuilderWithSave";
 import { useCreateWorkflow, useUpdateWorkflow, useWorkflow } from "@/lib/hooks/use-workflows";
+import { validateWorkflowGraphForBuilder } from "@repo/types";
+import { log } from "utils";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -36,59 +38,6 @@ export default function WorkflowBuilderClientPage() {
     }
   }, [existingWorkflow]);
 
-  const validateWorkflowGraph = (graph: any) => {
-    const errors: string[] = [];
-
-    // Must have at least one trigger node
-    const triggerNodes = graph.nodes.filter((n: any) => n.type === "trigger");
-    if (triggerNodes.length === 0) {
-      errors.push("Workflow must have at least one trigger node");
-    }
-
-    // Validate trigger nodes
-    for (const trigger of triggerNodes) {
-      const config = trigger.data?.config || {};
-      if (trigger.data?.triggerType === "balance_change" && !config.address) {
-        errors.push(`Trigger node ${trigger.id}: Wallet address is required`);
-      }
-    }
-
-    // Must have at least one action node
-    const actionNodes = graph.nodes.filter((n: any) => n.type === "action");
-    if (actionNodes.length === 0) {
-      errors.push("Workflow must have at least one action node");
-    }
-
-    // Validate action nodes
-    for (const action of actionNodes) {
-      const config = action.data?.config || {};
-      if (action.data?.actionType === "send_sol") {
-        if (!config.toAddress) {
-          errors.push(`Action node ${action.id}: Recipient address is required`);
-        }
-        if (!config.amount) {
-          errors.push(`Action node ${action.id}: Amount is required`);
-        }
-      }
-    }
-
-    // Validate notify nodes
-    const notifyNodes = graph.nodes.filter((n: any) => n.type === "notify");
-    for (const notify of notifyNodes) {
-      if (notify.data?.notifyType === "discord" && !notify.data?.webhookUrl) {
-        errors.push(`Notify node ${notify.id}: Discord webhook URL is required`);
-      }
-      if (notify.data?.notifyType === "telegram" && !notify.data?.telegramBotToken) {
-        errors.push(`Notify node ${notify.id}: Telegram bot token is required`);
-      }
-      if (notify.data?.notifyType === "telegram" && !notify.data?.telegramChatId) {
-        errors.push(`Notify node ${notify.id}: Telegram chat ID is required`);
-      }
-    }
-
-    return errors;
-  };
-
   const handleSave = async () => {
     setIsSaving(true);
     setErrors([]);
@@ -105,9 +54,13 @@ export default function WorkflowBuilderClientPage() {
         return;
       }
 
-      // Validate the workflow graph
-      const validationErrors = validateWorkflowGraph(graph);
+      const validationErrors = validateWorkflowGraphForBuilder(graph);
       if (validationErrors.length > 0) {
+        log.warn("Workflow validation failed", {
+          service: "web",
+          workflowId: editId || "new",
+          errors: validationErrors,
+        });
         setErrors(validationErrors);
         setShowErrors(true);
         setIsSaving(false);
@@ -141,9 +94,18 @@ export default function WorkflowBuilderClientPage() {
         await createWorkflow.mutateAsync(workflowData);
       }
 
+      log.info("Workflow saved successfully", {
+        service: "web",
+        workflowId: editId || "new",
+        workflowName: finalWorkflowName,
+      });
       router.push("/workflows");
     } catch (error) {
-      console.error("Failed to save workflow:", error);
+      log.error("Failed to save workflow", error as Error, {
+        service: "web",
+        workflowId: editId || "new",
+        workflowName: workflowName,
+      });
       setErrors(["Failed to save workflow. Please try again."]);
       setShowErrors(true);
     } finally {
