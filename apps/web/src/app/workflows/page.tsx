@@ -5,6 +5,10 @@ import { useToggleWorkflow, useWorkflows } from "@/lib/hooks/use-workflows";
 export default function WorkflowsPage() {
   const { data, isLoading, error } = useWorkflows();
   const toggleWorkflow = useToggleWorkflow();
+  console.log("data", data);
+  console.log("error", error);
+  console.log("isLoading", isLoading);
+  console.log("toggleWorkflow", toggleWorkflow);
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-12">

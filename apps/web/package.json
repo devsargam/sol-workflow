@@ -25,6 +25,7 @@
     "react-dom": "19.2.3",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
+    "@repo/types": "workspace:*",
     "utils": "workspace:*",
     "zod": "^3.24.1",
     "zustand": "^5.0.2"

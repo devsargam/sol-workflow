@@ -1,7 +1,7 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { Queue } from "bullmq";
 import crypto from "crypto";
-import { TriggerType, JOB_NAMES, JOB_OPTIONS, SOLANA, NodeType } from "utils";
+import { TriggerType, JOB_NAMES, JOB_OPTIONS, SOLANA, NodeType, log } from "utils";
 import type { WorkflowGraph } from "@repo/types";
 
 interface Workflow {
@@ -31,21 +31,73 @@ export class SubscriptionManager {
   }
 
   async subscribe(workflow: Workflow): Promise<void> {
-    // Extract all trigger nodes from the graph
     const triggerNodes = workflow.graph.nodes.filter(
       (n) => n.type === NodeType.TRIGGER
     ) as TriggerNode[];
 
+    log.debug(
+      `[SubscriptionManager] Workflow ${workflow.id}: Found ${triggerNodes.length} trigger nodes out of ${workflow.graph.nodes.length} total nodes`,
+      {
+        service: "listener",
+        workflowId: workflow.id,
+        triggerNodeCount: triggerNodes.length,
+        totalNodeCount: workflow.graph.nodes.length,
+      }
+    );
+
     if (triggerNodes.length === 0) {
-      console.warn(`No trigger nodes found in workflow ${workflow.id}`);
+      log.warn(`No trigger nodes found in workflow ${workflow.id}`, {
+        service: "listener",
+        workflowId: workflow.id,
+        availableNodeTypes: workflow.graph.nodes.map((n) => n.type).join(", "),
+      });
       return;
     }
 
-    // Subscribe to each trigger node
     for (const triggerNode of triggerNodes) {
+      log.debug(`[SubscriptionManager] Processing trigger node ${triggerNode.id}`, {
+        service: "listener",
+        workflowId: workflow.id,
+        triggerNodeId: triggerNode.id,
+        triggerNodeData: triggerNode.data,
+      });
+
       const { triggerType, config } = triggerNode.data;
 
-      console.log(`Setting up subscription for trigger node ${triggerNode.id} (${triggerType})`);
+      if (!triggerType) {
+        log.error(
+          `[SubscriptionManager] Trigger node ${triggerNode.id} missing triggerType`,
+          new Error("Missing triggerType"),
+          {
+            service: "listener",
+            workflowId: workflow.id,
+            triggerNodeId: triggerNode.id,
+            triggerNodeData: triggerNode.data,
+          }
+        );
+        continue;
+      }
+
+      if (!config) {
+        log.error(
+          `[SubscriptionManager] Trigger node ${triggerNode.id} missing config`,
+          new Error("Missing config"),
+          {
+            service: "listener",
+            workflowId: workflow.id,
+            triggerNodeId: triggerNode.id,
+            triggerNodeData: triggerNode.data,
+          }
+        );
+        continue;
+      }
+
+      log.info(`Setting up subscription for trigger node ${triggerNode.id} (${triggerType})`, {
+        service: "listener",
+        workflowId: workflow.id,
+        triggerNodeId: triggerNode.id,
+        triggerType,
+      });
 
       switch (triggerType) {
         case TriggerType.BALANCE_CHANGE:
@@ -59,7 +111,11 @@ export class SubscriptionManager {
           await this.subscribeToProgramLogs(workflow, triggerNode.id, config);
           break;
         default:
-          console.warn(`Unsupported trigger type: ${triggerType}`);
+          log.warn(`Unsupported trigger type: ${triggerType}`, {
+            service: "listener",
+            workflowId: workflow.id,
+            triggerType,
+          });
       }
     }
   }
@@ -69,14 +125,42 @@ export class SubscriptionManager {
     triggerNodeId: string,
     config: any
   ): Promise<void> {
+    if (!config.address) {
+      log.error(
+        `[SubscriptionManager] Balance change trigger ${triggerNodeId} missing address in config`,
+        new Error("Missing address in config"),
+        {
+          service: "listener",
+          workflowId: workflow.id,
+          triggerNodeId,
+          config,
+        }
+      );
+      return;
+    }
+
+    log.info(
+      `[SubscriptionManager] Subscribing to balance changes for address: ${config.address}`,
+      {
+        service: "listener",
+        workflowId: workflow.id,
+        triggerNodeId,
+        address: config.address,
+      }
+    );
     const address = new PublicKey(config.address);
 
     const subscriptionId = this.connection.onAccountChange(
       address,
       async (accountInfo, context) => {
-        console.log(
-          `Account change detected for ${address.toBase58()} (workflow: ${workflow.name})`
-        );
+        log.info(`Account change detected for ${address.toBase58()} (workflow: ${workflow.name})`, {
+          service: "listener",
+          workflowId: workflow.id,
+          workflowName: workflow.name,
+          address: address.toBase58(),
+          lamports: accountInfo.lamports,
+          slot: context.slot,
+        });
 
         const executionId = this.generateExecutionId(
           workflow.id,
@@ -104,13 +188,23 @@ export class SubscriptionManager {
           }
         );
 
-        console.log(`✅ Queued execution ${executionId} for workflow ${workflow.id}`);
+        log.info(`✅ Queued execution ${executionId} for workflow ${workflow.id}`, {
+          service: "listener",
+          workflowId: workflow.id,
+          executionId,
+          triggerNodeId,
+        });
       },
       SOLANA.COMMITMENT
     );
 
     this.subscriptions.set(`${workflow.id}-${triggerNodeId}`, subscriptionId);
-    console.log(`✅ Subscribed to balance changes for ${address.toBase58()}`);
+    log.info(`✅ Subscribed to balance changes for ${address.toBase58()}`, {
+      service: "listener",
+      workflowId: workflow.id,
+      triggerNodeId,
+      address: address.toBase58(),
+    });
   }
 
   private async subscribeToTokenReceipt(
@@ -124,8 +218,16 @@ export class SubscriptionManager {
     const subscriptionId = this.connection.onAccountChange(
       address,
       async (accountInfo, context) => {
-        console.log(
-          `Token account change detected for ${address.toBase58()} (workflow: ${workflow.name})`
+        log.info(
+          `Token account change detected for ${address.toBase58()} (workflow: ${workflow.name})`,
+          {
+            service: "listener",
+            workflowId: workflow.id,
+            workflowName: workflow.name,
+            address: address.toBase58(),
+            triggerType,
+            slot: context.slot,
+          }
         );
 
         const executionId = this.generateExecutionId(
@@ -155,13 +257,24 @@ export class SubscriptionManager {
           }
         );
 
-        console.log(`✅ Queued execution ${executionId} for workflow ${workflow.id}`);
+        log.info(`✅ Queued execution ${executionId} for workflow ${workflow.id}`, {
+          service: "listener",
+          workflowId: workflow.id,
+          executionId,
+          triggerNodeId,
+        });
       },
       SOLANA.COMMITMENT
     );
 
     this.subscriptions.set(`${workflow.id}-${triggerNodeId}`, subscriptionId);
-    console.log(`✅ Subscribed to ${triggerType} for ${address.toBase58()}`);
+    log.info(`✅ Subscribed to ${triggerType} for ${address.toBase58()}`, {
+      service: "listener",
+      workflowId: workflow.id,
+      triggerNodeId,
+      triggerType,
+      address: address.toBase58(),
+    });
   }
 
   private async subscribeToProgramLogs(
@@ -174,14 +287,19 @@ export class SubscriptionManager {
     const subscriptionId = this.connection.onLogs(
       programId,
       async (logs, context) => {
-        console.log(
-          `Program logs detected for ${programId.toBase58()} (workflow: ${workflow.name})`
-        );
+        log.info(`Program logs detected for ${programId.toBase58()} (workflow: ${workflow.name})`, {
+          service: "listener",
+          workflowId: workflow.id,
+          workflowName: workflow.name,
+          programId: programId.toBase58(),
+          signature: logs.signature,
+          slot: context.slot,
+        });
 
         // Check if logs match the pattern (if configured)
         if (config.logPattern) {
           const pattern = new RegExp(config.logPattern);
-          const hasMatch = logs.logs.some((log) => pattern.test(log));
+          const hasMatch = logs.logs.some((logEntry) => pattern.test(logEntry));
           if (!hasMatch) {
             return; // Skip if pattern doesn't match
           }
@@ -215,13 +333,23 @@ export class SubscriptionManager {
           }
         );
 
-        console.log(`✅ Queued execution ${executionId} for workflow ${workflow.id}`);
+        log.info(`✅ Queued execution ${executionId} for workflow ${workflow.id}`, {
+          service: "listener",
+          workflowId: workflow.id,
+          executionId,
+          triggerNodeId,
+        });
       },
       SOLANA.COMMITMENT
     );
 
     this.subscriptions.set(`${workflow.id}-${triggerNodeId}`, subscriptionId);
-    console.log(`✅ Subscribed to program logs for ${programId.toBase58()}`);
+    log.info(`✅ Subscribed to program logs for ${programId.toBase58()}`, {
+      service: "listener",
+      workflowId: workflow.id,
+      triggerNodeId,
+      programId: programId.toBase58(),
+    });
   }
 
   async unsubscribe(workflowId: string): Promise<void> {
@@ -229,7 +357,11 @@ export class SubscriptionManager {
       if (key.startsWith(`${workflowId}-`)) {
         await this.connection.removeAccountChangeListener(subscriptionId);
         this.subscriptions.delete(key);
-        console.log(`✅ Unsubscribed from ${key}`);
+        log.info(`✅ Unsubscribed from ${key}`, {
+          service: "listener",
+          workflowId,
+          subscriptionKey: key,
+        });
       }
     }
   }
@@ -238,9 +370,15 @@ export class SubscriptionManager {
     for (const [key, subscriptionId] of this.subscriptions.entries()) {
       try {
         await this.connection.removeAccountChangeListener(subscriptionId);
-        console.log(`✅ Unsubscribed from ${key}`);
+        log.info(`✅ Unsubscribed from ${key}`, {
+          service: "listener",
+          subscriptionKey: key,
+        });
       } catch (error) {
-        console.error(`Failed to unsubscribe from ${key}:`, error);
+        log.error(`Failed to unsubscribe from ${key}`, error as Error, {
+          service: "listener",
+          subscriptionKey: key,
+        });
       }
     }
     this.subscriptions.clear();

@@ -12,6 +12,8 @@ export const NotifyNode = memo(({ data, selected }: NodeProps) => {
     switch (type) {
       case "discord":
         return "💬";
+      case "telegram":
+        return "✈️";
       case "slack":
         return "📨";
       case "email":
@@ -27,6 +29,8 @@ export const NotifyNode = memo(({ data, selected }: NodeProps) => {
     switch (type) {
       case "discord":
         return "Discord";
+      case "telegram":
+        return "Telegram";
       case "slack":
         return "Slack";
       case "email":
@@ -87,9 +91,9 @@ export const NotifyNode = memo(({ data, selected }: NodeProps) => {
               <span className="text-gray-900">{getTemplateLabel(nodeData.template || "")}</span>
             </div>
           )}
-          {nodeData.webhookUrl && (
+          {(nodeData.webhookUrl || nodeData.telegramChatId) && (
             <div className="text-xs text-gray-600">
-              <span className="font-medium">Webhook:</span>{" "}
+              <span className="font-medium">Destination:</span>{" "}
               <span className="text-gray-900">Configured</span>
             </div>
           )}

@@ -88,8 +88,8 @@ export async function callProgram(params: CallProgramParams): Promise<string> {
 
 // Helper to get associated token account
 export async function getOrCreateAssociatedTokenAccount(
-  connection: Connection,
-  payer: Keypair,
+  _connection: Connection,
+  _payer: Keypair,
   mint: PublicKey,
   owner: PublicKey
 ): Promise<PublicKey> {

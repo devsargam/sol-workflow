@@ -47,7 +47,12 @@ export function NodeConfigPanel({ node, onUpdate, onClose }: NodeConfigPanelProp
             className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -84,7 +89,14 @@ function TriggerConfig({ formData, setFormData }: any) {
         <label className="block text-sm font-medium mb-2">Trigger Type</label>
         <select
           value={formData.type || "balance_change"}
-          onChange={(e) => setFormData({ ...formData, type: e.target.value, config: {} })}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              type: e.target.value,
+              triggerType: e.target.value,
+              config: {},
+            })
+          }
           className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
         >
           <option value="balance_change">Balance Change</option>
@@ -231,7 +243,9 @@ function TriggerConfig({ formData, setFormData }: any) {
               }
               className="w-4 h-4"
             />
-            <label htmlFor="verifiedOnly" className="text-sm">Verified Collections Only</label>
+            <label htmlFor="verifiedOnly" className="text-sm">
+              Verified Collections Only
+            </label>
           </div>
         </>
       )}
@@ -282,10 +296,7 @@ function FilterConfig({ formData, setFormData }: any) {
   const addCondition = () => {
     setFormData({
       ...formData,
-      conditions: [
-        ...conditions,
-        { field: "", operator: "equals", value: "" },
-      ],
+      conditions: [...conditions, { field: "", operator: "equals", value: "" }],
     });
   };
 
@@ -331,7 +342,12 @@ function FilterConfig({ formData, setFormData }: any) {
                   className="text-red-600 hover:text-red-700"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
@@ -378,7 +394,14 @@ function ActionConfig({ formData, setFormData }: any) {
         <label className="block text-sm font-medium mb-2">Action Type</label>
         <select
           value={formData.type || "send_sol"}
-          onChange={(e) => setFormData({ ...formData, type: e.target.value, config: {} })}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              type: e.target.value,
+              actionType: e.target.value,
+              config: {},
+            })
+          }
           className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
         >
           <option value="send_sol">Send SOL</option>
@@ -572,10 +595,33 @@ function NotifyConfig({ formData, setFormData }: any) {
         <label className="block text-sm font-medium mb-2">Notification Type</label>
         <select
           value={formData.type || "discord"}
-          onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+          onChange={(e) => {
+            const nextType = e.target.value;
+
+            if (nextType === "telegram") {
+              setFormData({
+                ...formData,
+                type: nextType,
+                notifyType: nextType,
+                webhookUrl: undefined,
+              });
+              return;
+            }
+
+            setFormData({
+              ...formData,
+              type: nextType,
+              notifyType: nextType,
+              telegramBotToken: undefined,
+              telegramChatId: undefined,
+              telegramParseMode: undefined,
+              telegramDisableWebPreview: undefined,
+            });
+          }}
           className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
         >
           <option value="discord">Discord</option>
+          <option value="telegram">Telegram</option>
           <option value="slack">Slack (Coming Soon)</option>
           <option value="email">Email (Coming Soon)</option>
           <option value="webhook">Custom Webhook</option>
@@ -614,6 +660,82 @@ function NotifyConfig({ formData, setFormData }: any) {
               <option value="minimal">Minimal (Single line)</option>
               <option value="detailed">Detailed (Full context)</option>
             </select>
+          </div>
+        </>
+      )}
+
+      {formData.type === "telegram" && (
+        <>
+          <div>
+            <label className="block text-sm font-medium mb-2">Bot Token</label>
+            <input
+              type="password"
+              value={formData.telegramBotToken || ""}
+              onChange={(e) => setFormData({ ...formData, telegramBotToken: e.target.value })}
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              placeholder="123456:ABC-DEF..."
+              required
+            />
+            <p className="text-xs text-neutral-500 mt-1">
+              Create a bot via @BotFather and paste the token here.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Chat ID</label>
+            <input
+              type="text"
+              value={formData.telegramChatId || ""}
+              onChange={(e) => setFormData({ ...formData, telegramChatId: e.target.value })}
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              placeholder="e.g. 123456789 or -1001234567890"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Parse Mode (optional)</label>
+            <select
+              value={formData.telegramParseMode || ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  telegramParseMode: e.target.value || undefined,
+                })
+              }
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+            >
+              <option value="">Plain text</option>
+              <option value="Markdown">Markdown</option>
+              <option value="MarkdownV2">MarkdownV2</option>
+              <option value="HTML">HTML</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Message Template</label>
+            <select
+              value={formData.template || "default"}
+              onChange={(e) => setFormData({ ...formData, template: e.target.value })}
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+            >
+              <option value="default">Default</option>
+              <option value="success">Success</option>
+              <option value="error">Error</option>
+              <option value="minimal">Minimal</option>
+              <option value="detailed">Detailed</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Custom Message (optional)</label>
+            <textarea
+              value={formData.customMessage || ""}
+              onChange={(e) => setFormData({ ...formData, customMessage: e.target.value })}
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              placeholder="This will be prepended to the template"
+              rows={2}
+            />
           </div>
         </>
       )}

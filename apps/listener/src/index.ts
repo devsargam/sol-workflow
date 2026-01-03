@@ -3,7 +3,7 @@ import { Queue } from "bullmq";
 import Redis from "ioredis";
 import { SubscriptionManager } from "./lib/subscription-manager";
 import { db, workflows as workflowsTable, eq } from "@repo/db";
-import { ENV_DEFAULTS, QUEUES, SOLANA, INTERVALS } from "utils";
+import { ENV_DEFAULTS, QUEUES, SOLANA, INTERVALS, log } from "utils";
 
 const connection = new Connection(process.env.SOLANA_RPC_URL || ENV_DEFAULTS.SOLANA_RPC_URL, {
   wsEndpoint: process.env.SOLANA_WS_URL || ENV_DEFAULTS.SOLANA_WS_URL,
@@ -19,42 +19,56 @@ const workflowQueue = new Queue(QUEUES.WORKFLOW_EVENTS, { connection: redis });
 const subscriptionManager = new SubscriptionManager(connection, workflowQueue);
 
 async function start() {
-  console.log("🔌 Listener service starting...");
+  log.info("🔌 Listener service starting...", { service: "listener" });
 
-  // Load active workflows from database
   const activeWorkflows = await loadActiveWorkflows();
 
-  console.log(`📋 Found ${activeWorkflows.length} active workflows`);
+  log.info(`📋 Found ${activeWorkflows.length} active workflows`, {
+    service: "listener",
+    count: activeWorkflows.length,
+  });
 
-  // Subscribe to Solana events for each workflow
   for (const workflow of activeWorkflows) {
     try {
-      await subscriptionManager.subscribe(workflow);
-      console.log(`✅ Subscribed to events for workflow: ${workflow.id} (${workflow.name})`);
+      await subscriptionManager.subscribe(workflow as any);
+      log.info(`✅ Subscribed to events for workflow: ${workflow.id} (${workflow.name})`, {
+        service: "listener",
+        workflowId: workflow.id,
+        workflowName: workflow.name,
+      });
     } catch (error) {
-      console.error(`❌ Failed to subscribe for workflow ${workflow.id}:`, error);
+      log.error(`❌ Failed to subscribe for workflow ${workflow.id}`, error as Error, {
+        service: "listener",
+        workflowId: workflow.id,
+      });
     }
   }
 
-  console.log("🚀 Listener service ready and monitoring events");
+  log.info("🚀 Listener service ready and monitoring events", { service: "listener" });
 
   // Monitor connection health
   setInterval(() => {
     const stats = subscriptionManager.getStats();
-    console.log(`📊 Active subscriptions: ${stats.activeSubscriptions}`);
+    log.debug(`📊 Active subscriptions: ${stats.activeSubscriptions}`, {
+      service: "listener",
+      activeSubscriptions: stats.activeSubscriptions,
+    });
   }, INTERVALS.MONITOR_CONNECTION);
 
   // Periodically reload workflows (check for new/updated workflows)
   setInterval(async () => {
-    console.log("🔄 Reloading workflows...");
+    log.debug("🔄 Reloading workflows...", { service: "listener" });
     try {
       const workflows = await loadActiveWorkflows();
 
       // TODO: Handle dynamic subscription updates
       // For now, just log the count
-      console.log(`📋 Currently ${workflows.length} active workflows`);
+      log.debug(`📋 Currently ${workflows.length} active workflows`, {
+        service: "listener",
+        count: workflows.length,
+      });
     } catch (error) {
-      console.error("❌ Failed to reload workflows:", error);
+      log.error("❌ Failed to reload workflows", error as Error, { service: "listener" });
     }
   }, INTERVALS.RELOAD_WORKFLOWS);
 }
@@ -69,21 +83,23 @@ async function loadActiveWorkflows() {
     // Return graph-based workflows
     return workflows;
   } catch (error) {
-    console.error("Error loading workflows from database:", error);
+    log.error("Error loading workflows from database", error as Error, {
+      service: "listener",
+    });
     return [];
   }
 }
 
 // Graceful shutdown
 process.on("SIGTERM", async () => {
-  console.log("SIGTERM received, closing listener...");
+  log.info("SIGTERM received, closing listener...", { service: "listener" });
   await subscriptionManager.unsubscribeAll();
   await redis.quit();
   process.exit(0);
 });
 
 process.on("SIGINT", async () => {
-  console.log("SIGINT received, closing listener...");
+  log.info("SIGINT received, closing listener...", { service: "listener" });
   await subscriptionManager.unsubscribeAll();
   await redis.quit();
   process.exit(0);
@@ -91,6 +107,6 @@ process.on("SIGINT", async () => {
 
 // Start the service
 start().catch((error) => {
-  console.error("Fatal error:", error);
+  log.error("Fatal error", error as Error, { service: "listener" });
   process.exit(1);
 });

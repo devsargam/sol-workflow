@@ -65,11 +65,21 @@ export async function createWorkflow(data: CreateWorkflowData): Promise<{ workfl
       },
     }),
   });
+
+  const json = await res.json().catch(() => null);
+
   if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.error || "Failed to create workflow");
+    const message =
+      typeof (json as any)?.error === "string"
+        ? (json as any).error
+        : typeof (json as any)?.message === "string"
+          ? (json as any).message
+          : json
+            ? JSON.stringify(json)
+            : `Failed to create workflow (${res.status})`;
+    throw new Error(message);
   }
-  return res.json();
+  return json as { workflow: Workflow };
 }
 
 export async function updateWorkflow(

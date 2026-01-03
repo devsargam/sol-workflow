@@ -144,8 +144,26 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
               break;
             case "notify":
               baseNode.data.notifyType = n.data.notifyType || n.data.type || "discord";
-              baseNode.data.webhookUrl = n.data.webhookUrl || "";
               baseNode.data.template = n.data.template || "default";
+
+              if (
+                baseNode.data.notifyType === "discord" ||
+                baseNode.data.notifyType === "webhook"
+              ) {
+                if (n.data.webhookUrl) baseNode.data.webhookUrl = n.data.webhookUrl;
+              }
+
+              if (baseNode.data.notifyType === "telegram") {
+                if (n.data.telegramBotToken)
+                  baseNode.data.telegramBotToken = n.data.telegramBotToken;
+                if (n.data.telegramChatId) baseNode.data.telegramChatId = n.data.telegramChatId;
+                if (n.data.telegramParseMode)
+                  baseNode.data.telegramParseMode = n.data.telegramParseMode;
+                if (n.data.telegramDisableWebPreview !== undefined) {
+                  baseNode.data.telegramDisableWebPreview = n.data.telegramDisableWebPreview;
+                }
+                if (n.data.customMessage) baseNode.data.customMessage = n.data.customMessage;
+              }
               break;
           }
 
