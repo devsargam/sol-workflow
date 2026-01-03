@@ -3,7 +3,8 @@
  */
 
 // Export all constants
-export * from './constants';
+export * from "./constants";
+export * from "./logger";
 
 // Re-export specific commonly used items for convenience
 export {
@@ -23,4 +24,4 @@ export {
   getExecutionRedisKey,
   isCompletedStatus,
   isErrorStatus,
-} from './constants';
+} from "./constants";
