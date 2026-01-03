@@ -45,6 +45,7 @@ pnpm dev:listener
 ```
 
 Or run everything together:
+
 ```bash
 pnpm dev
 ```
@@ -91,6 +92,7 @@ solana airdrop 1 <YOUR_WALLET_ADDRESS> --url devnet
 ```
 
 When the balance changes, you should see:
+
 1. **Listener logs**: Account change detected
 2. **Worker logs**: Job processing
 3. **Discord**: Notification sent
@@ -115,11 +117,13 @@ POST /workflows/:id/toggle → 200
 ### Database
 
 Check in Drizzle Studio:
+
 ```bash
 pnpm db:studio
 ```
 
 You should see:
+
 - Workflows table has your workflow
 - `enabled` = true when toggled
 - `trigger_config` contains the wallet address
@@ -144,6 +148,7 @@ Publishing job to queue: workflow-event
 ### "Failed to fetch workflows"
 
 **Check:**
+
 - Is API running? `curl http://localhost:3001/health`
 - Is DATABASE_URL correct in `.env`?
 - Did migrations run? `pnpm db:migrate`
@@ -151,6 +156,7 @@ Publishing job to queue: workflow-event
 ### "No active workflows" in listener
 
 **Check:**
+
 - Is the workflow **enabled** (green button)?
 - Listener reloads every 30 seconds, wait for next cycle
 - Check listener logs for database connection errors
@@ -165,6 +171,7 @@ pnpm install
 ### React Query errors in frontend
 
 **Check:**
+
 - Is `QueryProvider` in `app/layout.tsx`?
 - Is API URL correct? (Should be http://localhost:3001)
 
@@ -185,6 +192,7 @@ pnpm install
 ✅ **Listener ↔ Solana**: WebSocket subscription active
 
 **Next Steps:**
+
 - Wire up the Worker to actually execute actions
 - Test full flow with real Solana transactions
 - Add error handling and retries

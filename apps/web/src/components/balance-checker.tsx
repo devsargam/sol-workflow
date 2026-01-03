@@ -41,12 +41,17 @@ export function BalanceChecker({ address }: { address: string }) {
           disabled={isLoading}
         >
           <svg
-            className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`}
+            className={`w-3 h-3 ${isLoading ? "animate-spin" : ""}`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
           </svg>
           {isLoading ? "Updating..." : "Refresh"}
         </button>
@@ -54,9 +59,7 @@ export function BalanceChecker({ address }: { address: string }) {
 
       {error && (
         <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-600">
-            {(error as Error).message}
-          </p>
+          <p className="text-sm text-red-600">{(error as Error).message}</p>
         </div>
       )}
 
@@ -73,9 +76,7 @@ export function BalanceChecker({ address }: { address: string }) {
           </div>
           <div className="pt-3 border-t border-neutral-200">
             <p className="text-xs text-neutral-400 uppercase tracking-wider mb-1">Wallet Address</p>
-            <p className="text-xs font-mono text-neutral-600 truncate">
-              {data.address}
-            </p>
+            <p className="text-xs font-mono text-neutral-600 truncate">{data.address}</p>
           </div>
         </div>
       )}

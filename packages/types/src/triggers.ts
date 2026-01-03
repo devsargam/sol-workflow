@@ -46,9 +46,7 @@ export const TransactionStatusTriggerConfigSchema = z.object({
   statusType: z.enum(["success", "failure", "any"]).default("any"),
 });
 
-export type TransactionStatusTriggerConfig = z.infer<
-  typeof TransactionStatusTriggerConfigSchema
->;
+export type TransactionStatusTriggerConfig = z.infer<typeof TransactionStatusTriggerConfigSchema>;
 
 // Program Log Trigger
 export const ProgramLogTriggerConfigSchema = z.object({

@@ -35,6 +35,7 @@ docker compose up -d
 ```
 
 This starts:
+
 - PostgreSQL on `localhost:5432`
 - Redis on `localhost:6379`
 - Bull Board (queue monitoring) on `http://localhost:3002`
@@ -52,6 +53,7 @@ pnpm dev
 ```
 
 This starts:
+
 - **Web UI**: http://localhost:3000
 - **API**: http://localhost:3001
 - **Worker**: Background process (no UI)
@@ -82,34 +84,38 @@ This starts:
 ### Tables
 
 **workflows**
+
 - Stores workflow definitions (trigger, filter, action, notify)
 - Safety limits: max SOL per tx, max executions per hour
 - Soft delete support
 
 **executions**
+
 - Execution history with idempotency tracking
 - Links to workflow, stores trigger data, tx signature, errors
 - Tracks notification delivery
 
 **trigger_subscriptions**
+
 - Active Solana subscriptions
 - Tracks subscription health and errors
 
 **audit_logs**
+
 - Audit trail for all workflow operations
 - For future compliance and debugging
 
 ## 🔧 Technology Stack
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| Frontend | Next.js 14 + shadcn/ui | Workflow builder UI |
-| API | Hono + Bun | RESTful API server |
-| Worker | BullMQ + Bun | Workflow execution engine |
-| Listener | @solana/web3.js + Bun | Solana event subscriptions |
-| Database | PostgreSQL + Drizzle ORM | Persistent storage |
-| Cache/Queue | Redis + BullMQ | Job queue + deduplication |
-| Blockchain | Solana (devnet) | On-chain triggers and actions |
+| Layer       | Technology               | Purpose                       |
+| ----------- | ------------------------ | ----------------------------- |
+| Frontend    | Next.js 14 + shadcn/ui   | Workflow builder UI           |
+| API         | Hono + Bun               | RESTful API server            |
+| Worker      | BullMQ + Bun             | Workflow execution engine     |
+| Listener    | @solana/web3.js + Bun    | Solana event subscriptions    |
+| Database    | PostgreSQL + Drizzle ORM | Persistent storage            |
+| Cache/Queue | Redis + BullMQ           | Job queue + deduplication     |
+| Blockchain  | Solana (devnet)          | On-chain triggers and actions |
 
 ## 📝 Next Steps
 
@@ -181,6 +187,7 @@ Opens a web UI to browse and edit database records.
 ### Monitoring Bull Queue
 
 Visit http://localhost:3002 to see:
+
 - Pending jobs
 - Active jobs
 - Failed jobs
@@ -189,6 +196,7 @@ Visit http://localhost:3002 to see:
 ### Testing Solana Integration
 
 Use Solana devnet faucet for test SOL:
+
 ```bash
 solana airdrop 1 <YOUR_PUBLIC_KEY> --url devnet
 ```
@@ -196,24 +204,29 @@ solana airdrop 1 <YOUR_PUBLIC_KEY> --url devnet
 ### Hot Reload
 
 All services support hot reload:
+
 - Next.js: Built-in
 - Bun apps: `--watch` flag enabled
 
 ## 🐛 Troubleshooting
 
 **Database connection failed**
+
 - Ensure Docker is running: `docker ps`
 - Check PostgreSQL logs: `docker logs solworkflow-postgres`
 
 **Redis connection failed**
+
 - Check Redis logs: `docker logs solworkflow-redis`
 - Verify port 6379 is not in use
 
 **Migration failed**
+
 - Drop database: `docker compose down -v`
 - Recreate: `docker compose up -d && pnpm db:migrate`
 
 **Type errors in packages**
+
 - Rebuild TypeScript: `pnpm type-check`
 - Clear cache: `rm -rf node_modules/.cache`
 
@@ -228,22 +241,26 @@ All services support hot reload:
 ## 🎯 Architecture Decision Records
 
 **Why pnpm workspaces?**
+
 - Better dependency management than npm/yarn
 - Native monorepo support
 - Works well with Bun runtime
 
 **Why Bun for backend?**
+
 - 3-4x faster than Node.js for I/O-heavy workloads
 - Native TypeScript support (no transpilation)
 - Better WebSocket performance
 
 **Why Drizzle over Prisma?**
+
 - Better TypeScript inference
 - Faster with Bun
 - Simpler migrations
 - Less abstraction, closer to SQL
 
 **Why BullMQ?**
+
 - Battle-tested job queue
 - Built-in retries and backpressure
 - Excellent monitoring (Bull Board)

@@ -11,12 +11,14 @@ Added comprehensive balance monitoring and execution tracking features to make w
 **Location**: `packages/solana/src/balance.ts`
 
 **Functions**:
+
 - `getBalance()` - Fetch SOL balance for any address
 - `watchBalance()` - Monitor balance changes with callback
 - `formatBalance()` - Format lamports to SOL
 - `hasSignificantChange()` - Detect meaningful balance changes
 
 **Usage**:
+
 ```typescript
 import { getBalance, formatBalance } from "@repo/solana";
 
@@ -29,6 +31,7 @@ console.log(formatBalance(balance.lamports)); // "1.5432 SOL"
 **Location**: `apps/api/src/routes/solana.ts`
 
 **New Endpoints**:
+
 ```bash
 GET /solana/balance/:address     # Get current balance
 GET /solana/account/:address     # Get account info
@@ -36,6 +39,7 @@ GET /solana/health               # Check Solana connection
 ```
 
 **Response Example**:
+
 ```json
 {
   "address": "7xKX...",
@@ -50,6 +54,7 @@ GET /solana/health               # Check Solana connection
 **Location**: `apps/web/src/components/balance-checker.tsx`
 
 **Features**:
+
 - Real-time balance display
 - Auto-refresh every 10 seconds
 - Manual refresh button
@@ -57,6 +62,7 @@ GET /solana/health               # Check Solana connection
 - Displays for enabled workflows
 
 **UI**:
+
 ```
 ┌─────────────────────────────┐
 │ Current Balance   ↻ Refresh │
@@ -72,6 +78,7 @@ GET /solana/health               # Check Solana connection
 **Location**: `apps/worker/src/processors/workflow-processor.ts`
 
 **New Capabilities**:
+
 - ✅ Saves every execution to PostgreSQL
 - ✅ Dual idempotency (Redis + Database)
 - ✅ Detailed status tracking (processing, success, failed, filtered)
@@ -80,6 +87,7 @@ GET /solana/health               # Check Solana connection
 - ✅ Measures execution time
 
 **Execution Lifecycle**:
+
 ```
 1. 📥 Job received
 2. ✅ Created DB record (status: processing)
@@ -95,6 +103,7 @@ GET /solana/health               # Check Solana connection
 **Location**: `apps/web/src/app/executions/page.tsx`
 
 **Features**:
+
 - View all workflow executions
 - Real-time updates (5s interval)
 - Color-coded status badges
@@ -104,6 +113,7 @@ GET /solana/health               # Check Solana connection
 - Error display
 
 **UI Preview**:
+
 ```
 ┌────────────────────────────────────────────┐
 │ ✓ success  Watch My Wallet    3:45 PM     │
@@ -122,12 +132,13 @@ GET /solana/health               # Check Solana connection
 ### 6. Auto-Refreshing Data
 
 **React Query Configuration**:
+
 ```typescript
 // Balance: Refetch every 10 seconds
-useQuery({ refetchInterval: 10000 })
+useQuery({ refetchInterval: 10000 });
 
 // Executions: Refetch every 5 seconds
-useQuery({ refetchInterval: 5000 })
+useQuery({ refetchInterval: 5000 });
 ```
 
 **Result**: UI stays synchronized with backend without page refresh!
@@ -208,12 +219,14 @@ Balance updates automatically
 ### What You Can See Now
 
 **Workflows Page** (`/workflows`):
+
 - ✅ Real-time SOL balance
 - ✅ Lamports count
 - ✅ Last refresh time
 - ✅ Wallet address
 
 **Executions Page** (`/executions`):
+
 - ✅ All execution history
 - ✅ Status (success/failed/filtered)
 - ✅ Trigger data
@@ -224,6 +237,7 @@ Balance updates automatically
 - ✅ Timestamps
 
 **API Endpoints**:
+
 ```bash
 # Balance for any address
 GET /solana/balance/:address
@@ -267,12 +281,14 @@ See **COMPLETE_TESTING_GUIDE.md** for detailed step-by-step testing.
 ## 🎨 UI/UX Improvements
 
 ### Before
+
 - ❌ No visibility into wallet balance
 - ❌ No execution history
 - ❌ Manual refresh needed
 - ❌ No feedback on what's happening
 
 ### After
+
 - ✅ Real-time balance display
 - ✅ Complete execution history
 - ✅ Auto-refresh (5-10s)
@@ -285,6 +301,7 @@ See **COMPLETE_TESTING_GUIDE.md** for detailed step-by-step testing.
 ### Console Logs Added
 
 **Worker**:
+
 ```
 📥 Processing execution abc123...
 ✅ Created execution record in database
@@ -295,6 +312,7 @@ See **COMPLETE_TESTING_GUIDE.md** for detailed step-by-step testing.
 ```
 
 **Listener**:
+
 ```
 📋 Found 1 active workflows
 ✅ Subscribed to events for workflow: abc-123 (My Workflow)
@@ -302,6 +320,7 @@ See **COMPLETE_TESTING_GUIDE.md** for detailed step-by-step testing.
 ```
 
 **API**:
+
 ```
 GET /workflows → 200
 POST /workflows → 201
@@ -327,12 +346,14 @@ GET /solana/balance/:address → 200
 ## 🎯 Success Metrics
 
 **Before This Update**:
+
 - Could create workflows ✅
 - Could enable/disable ✅
 - Listener subscribed ✅
 - But... no visibility into what's happening ❌
 
 **After This Update**:
+
 - Everything above ✅
 - **PLUS**:
   - See current balance ✅
@@ -344,16 +365,19 @@ GET /solana/balance/:address → 200
 ## 🚀 What This Enables
 
 ### For Development
+
 - **Debugging**: See exactly what's happening
 - **Testing**: Verify balance changes detected
 - **Validation**: Check executions logged correctly
 
 ### For Users
+
 - **Transparency**: See their wallet balance
 - **History**: View all past executions
 - **Confidence**: Know the system is working
 
 ### For Demo
+
 - **Showcase**: Show real-time balance updates
 - **Proof**: Demonstrate event detection
 - **Reliability**: Show error handling

@@ -31,6 +31,7 @@ pnpm dev
 ### Manual Setup
 
 **Prerequisites:**
+
 - Node.js 20+
 - pnpm 8+
 - Bun 1.0+
@@ -86,17 +87,20 @@ pnpm dev
 ## Features
 
 ### Supported Triggers
+
 - Wallet balance changes
 - Token/NFT receipts
 - Transaction success/failure
 - Program log events
 
 ### Supported Actions
+
 - Send SOL
 - Send SPL tokens
 - Call predefined program instructions (via IDLs)
 
 ### Notifications
+
 - Discord webhooks with prebuilt templates
 
 ## Architecture
@@ -113,6 +117,7 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed system design.
 **Phase 1 - Week 0: Project Setup** ✅ **COMPLETE**
 
 All infrastructure scaffolded and ready for development:
+
 - ✅ Monorepo structure with pnpm workspaces
 - ✅ Next.js frontend with shadcn/ui (Vega theme)
 - ✅ Hono API server with Bun runtime

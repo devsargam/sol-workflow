@@ -107,21 +107,21 @@ Your theme is already configured in `tailwind.config.ts`:
 
 ```typescript
 // Primary (Blue)
-bg-primary           // #3B82F6
-text-primary-foreground
+bg - primary; // #3B82F6
+text - primary - foreground;
 
 // Background (Stone)
-bg-background        // White (#FFFFFF)
-bg-card             // White
-bg-muted            // Stone-100 (#F5F5F4)
+bg - background; // White (#FFFFFF)
+bg - card; // White
+bg - muted; // Stone-100 (#F5F5F4)
 
 // Text
-text-foreground     // Stone-950
-text-muted-foreground // Stone-500
+text - foreground; // Stone-950
+text - muted - foreground; // Stone-500
 
 // Accents
-border              // Stone-200
-ring                // Blue-500
+border; // Stone-200
+ring; // Blue-500
 ```
 
 ## 🔌 API Integration
@@ -391,6 +391,7 @@ export function WorkflowForm() {
 ### 1. Start with UI mockups
 
 Build static components first:
+
 ```typescript
 // Start with hardcoded data
 const mockWorkflow = {
@@ -429,11 +430,13 @@ const useWorkflowDraft = create((set) => ({
 ## 🐛 Debugging Tips
 
 **Check if API is running:**
+
 ```bash
 curl http://localhost:3001/health
 ```
 
 **Check React Query DevTools:**
+
 ```bash
 pnpm add @tanstack/react-query-devtools
 ```
@@ -447,6 +450,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 **Tailwind not working?**
 Check that files are included in `tailwind.config.ts`:
+
 ```typescript
 content: [
   "./src/**/*.{js,ts,jsx,tsx,mdx}",

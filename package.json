@@ -16,13 +16,18 @@
     "db:push": "pnpm --filter db push",
     "lint": "pnpm -r lint",
     "type-check": "pnpm -r type-check",
-    "clean": "pnpm -r clean && rm -rf node_modules"
+    "clean": "pnpm -r clean && rm -rf node_modules",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@types/node": "^20.11.5",
     "concurrently": "^8.2.2",
-    "prettier": "^3.2.4",
-    "typescript": "^5.3.3"
+    "eslint": "^9.39.2",
+    "husky": "^9.1.7",
+    "prettier": "^3.7.4",
+    "stylelint": "^16.26.1",
+    "typescript": "^5.3.3",
+    "ultracite": "7.0.5"
   },
   "engines": {
     "node": ">=20.0.0",

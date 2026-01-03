@@ -58,9 +58,7 @@ export default function ExecutionsPage() {
       {/* Header */}
       <div className="mb-12">
         <h1 className="text-4xl font-bold tracking-tight mb-2">Execution History</h1>
-        <p className="text-neutral-600 text-lg">
-          Track all workflow executions and their results
-        </p>
+        <p className="text-neutral-600 text-lg">Track all workflow executions and their results</p>
       </div>
 
       {/* Loading State */}
@@ -76,9 +74,7 @@ export default function ExecutionsPage() {
       {/* Error State */}
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-6">
-          <p className="text-red-600">
-            Error loading executions: {(error as Error).message}
-          </p>
+          <p className="text-red-600">Error loading executions: {(error as Error).message}</p>
         </div>
       )}
 
@@ -87,14 +83,22 @@ export default function ExecutionsPage() {
         <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-12 text-center">
           <div className="max-w-sm mx-auto">
             <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              <svg
+                className="w-8 h-8 text-neutral-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
               </svg>
             </div>
             <h3 className="text-lg font-semibold mb-2">No executions yet</h3>
-            <p className="text-neutral-600">
-              Create and enable a workflow to start monitoring
-            </p>
+            <p className="text-neutral-600">Create and enable a workflow to start monitoring</p>
           </div>
         </div>
       )}
@@ -158,8 +162,18 @@ export default function ExecutionsPage() {
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-2 text-sm font-mono text-blue-600 hover:text-blue-700 hover:underline"
                         >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                            />
                           </svg>
                           View on Solscan
                         </a>
@@ -181,8 +195,18 @@ export default function ExecutionsPage() {
                     {/* Notification Success */}
                     {execution.notificationSent && (
                       <div className="flex items-center gap-2 text-sm text-green-600">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
                         </svg>
                         <span>
                           Notification sent at{" "}
@@ -208,15 +232,14 @@ export default function ExecutionsPage() {
                 {/* Footer */}
                 {execution.completedAt && (
                   <div className="mt-4 pt-4 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-500">
-                    <span>
-                      Completed: {new Date(execution.completedAt).toLocaleString()}
-                    </span>
+                    <span>Completed: {new Date(execution.completedAt).toLocaleString()}</span>
                     <span className="px-2 py-1 bg-neutral-100 rounded font-mono">
                       {Math.round(
                         (new Date(execution.completedAt).getTime() -
                           new Date(execution.startedAt).getTime()) /
                           1000
-                      )}s
+                      )}
+                      s
                     </span>
                   </div>
                 )}
