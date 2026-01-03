@@ -32,8 +32,7 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased min-h-screen bg-neutral-50`}
       >
         <QueryProvider>
-          <Header />
-          <main className="pb-16">{children}</main>
+          <main>{children}</main>
         </QueryProvider>
       </body>
     </html>
