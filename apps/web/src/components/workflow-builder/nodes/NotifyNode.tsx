@@ -2,28 +2,12 @@
 
 import { cn } from "@/lib/utils";
 import { Handle, NodeProps, Position } from "@xyflow/react";
-import { MegaphoneIcon } from "lucide-react";
 import { memo } from "react";
+import { getNotificationIcon } from "../icons";
 import type { NotifyNodeData } from "../types";
 
 export const NotifyNode = memo(({ data, selected }: NodeProps) => {
   const nodeData = data as NotifyNodeData;
-  const getNotifyIcon = (type: string) => {
-    switch (type) {
-      case "discord":
-        return "💬";
-      case "telegram":
-        return "✈️";
-      case "slack":
-        return "📨";
-      case "email":
-        return "📧";
-      case "webhook":
-        return "🔔";
-      default:
-        return <MegaphoneIcon className="w-6 h-6" />;
-    }
-  };
 
   const getNotifyLabel = (type: string) => {
     switch (type) {
@@ -75,7 +59,7 @@ export const NotifyNode = memo(({ data, selected }: NodeProps) => {
       />
 
       <div className="flex items-center gap-2 mb-1">
-        <span className="text-xl">{getNotifyIcon(nodeData.type || "")}</span>
+        <span className="text-xl">{getNotificationIcon(nodeData.type)}</span>
         <div className="flex-1">
           <div className="text-base font-semibold text-black">
             {getNotifyLabel(nodeData.type || "")}

@@ -2,28 +2,12 @@
 
 import { cn } from "@/lib/utils";
 import { Handle, NodeProps, Position } from "@xyflow/react";
-import { CircleDollarSignIcon, ZapIcon } from "lucide-react";
 import { memo } from "react";
+import { getTriggerIcon } from "../icons";
 import type { TriggerNodeData } from "../types";
 
 export const TriggerNode = memo(({ data, selected }: NodeProps) => {
   const nodeData = data as TriggerNodeData;
-  const getTriggerIcon = (type: string) => {
-    switch (type) {
-      case "balance_change":
-        return <CircleDollarSignIcon className="w-6 h-6" />;
-      case "token_receipt":
-        return "🪙";
-      case "nft_receipt":
-        return "🖼️";
-      case "transaction_status":
-        return "📊";
-      case "program_log":
-        return "📝";
-      default:
-        return <ZapIcon className="w-6 h-6" />;
-    }
-  };
 
   const getTriggerLabel = (type: string) => {
     switch (type) {
@@ -50,7 +34,7 @@ export const TriggerNode = memo(({ data, selected }: NodeProps) => {
       )}
     >
       <div className="flex items-center gap-2 mb-1">
-        <span className="text-xl">{getTriggerIcon(nodeData.type || "")}</span>
+        <span className="text-xl">{getTriggerIcon(nodeData.type)}</span>
         <div className="flex-1">
           <div className="text-base font-semibold text-black">
             {getTriggerLabel(nodeData.type || "")}

@@ -2,24 +2,12 @@
 
 import { cn } from "@/lib/utils";
 import { Handle, NodeProps, Position } from "@xyflow/react";
-import { BanknoteIcon, RocketIcon } from "lucide-react";
 import { memo } from "react";
+import { getActionIcon } from "../icons";
 import type { ActionNodeData } from "../types";
 
 export const ActionNode = memo(({ data, selected }: NodeProps) => {
   const nodeData = data as ActionNodeData;
-  const getActionIcon = (type: string) => {
-    switch (type) {
-      case "send_sol":
-        return <BanknoteIcon className="w-6 h-6" />;
-      case "send_spl_token":
-        return "🪙";
-      case "call_program":
-        return "📋";
-      default:
-        return <RocketIcon className="w-6 h-6" />;
-    }
-  };
 
   const getActionLabel = (type: string) => {
     switch (type) {
@@ -76,7 +64,7 @@ export const ActionNode = memo(({ data, selected }: NodeProps) => {
       />
 
       <div className="flex items-center gap-2 mb-1">
-        <span className="text-xl">{getActionIcon(nodeData.type || "")}</span>
+        <span className="text-xl">{getActionIcon(nodeData.type)}</span>
         <div className="flex-1">
           <div className="text-base font-semibold text-black">
             {getActionLabel(nodeData.type || "")}
