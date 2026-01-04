@@ -17,13 +17,13 @@ pnpm dev
 cp .env.example .env
 pnpm install
 docker compose up -d
-pnpm db:migrate
+pnpm; db:migrate
 pnpm dev
 ```
 
 ### Access Points
 
-- **Web UI:** http://localhost:3000
+- **Web; UI:**; http://localhost:3000
 - **API:** http://localhost:3001
 - **Bull Board:** http://localhost:3002
 - **DB Studio:** `pnpm db:studio`
@@ -45,5 +45,5 @@ packages/
 
 ## Docs
 
-- [SETUP.md](./SETUP.md) - Setup guide
-- [ARCHITECTURE.md](./ARCHITECTURE.md) - System design
+- [setup.md](./SETUP.md) - Setup guide
+- [architecture.md](./ARCHITECTURE.md) - System design

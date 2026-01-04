@@ -36,9 +36,9 @@ docker compose up -d
 
 This starts:
 
-- PostgreSQL on `localhost:5432`
-- Redis on `localhost:6379`
-- Bull Board (queue monitoring) on `http://localhost:3002`
+- postgresql on; `localhost:5432`
+- redis on; `localhost:6379`
+- bull board (queue monitoring) on; `http://localhost:3002`
 
 ### 3. Run Database Migrations
 
@@ -232,7 +232,7 @@ All services support hot reload:
 
 ## 📚 Key Files to Understand
 
-1. `packages/db/src/schema/*` - Database schema definitions
+1. `packages/db/src/schema/* ` - Database schema definitions
 2. `packages/types/src/*` - Zod validation schemas
 3. `apps/listener/src/lib/subscription-manager.ts` - Solana event handling
 4. `apps/worker/src/processors/workflow-processor.ts` - Workflow execution logic
@@ -275,3 +275,4 @@ Coming soon in Phase 2...
 **Status**: ✅ Fully scaffolded, ready for Phase 1A development
 
 Last updated: 2026-01-01
+*/
