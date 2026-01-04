@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { Handle, NodeProps, Position } from "@xyflow/react";
 import { CircleDollarSignIcon, ClockIcon, ZapIcon } from "lucide-react";
 import { memo } from "react";
-import { getTriggerIcon } from "../icons";
 import type { TriggerNodeData } from "../types";
 
 export const TriggerNode = memo(({ data, selected }: NodeProps) => {
@@ -55,7 +54,7 @@ export const TriggerNode = memo(({ data, selected }: NodeProps) => {
       )}
     >
       <div className="flex items-center gap-2 mb-1">
-        <span className="text-xl">{getTriggerIcon(nodeData.type)}</span>
+        <span className="text-xl">{getTriggerIcon(nodeData.type || "")}</span>
         <div className="flex-1">
           <div className="text-base font-semibold text-black">
             {getTriggerLabel(nodeData.type || "")}
