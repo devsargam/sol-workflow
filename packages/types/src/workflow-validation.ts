@@ -88,8 +88,18 @@ const notifyValidators: Record<string, NodeValidator> = {
 
     return errors;
   },
+  webhook: (node) => {
+    const data = node.data as NotifyNodeData;
+    const errors: ValidationError[] = [];
+    const webhookUrl = data?.webhookUrl;
+
+    if (!webhookUrl || typeof webhookUrl !== "string" || webhookUrl.trim().length === 0) {
+      errors.push(`Notify node ${node.id}: Webhook URL is required`);
+    }
+
+    return errors;
+  },
   // Add more notify validators here as needed:
-  // webhook: (node) => { ... },
   // slack: (node) => { ... },
 };
 
@@ -139,9 +149,58 @@ function validateNotifyNodes(nodes: WorkflowNode[]): ValidationError[] {
 
   for (const node of notifyNodes) {
     const data = node.data as NotifyNodeData;
-    const notifyType = data?.notifyType;
-    if (notifyType && notifyValidators[notifyType]) {
-      errors.push(...notifyValidators[notifyType](node));
+
+    if (data.notifications && Array.isArray(data.notifications) && data.notifications.length > 0) {
+      for (let i = 0; i < data.notifications.length; i++) {
+        const notification: any = data.notifications[i];
+        const notifyType = notification?.notifyType;
+
+        if (!notifyType) {
+          errors.push(
+            `Notify node ${node.id} (notification ${i + 1}): Notification type is required`
+          );
+          continue;
+        }
+
+        if (notifyValidators[notifyType]) {
+          const tempNode: WorkflowNode = {
+            ...node,
+            data: {
+              nodeType: "notify" as const,
+              notifyType: notification.notifyType as any,
+              webhookUrl: notification.webhookUrl,
+              telegramBotToken: notification.telegramBotToken,
+              telegramChatId: notification.telegramChatId,
+              telegramParseMode: notification.telegramParseMode as any,
+              telegramDisableWebPreview: notification.telegramDisableWebPreview,
+              template: notification.template as any,
+              customMessage: notification.customMessage,
+            } as any,
+          };
+          const validationErrors = notifyValidators[notifyType](tempNode);
+          errors.push(
+            ...validationErrors.map((err) =>
+              err.replace(
+                `Notify node ${node.id}:`,
+                `Notify node ${node.id} (notification ${i + 1}):`
+              )
+            )
+          );
+        } else {
+          errors.push(
+            `Notify node ${node.id} (notification ${i + 1}): Unknown notification type: ${notifyType}`
+          );
+        }
+      }
+    } else if (data.notifyType) {
+      const notifyType = data.notifyType;
+      if (notifyValidators[notifyType]) {
+        errors.push(...notifyValidators[notifyType](node));
+      } else {
+        errors.push(`Notify node ${node.id}: Unknown notification type: ${notifyType}`);
+      }
+    } else {
+      errors.push(`Notify node ${node.id}: No notification configuration found`);
     }
   }
 

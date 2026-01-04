@@ -79,7 +79,7 @@ export const FilterNodeDataSchema = z.object({
 
 // Action node data schema
 export const ActionNodeDataSchema = z.object({
-  actionType: z.enum(["send_sol", "send_spl_token", "call_program"]),
+  actionType: z.enum(["send_sol", "send_spl_token", "call_program", "do_nothing"]),
   config: z.object({
     // Send SOL specific
     fromKeypair: z.string().optional(),
@@ -106,19 +106,15 @@ export const ActionNodeDataSchema = z.object({
   }),
 });
 
-// Notify node data schema
-export const NotifyNodeDataSchema = z
+export const SingleNotificationConfigSchema = z
   .object({
     notifyType: z.enum(["discord", "telegram", "slack", "email", "webhook"]),
-
     webhookUrl: z.string().optional(),
-
     telegramBotToken: z.string().min(1).optional(),
     telegramChatId: z.string().min(1).optional(),
     telegramParseMode: z.enum(["Markdown", "MarkdownV2", "HTML"]).optional(),
     telegramDisableWebPreview: z.boolean().optional(),
-
-    template: z.enum(["default", "success", "error", "minimal", "detailed"]),
+    template: z.enum(["default", "success", "error", "minimal", "detailed"]).default("default"),
     customMessage: z.string().optional(),
   })
   .superRefine((data, ctx) => {
@@ -145,6 +141,84 @@ export const NotifyNodeDataSchema = z
           message: "telegramChatId is required for telegram notifications",
         });
       }
+    }
+  });
+
+export const NotifyNodeDataSchema = z
+  .object({
+    notifyType: z.enum(["discord", "telegram", "slack", "email", "webhook"]).optional(),
+    webhookUrl: z.string().optional(),
+    telegramBotToken: z.string().min(1).optional(),
+    telegramChatId: z.string().min(1).optional(),
+    telegramParseMode: z.enum(["Markdown", "MarkdownV2", "HTML"]).optional(),
+    telegramDisableWebPreview: z.boolean().optional(),
+    template: z.enum(["default", "success", "error", "minimal", "detailed"]).optional(),
+    customMessage: z.string().optional(),
+
+    notifications: z.array(SingleNotificationConfigSchema).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.notifications && data.notifications.length > 0) {
+      data.notifications.forEach((notification, index) => {
+        if (
+          (notification.notifyType === "discord" || notification.notifyType === "webhook") &&
+          !notification.webhookUrl
+        ) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["notifications", index, "webhookUrl"],
+            message: "webhookUrl is required for discord/webhook notifications",
+          });
+        }
+
+        if (notification.notifyType === "telegram") {
+          if (!notification.telegramBotToken) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ["notifications", index, "telegramBotToken"],
+              message: "telegramBotToken is required for telegram notifications",
+            });
+          }
+          if (!notification.telegramChatId) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ["notifications", index, "telegramChatId"],
+              message: "telegramChatId is required for telegram notifications",
+            });
+          }
+        }
+      });
+    } else if (data.notifyType) {
+      if ((data.notifyType === "discord" || data.notifyType === "webhook") && !data.webhookUrl) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["webhookUrl"],
+          message: "webhookUrl is required for discord/webhook notifications",
+        });
+      }
+
+      if (data.notifyType === "telegram") {
+        if (!data.telegramBotToken) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["telegramBotToken"],
+            message: "telegramBotToken is required for telegram notifications",
+          });
+        }
+        if (!data.telegramChatId) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["telegramChatId"],
+            message: "telegramChatId is required for telegram notifications",
+          });
+        }
+      }
+    } else {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["notifyType"],
+        message: "Either notifyType or notifications array must be provided",
+      });
     }
   });
 
