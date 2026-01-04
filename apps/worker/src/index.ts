@@ -1,21 +1,11 @@
 import { Worker, Job } from "bullmq";
 import Redis from "ioredis";
-import crypto from "crypto";
 import { processWorkflowEvent } from "./processors/workflow-processor";
-import { ENV_DEFAULTS, QUEUES, JOB_NAMES } from "utils";
+import { ENV_DEFAULTS, QUEUES, JOB_NAMES, generateExecutionId } from "utils";
 
 const connection = new Redis(process.env.REDIS_URL || ENV_DEFAULTS.REDIS_URL, {
   maxRetriesPerRequest: null,
 });
-
-/**
- * Generate a unique execution ID for cron triggers
- */
-function generateCronExecutionId(workflowId: string, triggerNodeId: string): string {
-  const hash = crypto.createHash("sha256");
-  hash.update(`${workflowId}:${Date.now()}:${triggerNodeId}:cron`);
-  return hash.digest("hex");
-}
 
 // Workflow event processor
 const workflowWorker = new Worker(
@@ -29,7 +19,7 @@ const workflowWorker = new Worker(
         const { workflowId, triggerNodeId, graph, metadata } = job.data;
 
         // Generate a unique execution ID for this cron run
-        const executionId = generateCronExecutionId(workflowId, triggerNodeId);
+        const executionId = generateExecutionId(workflowId, Date.now(), `${triggerNodeId}:cron`);
 
         // Get repeat info from job options
         const repeatPattern = (job.opts as any).repeat?.pattern;

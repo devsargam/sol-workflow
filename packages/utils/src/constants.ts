@@ -254,6 +254,24 @@ export function getExecutionRedisKey(executionId: string): string {
 }
 
 /**
+ * Generate a unique execution ID using SHA256 hash
+ * @param workflowId - The workflow ID
+ * @param timestamp - A timestamp or slot number for uniqueness
+ * @param identifier - Additional identifier (e.g., trigger node ID, address)
+ */
+export function generateExecutionId(
+  workflowId: string,
+  timestamp: number | string,
+  identifier: string
+): string {
+  // Using dynamic import pattern for crypto to work in both Node and browser
+  const crypto = require("crypto");
+  const hash = crypto.createHash("sha256");
+  hash.update(`${workflowId}:${timestamp}:${identifier}`);
+  return hash.digest("hex");
+}
+
+/**
  * Check if a status indicates completion
  */
 export function isCompletedStatus(status: ExecutionStatus): boolean {
