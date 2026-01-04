@@ -9,6 +9,7 @@ import {
 } from "@repo/types";
 import { Hono } from "hono";
 import { z } from "zod";
+import { getCronScheduler } from "../index";
 
 const workflows = new Hono();
 
@@ -83,6 +84,21 @@ workflows.post("/", zValidator("json", createWorkflowSchema), async (c) => {
       );
     }
 
+    // Validate cron triggers if present
+    const cronScheduler = getCronScheduler();
+    if (cronScheduler) {
+      const cronValidation = cronScheduler.validateWorkflowCronTriggers(data.graph);
+      if (!cronValidation.valid) {
+        return c.json(
+          {
+            error: "Invalid cron trigger configuration",
+            details: cronValidation.errors,
+          },
+          400
+        );
+      }
+    }
+
     const [workflow] = await db
       .insert(workflowsTable)
       .values({
@@ -98,6 +114,9 @@ workflows.post("/", zValidator("json", createWorkflowSchema), async (c) => {
         enabled: false,
       })
       .returning();
+
+    // Note: Cron jobs are not scheduled here since workflow is created as disabled
+    // They will be scheduled when the workflow is enabled via toggle
 
     return c.json({ workflow }, 201);
   } catch (error) {
@@ -143,6 +162,21 @@ workflows.patch("/:id", zValidator("json", createWorkflowSchema.partial()), asyn
         );
       }
 
+      // Validate cron triggers if present
+      const cronScheduler = getCronScheduler();
+      if (cronScheduler) {
+        const cronValidation = cronScheduler.validateWorkflowCronTriggers(data.graph);
+        if (!cronValidation.valid) {
+          return c.json(
+            {
+              error: "Invalid cron trigger configuration",
+              details: cronValidation.errors,
+            },
+            400
+          );
+        }
+      }
+
       updateData.graph = data.graph;
     }
 
@@ -163,6 +197,17 @@ workflows.patch("/:id", zValidator("json", createWorkflowSchema.partial()), asyn
       return c.json({ error: "Workflow not found" }, 404);
     }
 
+    // Sync cron jobs if workflow is enabled and graph was updated
+    const cronScheduler = getCronScheduler();
+    if (cronScheduler && workflow.enabled && data.graph) {
+      await cronScheduler.syncWorkflowCronJobs(
+        workflow.id,
+        workflow.graph as any,
+        workflow.metadata,
+        workflow.enabled
+      );
+    }
+
     return c.json({ workflow });
   } catch (error) {
     console.error("Error updating workflow:", error);
@@ -174,6 +219,12 @@ workflows.patch("/:id", zValidator("json", createWorkflowSchema.partial()), asyn
 workflows.delete("/:id", async (c) => {
   try {
     const id = c.req.param("id");
+
+    // Remove any cron jobs for this workflow before deleting
+    const cronScheduler = getCronScheduler();
+    if (cronScheduler) {
+      await cronScheduler.removeAllForWorkflow(id);
+    }
 
     const [workflow] = await db.delete(workflowsTable).where(eq(workflowsTable.id, id)).returning();
 
@@ -204,15 +255,32 @@ workflows.post("/:id/toggle", async (c) => {
       return c.json({ error: "Workflow not found" }, 404);
     }
 
+    const newEnabledState = !current.enabled;
+
     // Toggle enabled status
     const [workflow] = await db
       .update(workflowsTable)
       .set({
-        enabled: !current.enabled,
+        enabled: newEnabledState,
         updatedAt: new Date(),
       })
       .where(eq(workflowsTable.id, id))
       .returning();
+
+    if (!workflow) {
+      return c.json({ error: "Failed to update workflow" }, 500);
+    }
+
+    // Sync cron jobs based on new enabled state
+    const cronScheduler = getCronScheduler();
+    if (cronScheduler) {
+      await cronScheduler.syncWorkflowCronJobs(
+        workflow.id,
+        workflow.graph as any,
+        workflow.metadata,
+        newEnabledState
+      );
+    }
 
     return c.json({ workflow });
   } catch (error) {

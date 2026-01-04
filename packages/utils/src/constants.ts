@@ -12,6 +12,7 @@ export const QUEUES = {
 
 export const JOB_NAMES = {
   WORKFLOW_EVENT: "workflow-event",
+  CRON_TRIGGER: "cron-trigger",
 } as const;
 
 // ============================================================================
@@ -156,7 +157,42 @@ export enum TriggerType {
   NFT_RECEIPT = "nft_receipt",
   TRANSACTION_STATUS = "transaction_status",
   PROGRAM_LOG = "program_log",
+  CRON = "cron",
 }
+
+// ============================================================================
+// Cron Constants
+// ============================================================================
+
+export const CRON = {
+  MIN_INTERVAL_SECONDS: 60, // 1 minute minimum to prevent abuse
+  COMMON_TIMEZONES: [
+    "UTC",
+    "America/New_York",
+    "America/Chicago",
+    "America/Denver",
+    "America/Los_Angeles",
+    "Europe/London",
+    "Europe/Paris",
+    "Europe/Berlin",
+    "Asia/Tokyo",
+    "Asia/Shanghai",
+    "Asia/Singapore",
+    "Asia/Dubai",
+    "Australia/Sydney",
+    "Pacific/Auckland",
+  ],
+  PRESETS: {
+    EVERY_MINUTE: "* * * * *",
+    EVERY_5_MINUTES: "*/5 * * * *",
+    EVERY_15_MINUTES: "*/15 * * * *",
+    EVERY_30_MINUTES: "*/30 * * * *",
+    EVERY_HOUR: "0 * * * *",
+    EVERY_DAY_MIDNIGHT: "0 0 * * *",
+    EVERY_DAY_9AM: "0 9 * * *",
+    EVERY_WEEK_MONDAY: "0 0 * * 1",
+  },
+} as const;
 
 // ============================================================================
 // Node Types
@@ -215,6 +251,24 @@ export function getSolscanTxUrl(
  */
 export function getExecutionRedisKey(executionId: string): string {
   return `${REDIS.KEYS.EXECUTION_PREFIX}${executionId}`;
+}
+
+/**
+ * Generate a unique execution ID using SHA256 hash
+ * @param workflowId - The workflow ID
+ * @param timestamp - A timestamp or slot number for uniqueness
+ * @param identifier - Additional identifier (e.g., trigger node ID, address)
+ */
+export function generateExecutionId(
+  workflowId: string,
+  timestamp: number | string,
+  identifier: string
+): string {
+  // Using dynamic import pattern for crypto to work in both Node and browser
+  const crypto = require("crypto");
+  const hash = crypto.createHash("sha256");
+  hash.update(`${workflowId}:${timestamp}:${identifier}`);
+  return hash.digest("hex");
 }
 
 /**

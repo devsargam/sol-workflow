@@ -21,6 +21,7 @@ export const TriggerNodeDataSchema = z.object({
     "nft_receipt",
     "transaction_status",
     "program_log",
+    "cron",
   ]),
   config: z.object({
     // Common fields
@@ -49,6 +50,10 @@ export const TriggerNodeDataSchema = z.object({
     // Program log specific
     logPattern: z.string().optional(),
     mentionedAccounts: z.array(z.string()).optional(),
+
+    // Cron trigger specific
+    schedule: z.string().optional(), // Cron expression like "*/5 * * * *"
+    timezone: z.string().optional(), // Timezone like "UTC" or "America/New_York"
   }),
 });
 
@@ -234,10 +239,11 @@ export function isExecutableGraph(graph: WorkflowGraph): { valid: boolean; error
     errors.push("Workflow must have at least one trigger node");
   }
 
-  // Must have at least one action node
+  // Must have at least one action OR notify node (workflows can be notification-only)
   const actionNodes = graph.nodes.filter((n) => n.type === "action");
-  if (actionNodes.length === 0) {
-    errors.push("Workflow must have at least one action node");
+  const notifyNodes = graph.nodes.filter((n) => n.type === "notify");
+  if (actionNodes.length === 0 && notifyNodes.length === 0) {
+    errors.push("Workflow must have at least one action or notify node");
   }
 
   // Check that all edges reference valid nodes

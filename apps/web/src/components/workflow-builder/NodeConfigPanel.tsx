@@ -104,6 +104,7 @@ function TriggerConfig({ formData, setFormData }: any) {
           <option value="nft_receipt">NFT Receipt</option>
           <option value="transaction_status">Transaction Status</option>
           <option value="program_log">Program Log</option>
+          <option value="cron">Scheduled (Cron)</option>
         </select>
       </div>
 
@@ -282,6 +283,110 @@ function TriggerConfig({ formData, setFormData }: any) {
               className="w-full px-3 py-2 border border-neutral-200 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-black"
               placeholder=".*success.*"
             />
+          </div>
+        </>
+      )}
+
+      {formData.type === "cron" && (
+        <>
+          <div>
+            <label className="block text-sm font-medium mb-2">Schedule (Cron Expression)</label>
+            <input
+              type="text"
+              value={formData.config?.schedule || ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  config: { ...formData.config, schedule: e.target.value },
+                })
+              }
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              placeholder="*/5 * * * *"
+              required
+            />
+            <p className="text-xs text-neutral-500 mt-1">
+              Format: minute hour day month weekday (minimum interval: 1 minute)
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Quick Presets</label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: "Every 5 min", value: "*/5 * * * *" },
+                { label: "Every 15 min", value: "*/15 * * * *" },
+                { label: "Every 30 min", value: "*/30 * * * *" },
+                { label: "Hourly", value: "0 * * * *" },
+                { label: "Daily 9 AM", value: "0 9 * * *" },
+                { label: "Daily Midnight", value: "0 0 * * *" },
+                { label: "Weekly Mon", value: "0 0 * * 1" },
+              ].map((preset) => (
+                <button
+                  key={preset.value}
+                  type="button"
+                  onClick={() =>
+                    setFormData({
+                      ...formData,
+                      config: { ...formData.config, schedule: preset.value },
+                    })
+                  }
+                  className={`px-2 py-1 text-xs rounded transition-colors ${
+                    formData.config?.schedule === preset.value
+                      ? "bg-black text-white"
+                      : "bg-neutral-100 hover:bg-neutral-200"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Timezone</label>
+            <select
+              value={formData.config?.timezone || "UTC"}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  config: { ...formData.config, timezone: e.target.value },
+                })
+              }
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+            >
+              <option value="UTC">UTC</option>
+              <option value="America/New_York">America/New_York (EST/EDT)</option>
+              <option value="America/Chicago">America/Chicago (CST/CDT)</option>
+              <option value="America/Denver">America/Denver (MST/MDT)</option>
+              <option value="America/Los_Angeles">America/Los_Angeles (PST/PDT)</option>
+              <option value="Europe/London">Europe/London (GMT/BST)</option>
+              <option value="Europe/Paris">Europe/Paris (CET/CEST)</option>
+              <option value="Europe/Berlin">Europe/Berlin (CET/CEST)</option>
+              <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+              <option value="Asia/Shanghai">Asia/Shanghai (CST)</option>
+              <option value="Asia/Singapore">Asia/Singapore (SGT)</option>
+              <option value="Asia/Dubai">Asia/Dubai (GST)</option>
+              <option value="Australia/Sydney">Australia/Sydney (AEST/AEDT)</option>
+              <option value="Pacific/Auckland">Pacific/Auckland (NZST/NZDT)</option>
+            </select>
+          </div>
+
+          <div className="p-3 bg-neutral-50 rounded-lg">
+            <p className="text-xs text-neutral-600">
+              <strong>Cron Expression Guide:</strong>
+            </p>
+            <div className="mt-2 text-xs text-neutral-500 font-mono space-y-1">
+              <div>┌───────────── minute (0-59)</div>
+              <div>│ ┌─────────── hour (0-23)</div>
+              <div>│ │ ┌───────── day of month (1-31)</div>
+              <div>│ │ │ ┌─────── month (1-12)</div>
+              <div>│ │ │ │ ┌───── day of week (0-6, Sun-Sat)</div>
+              <div>* * * * *</div>
+            </div>
+            <p className="mt-2 text-xs text-neutral-500">
+              Examples: <code>*/5 * * * *</code> = every 5 min, <code>0 9 * * 1-5</code> = 9 AM
+              weekdays
+            </p>
           </div>
         </>
       )}
