@@ -44,6 +44,9 @@ importers:
       bullmq:
         specifier: ^5.35.7
         version: 5.66.4
+      croner:
+        specifier: ^8.1.2
+        version: 8.1.2
       drizzle-orm:
         specifier: ^0.36.4
         version: 0.36.4(bun-types@1.3.5)
@@ -6895,6 +6898,11 @@ packages:
     engines: {node: '>=12.0.0'}
     dependencies:
       luxon: 3.7.2
+    dev: false
+
+  /croner@8.1.2:
+    resolution: {integrity: sha512-ypfPFcAXHuAZRCzo3vJL6ltENzniTjwe/qsLleH1V2/7SRDjgvRQyrLmumFTLmjFax4IuSxfGXEn79fozXcJog==}
+    engines: {node: '>=18.0'}
     dev: false
 
   /cross-fetch@3.2.0:

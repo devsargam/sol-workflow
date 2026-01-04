@@ -7,6 +7,7 @@ export const TriggerTypeEnum = z.enum([
   "nft_receipt",
   "transaction_status",
   "program_log",
+  "cron",
 ]);
 
 export type TriggerType = z.infer<typeof TriggerTypeEnum>;
@@ -46,9 +47,7 @@ export const TransactionStatusTriggerConfigSchema = z.object({
   statusType: z.enum(["success", "failure", "any"]).default("any"),
 });
 
-export type TransactionStatusTriggerConfig = z.infer<
-  typeof TransactionStatusTriggerConfigSchema
->;
+export type TransactionStatusTriggerConfig = z.infer<typeof TransactionStatusTriggerConfigSchema>;
 
 // Program Log Trigger
 export const ProgramLogTriggerConfigSchema = z.object({
@@ -59,6 +58,14 @@ export const ProgramLogTriggerConfigSchema = z.object({
 
 export type ProgramLogTriggerConfig = z.infer<typeof ProgramLogTriggerConfigSchema>;
 
+// Cron Trigger (time-based scheduling)
+export const CronTriggerConfigSchema = z.object({
+  schedule: z.string().min(9).max(100), // Cron expression like "*/5 * * * *"
+  timezone: z.string().default("UTC"),
+});
+
+export type CronTriggerConfig = z.infer<typeof CronTriggerConfigSchema>;
+
 // Union schema for all trigger configs
 export const TriggerConfigSchema = z.union([
   BalanceChangeTriggerConfigSchema,
@@ -66,6 +73,7 @@ export const TriggerConfigSchema = z.union([
   NFTReceiptTriggerConfigSchema,
   TransactionStatusTriggerConfigSchema,
   ProgramLogTriggerConfigSchema,
+  CronTriggerConfigSchema,
 ]);
 
 export type TriggerConfig = z.infer<typeof TriggerConfigSchema>;

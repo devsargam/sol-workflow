@@ -13,6 +13,9 @@ export interface TriggerNodeData {
     minChange?: number;
     changeType?: string;
     minAmount?: number;
+    // Cron trigger specific
+    schedule?: string;
+    timezone?: string;
   };
 }
 
