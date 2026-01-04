@@ -64,6 +64,7 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
     triggerData,
     variables: new Map<string, any>(),
     executionPath: [],
+    hasErrors: false,
   };
 
   try {

@@ -26,6 +26,7 @@ interface ExecutionContext {
   triggerData: any;
   variables: Map<string, any>; // For passing data between nodes
   executionPath: string[]; // Track which nodes were executed
+  hasErrors: boolean; // Track if any errors occurred during execution
 }
 
 interface NodeExecutor {
@@ -120,6 +121,7 @@ export class WorkflowEngine {
 
     if (!result.success) {
       errors.push(`Node ${node.id} failed: ${result.error || "Unknown error"}`);
+      context.hasErrors = true;
       return false;
     }
 
@@ -363,20 +365,38 @@ class NotifyNodeExecutor implements NodeExecutor {
   async execute(node: WorkflowNode, context: ExecutionContext) {
     const data = node.data as NotifyNodeData & { nodeType: NodeType.NOTIFY };
 
-    console.log(`Notify node ${node.id}: Sending ${data.notifyType} notification`);
-
     try {
-      if (data.notifyType === "discord" && data.webhookUrl) {
-        await this.sendDiscordNotification(data, context);
-      } else if (data.notifyType === "telegram" && data.telegramBotToken && data.telegramChatId) {
-        await this.sendTelegramNotification(data, context);
-      } else if (data.notifyType === "webhook" && data.webhookUrl) {
-        await this.sendWebhook(data, context);
-      } else {
-        console.warn(`Notification type ${data.notifyType} not yet implemented`);
-      }
+      if (data.notifications && data.notifications.length > 0) {
+        console.log(`Notify node ${node.id}: Sending ${data.notifications.length} notification(s)`);
 
-      return { success: true };
+        const notificationPromises = data.notifications.map((notification, index) =>
+          this.sendSingleNotification(notification, context, `${node.id}-${index}`)
+        );
+
+        await Promise.allSettled(notificationPromises);
+
+        return { success: true };
+      } else if (data.notifyType) {
+        console.log(`Notify node ${node.id}: Sending ${data.notifyType} notification`);
+        await this.sendSingleNotification(
+          {
+            notifyType: data.notifyType,
+            webhookUrl: data.webhookUrl,
+            telegramBotToken: data.telegramBotToken,
+            telegramChatId: data.telegramChatId,
+            telegramParseMode: data.telegramParseMode,
+            telegramDisableWebPreview: data.telegramDisableWebPreview,
+            template: data.template,
+            customMessage: data.customMessage,
+          },
+          context,
+          node.id
+        );
+        return { success: true };
+      } else {
+        console.warn(`Notify node ${node.id}: No notification configuration found`);
+        return { success: true }; // Non-fatal
+      }
     } catch (error) {
       console.error(`Notify node ${node.id} failed:`, error);
       // Notifications are non-fatal
@@ -387,8 +407,47 @@ class NotifyNodeExecutor implements NodeExecutor {
     }
   }
 
+  private async sendSingleNotification(
+    notificationConfig: {
+      notifyType: string;
+      webhookUrl?: string;
+      telegramBotToken?: string;
+      telegramChatId?: string;
+      telegramParseMode?: "Markdown" | "MarkdownV2" | "HTML";
+      telegramDisableWebPreview?: boolean;
+      template?: string;
+      customMessage?: string;
+    },
+    context: ExecutionContext,
+    notificationId: string
+  ): Promise<void> {
+    try {
+      if (notificationConfig.notifyType === "discord" && notificationConfig.webhookUrl) {
+        await this.sendDiscordNotification(notificationConfig, context);
+      } else if (
+        notificationConfig.notifyType === "telegram" &&
+        notificationConfig.telegramBotToken &&
+        notificationConfig.telegramChatId
+      ) {
+        await this.sendTelegramNotification(notificationConfig, context);
+      } else if (notificationConfig.notifyType === "webhook" && notificationConfig.webhookUrl) {
+        await this.sendWebhook(notificationConfig, context);
+      } else {
+        console.warn(
+          `Notification ${notificationId}: Type ${notificationConfig.notifyType} not yet implemented or missing required fields`
+        );
+      }
+    } catch (error) {
+      console.error(`Notification ${notificationId} failed:`, error);
+    }
+  }
+
   private async sendDiscordNotification(
-    data: NotifyNodeData & { nodeType: NodeType.NOTIFY },
+    data: {
+      webhookUrl?: string;
+      template?: string;
+      customMessage?: string;
+    },
     context: ExecutionContext
   ) {
     // Fetch workflow details to get the name
@@ -406,14 +465,17 @@ class NotifyNodeExecutor implements NodeExecutor {
     const txSignature = context.variables.get("txSignature");
 
     // Extract trigger type from the graph
-    const triggerNode = workflow.graph?.nodes?.find((n: any) => n.type === NodeType.TRIGGER);
+    const graph = workflow.graph as any;
+    const triggerNode = graph?.nodes?.find((n: any) => n.type === NodeType.TRIGGER);
     const triggerType = triggerNode?.data?.triggerType || "unknown";
+
+    const executionStatus = context.hasErrors ? "failed" : "success";
 
     const embed = getTemplate(data.template || "default", {
       workflowName: workflow.name,
       executionId: context.executionId,
       txSignature,
-      status: txSignature ? "success" : "failed",
+      status: executionStatus,
       triggerType,
       triggerData: context.triggerData,
     });
@@ -422,7 +484,14 @@ class NotifyNodeExecutor implements NodeExecutor {
   }
 
   private async sendTelegramNotification(
-    data: NotifyNodeData & { nodeType: NodeType.NOTIFY },
+    data: {
+      telegramBotToken?: string;
+      telegramChatId?: string;
+      telegramParseMode?: "Markdown" | "MarkdownV2" | "HTML";
+      telegramDisableWebPreview?: boolean;
+      template?: string;
+      customMessage?: string;
+    },
     context: ExecutionContext
   ) {
     const [workflow] = await db
@@ -438,14 +507,18 @@ class NotifyNodeExecutor implements NodeExecutor {
     const telegramClient = createTelegramClient(data.telegramBotToken!);
     const txSignature = context.variables.get("txSignature");
 
-    const triggerNode = workflow.graph?.nodes?.find((n: any) => n.type === NodeType.TRIGGER);
+    // Extract trigger type from the graph
+    const graph = workflow.graph as any;
+    const triggerNode = graph?.nodes?.find((n: any) => n.type === NodeType.TRIGGER);
     const triggerType = triggerNode?.data?.triggerType || "unknown";
+
+    const executionStatus = context.hasErrors ? "failed" : "success";
 
     const template = getTelegramTemplate(data.template || "default", {
       workflowName: workflow.name,
       executionId: context.executionId,
       txSignature,
-      status: txSignature ? "success" : "failed",
+      status: executionStatus,
       triggerType,
       triggerData: context.triggerData,
       network: process.env.SOLANA_NETWORK || "devnet",
@@ -462,7 +535,9 @@ class NotifyNodeExecutor implements NodeExecutor {
   }
 
   private async sendWebhook(
-    data: NotifyNodeData & { nodeType: NodeType.NOTIFY },
+    data: {
+      webhookUrl?: string;
+    },
     context: ExecutionContext
   ) {
     const response = await fetch(data.webhookUrl!, {
