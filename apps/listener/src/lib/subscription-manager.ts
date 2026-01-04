@@ -1,7 +1,14 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { Queue } from "bullmq";
-import crypto from "crypto";
-import { TriggerType, JOB_NAMES, JOB_OPTIONS, SOLANA, NodeType, log } from "utils";
+import {
+  TriggerType,
+  JOB_NAMES,
+  JOB_OPTIONS,
+  SOLANA,
+  NodeType,
+  log,
+  generateExecutionId,
+} from "utils";
 import type { WorkflowGraph } from "@repo/types";
 
 interface Workflow {
@@ -162,7 +169,7 @@ export class SubscriptionManager {
           slot: context.slot,
         });
 
-        const executionId = this.generateExecutionId(
+        const executionId = generateExecutionId(
           workflow.id,
           context.slot,
           `${triggerNodeId}-${address.toBase58()}`
@@ -230,7 +237,7 @@ export class SubscriptionManager {
           }
         );
 
-        const executionId = this.generateExecutionId(
+        const executionId = generateExecutionId(
           workflow.id,
           context.slot,
           `${triggerNodeId}-${address.toBase58()}`
@@ -305,7 +312,7 @@ export class SubscriptionManager {
           }
         }
 
-        const executionId = this.generateExecutionId(
+        const executionId = generateExecutionId(
           workflow.id,
           context.slot,
           `${triggerNodeId}-${logs.signature}`
@@ -389,11 +396,5 @@ export class SubscriptionManager {
       activeSubscriptions: this.subscriptions.size,
       subscriptionKeys: Array.from(this.subscriptions.keys()),
     };
-  }
-
-  private generateExecutionId(workflowId: string, slot: number, identifier: string): string {
-    const hash = crypto.createHash("sha256");
-    hash.update(`${workflowId}:${slot}:${identifier}`);
-    return hash.digest("hex");
   }
 }
