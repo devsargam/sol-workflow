@@ -305,6 +305,9 @@ class ActionNodeExecutor implements NodeExecutor {
         case "call_program":
           txSignature = await this.callProgram(data.config, context);
           break;
+        case "do_nothing":
+          console.log(`Do Nothing action executed for node ${node.id}`);
+          return { success: true, output: null };
         default:
           return {
             success: false,

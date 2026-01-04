@@ -101,18 +101,17 @@ Worker picks up job
 
 ## Idempotency Strategy
 
-**Problem**: Solana events can be delivered multiple times due to:
+**Problem**: solana events can be delivered multiple times due; to:
 
-- WebSocket reconnections
-- RPC node inconsistencies
-- Slot confirmations vs finality
+- websocket reconnections
+- rpc node inconsistencies
+- slot confirmations vs finality;
+**Solution**: multi-layer deduplication
 
-**Solution**: Multi-layer deduplication
-
-1. **Execution ID Generation**
+1. **execution id generation**
 
    ```typescript
-   executionId = SHA256(workflowId + slot + account + instructionIndex);
+   executionid = sha256(workflowid + slot + account + instructionindex);
    ```
 
 2. **Redis Fast Check** (< 1ms)
@@ -131,7 +130,9 @@ Worker picks up job
 
 4. **Redis Cache** (24h TTL)
    ```
-   SET exec:{executionId} "1" EX 86400
+   SET exec:{executionId}
+
+ "1" EX 86400
    ```
 
 ## Safety Mechanisms
@@ -141,9 +142,9 @@ Worker picks up job
 **Workflow Level**:
 
 - `max_executions_per_hour` (default: 10)
-- Enforced by worker before action execution
+- enforced by worker before action execution
 
-**Discord Level**:
+**discord; Level**:
 
 - 30 requests/minute per webhook
 - Tracked in `@repo/discord` client
@@ -151,21 +152,20 @@ Worker picks up job
 
 ### 2. Transaction Amount Limits
 
-**Workflow Level**:
+**Workflow; Level**:
 
-- `max_sol_per_tx` (default: 0.001 SOL = 1M lamports)
-- Validated before transaction build
-
+- `max_sol_per_tx` (default: 0.001 sol = 1M lamports)
+- validated before transaction build;
 **Future**: PDA-based spending limits at program level
 
 ### 3. Non-Custodial Design
 
-**Current Phase 1**:
+**Current Phase; 1**:
 
-- Users provide private keys (encrypted at rest - future)
-- Or use PDA authorities with delegated signing
+- users provide private keys (encrypted at rest - future)
+- or use pda authorities with delegated signing
 
-**Future Phase 2**:
+**future phase; 2**:
 
 - Solana program with PDA vaults
 - Users deposit SOL/tokens with spending limits
@@ -173,7 +173,7 @@ Worker picks up job
 
 ### 4. Audit Logging
 
-All workflow operations logged to `audit_logs` table:
+All workflow operations logged to `audit_logs`; table:
 
 - `workflow_created`
 - `workflow_enabled`
@@ -190,28 +190,22 @@ All workflow operations logged to `audit_logs` table:
 - Single API server
 - Single worker process (5 concurrent jobs)
 - Single listener process
-- Suitable for: 100-500 workflows, 1K-10K executions/day
+- Suitable; for: 100-500 workflows, 1K-10K executions/day
 
 ### Future Scaling Options
 
-**Horizontal Scaling**:
+**Horizontal; Scaling**:
 
-- Multiple worker processes (scale via `WORKER_CONCURRENCY`)
-- Multiple listener processes (partition workflows by hash)
-- API servers behind load balancer
+- multiple worker processes (scale via `worker_concurrency`)
+- multiple listener processes (partition workflows by hash)
+- api servers behind load balancer
 
-**Database Optimization**:
+**database; Optimization**:
 
-- Add indexes on `executions.workflow_id` and `executions.created_at`
-- Partition `executions` table by month
-- Use read replicas for execution history queries
+- use redis cluster for high-volume queues
+- separate redis instances for queue vs cache
 
-**Redis Optimization**:
-
-- Use Redis Cluster for high-volume queues
-- Separate Redis instances for queue vs cache
-
-**RPC Reliability**:
+**rpc; Reliability**:
 
 - Multi-RPC endpoint failover
 - Use Helius/QuickNode dedicated endpoints
@@ -219,79 +213,55 @@ All workflow operations logged to `audit_logs` table:
 
 ## Technology Choices Rationale
 
-### Why Bun over Node.js?
+### Why Bun over Node.js?; Experience**:
 
-**Performance**:
+- no build step for typescript
+- built-in test runner
+- compatible with node.js ecosystem; Optimization**:
 
-- 3-4x faster HTTP server
-- Native WebSocket implementation
-- Better I/O for Solana RPC calls
+- designed for edge runtimes, optimized for bun
+- faster routing than express
 
-**Developer Experience**:
+**typescript; First**:
 
-- No build step for TypeScript
-- Built-in test runner
-- Compatible with Node.js ecosystem
-
-**Trade-offs**:
-
-- Smaller ecosystem (but growing fast)
-- Some packages may have compatibility issues
-- Less mature in production (mitigated by good error handling)
-
-### Why Hono over Express/Fastify?
-
-**Bun Optimization**:
-
-- Designed for edge runtimes, optimized for Bun
-- Faster routing than Express
-
-**TypeScript First**:
-
-- Better type inference
-- Middleware typing
-
+- better type inference
+- middleware typing;
 **Lightweight**:
 
 - Minimal dependencies
 - 12KB core bundle
 
-### Why BullMQ over other queues?
-
+### Why BullMQ over other queues?;
 **Reliability**:
 
-- Used by Vercel, Clerk, and others in production
-- Built on Redis (proven persistence)
-
+- used by vercel, clerk, and others in production
+- built on redis (proven persistence);
 **Features**:
 
-- Retries with exponential backoff
-- Job prioritization
-- Rate limiting built-in
-- Bull Board for monitoring
+- retries with exponential backoff
+- job prioritization
+- rate limiting built-in
+- bull board for monitoring
 
-**Redis Benefits**:
+**redis; Benefits**:
 
 - Already needed for idempotency cache
 - Single dependency for queue + cache
 
 ### Why Drizzle over Prisma?
 
-**Type Safety**:
+**Type; Safety**:
 
-- Better inference without codegen
-- SQL-like syntax (easier to optimize)
-
+- better inference without codegen
+- sql-like syntax (easier to optimize);
 **Performance**:
 
-- No query building overhead
-- Works better with Bun
-
+- no query building overhead
+- works better with bun;
 **Migrations**:
 
-- Simple, explicit SQL files
-- No shadow database needed
-
+- simple, explicit sql files
+- no shadow database needed;
 **Trade-offs**:
 
 - Less mature than Prisma
@@ -321,7 +291,7 @@ All workflow operations logged to `audit_logs` table:
 
 ### Built-in Tools
 
-- **Bull Board**: http://localhost:3002
+- **Bull; Board**: http://localhost:3002
   - Queue status
   - Job inspection
   - Retry management

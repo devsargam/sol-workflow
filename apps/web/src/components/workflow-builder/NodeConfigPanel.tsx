@@ -512,6 +512,7 @@ function ActionConfig({ formData, setFormData }: any) {
           <option value="send_sol">Send SOL</option>
           <option value="send_spl_token">Send SPL Token</option>
           <option value="call_program">Call Program</option>
+          <option value="do_nothing">Do Nothing</option>
         </select>
       </div>
 

@@ -4,6 +4,7 @@ import {
   BanknoteIcon,
   BellIcon,
   CircleDollarSignIcon,
+  CircleOffIcon,
   CodeIcon,
   FileTextIcon,
   ImageIcon,
@@ -18,7 +19,7 @@ import {
 import { type ComponentType, type ReactElement } from "react";
 
 export type NotificationType = "discord" | "telegram" | "slack" | "email" | "webhook";
-export type ActionType = "send_sol" | "send_spl_token" | "call_program";
+export type ActionType = "send_sol" | "send_spl_token" | "call_program" | "do_nothing";
 export type TriggerType =
   | "balance_change"
   | "token_receipt"
@@ -38,6 +39,7 @@ export const ACTION_ICONS: Record<ActionType, ComponentType<{ className?: string
   send_sol: BanknoteIcon,
   send_spl_token: CircleDollarSignIcon,
   call_program: CodeIcon,
+  do_nothing: CircleOffIcon,
 };
 
 export const TRIGGER_ICONS: Record<TriggerType, ComponentType<{ className?: string }>> = {

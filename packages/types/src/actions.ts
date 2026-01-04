@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // Action types
-export const ActionTypeEnum = z.enum(["send_sol", "send_spl_token", "call_program"]);
+export const ActionTypeEnum = z.enum(["send_sol", "send_spl_token", "call_program", "do_nothing"]);
 
 export type ActionType = z.infer<typeof ActionTypeEnum>;
 
@@ -51,11 +51,17 @@ export const CallProgramActionConfigSchema = z.object({
 
 export type CallProgramActionConfig = z.infer<typeof CallProgramActionConfigSchema>;
 
+// Do Nothing Action (placeholder/no-op)
+export const DoNothingActionConfigSchema = z.object({});
+
+export type DoNothingActionConfig = z.infer<typeof DoNothingActionConfigSchema>;
+
 // Union schema for all action configs
 export const ActionConfigSchema = z.union([
   SendSolActionConfigSchema,
   SendSPLTokenActionConfigSchema,
   CallProgramActionConfigSchema,
+  DoNothingActionConfigSchema,
 ]);
 
 export type ActionConfig = z.infer<typeof ActionConfigSchema>;
