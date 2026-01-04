@@ -131,38 +131,76 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
           // Map fields based on node type
           switch (n.type) {
             case "trigger":
+              baseNode.data.nodeType = "trigger";
               baseNode.data.triggerType = n.data.triggerType || n.data.type || "balance_change";
               baseNode.data.config = n.data.config || {};
               break;
             case "filter":
+              baseNode.data.nodeType = "filter";
               baseNode.data.conditions = n.data.conditions || [];
               baseNode.data.logic = n.data.logic || "and";
               break;
             case "action":
+              baseNode.data.nodeType = "action";
               baseNode.data.actionType = n.data.actionType || n.data.type || "send_sol";
               baseNode.data.config = n.data.config || {};
               break;
             case "notify":
-              baseNode.data.notifyType = n.data.notifyType || n.data.type || "discord";
-              baseNode.data.template = n.data.template || "default";
+              baseNode.data.nodeType = "notify";
 
               if (
-                baseNode.data.notifyType === "discord" ||
-                baseNode.data.notifyType === "webhook"
+                n.data.notifications &&
+                Array.isArray(n.data.notifications) &&
+                n.data.notifications.length > 0
               ) {
-                if (n.data.webhookUrl) baseNode.data.webhookUrl = n.data.webhookUrl;
-              }
+                delete baseNode.data.notifyType;
+                delete baseNode.data.webhookUrl;
+                delete baseNode.data.telegramBotToken;
+                delete baseNode.data.telegramChatId;
+                delete baseNode.data.telegramParseMode;
+                delete baseNode.data.telegramDisableWebPreview;
+                delete baseNode.data.template;
+                delete baseNode.data.customMessage;
 
-              if (baseNode.data.notifyType === "telegram") {
-                if (n.data.telegramBotToken)
-                  baseNode.data.telegramBotToken = n.data.telegramBotToken;
-                if (n.data.telegramChatId) baseNode.data.telegramChatId = n.data.telegramChatId;
-                if (n.data.telegramParseMode)
-                  baseNode.data.telegramParseMode = n.data.telegramParseMode;
-                if (n.data.telegramDisableWebPreview !== undefined) {
-                  baseNode.data.telegramDisableWebPreview = n.data.telegramDisableWebPreview;
+                baseNode.data.notifications = n.data.notifications
+                  .map((notif: any) => {
+                    const mapped: any = {
+                      notifyType: notif.notifyType,
+                      template: notif.template || "default",
+                    };
+                    if (notif.webhookUrl) mapped.webhookUrl = notif.webhookUrl;
+                    if (notif.telegramBotToken) mapped.telegramBotToken = notif.telegramBotToken;
+                    if (notif.telegramChatId) mapped.telegramChatId = notif.telegramChatId;
+                    if (notif.telegramParseMode) mapped.telegramParseMode = notif.telegramParseMode;
+                    if (notif.telegramDisableWebPreview !== undefined) {
+                      mapped.telegramDisableWebPreview = notif.telegramDisableWebPreview;
+                    }
+                    if (notif.customMessage) mapped.customMessage = notif.customMessage;
+                    return mapped;
+                  })
+                  .filter((notif: any) => notif.notifyType);
+              } else {
+                baseNode.data.notifyType = n.data.notifyType || n.data.type || "discord";
+                baseNode.data.template = n.data.template || "default";
+
+                if (
+                  baseNode.data.notifyType === "discord" ||
+                  baseNode.data.notifyType === "webhook"
+                ) {
+                  if (n.data.webhookUrl) baseNode.data.webhookUrl = n.data.webhookUrl;
                 }
-                if (n.data.customMessage) baseNode.data.customMessage = n.data.customMessage;
+
+                if (baseNode.data.notifyType === "telegram") {
+                  if (n.data.telegramBotToken)
+                    baseNode.data.telegramBotToken = n.data.telegramBotToken;
+                  if (n.data.telegramChatId) baseNode.data.telegramChatId = n.data.telegramChatId;
+                  if (n.data.telegramParseMode)
+                    baseNode.data.telegramParseMode = n.data.telegramParseMode;
+                  if (n.data.telegramDisableWebPreview !== undefined) {
+                    baseNode.data.telegramDisableWebPreview = n.data.telegramDisableWebPreview;
+                  }
+                  if (n.data.customMessage) baseNode.data.customMessage = n.data.customMessage;
+                }
               }
               break;
           }

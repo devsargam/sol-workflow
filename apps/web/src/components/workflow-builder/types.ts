@@ -47,6 +47,7 @@ export interface ActionNodeData {
 export interface NotifyNodeData {
   label?: string;
   type?: string;
+  notifyType?: string;
   webhookUrl?: string;
   template?: string;
   telegramBotToken?: string;
@@ -54,4 +55,14 @@ export interface NotifyNodeData {
   telegramParseMode?: "Markdown" | "MarkdownV2" | "HTML";
   telegramDisableWebPreview?: boolean;
   customMessage?: string;
+  notifications?: Array<{
+    notifyType: string;
+    webhookUrl?: string;
+    telegramBotToken?: string;
+    telegramChatId?: string;
+    telegramParseMode?: "Markdown" | "MarkdownV2" | "HTML";
+    telegramDisableWebPreview?: boolean;
+    template?: string;
+    customMessage?: string;
+  }>;
 }

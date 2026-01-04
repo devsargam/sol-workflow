@@ -695,155 +695,295 @@ function ActionConfig({ formData, setFormData }: any) {
 
 // Notify Configuration
 function NotifyConfig({ formData, setFormData }: any) {
+  const isMultipleMode =
+    formData.notifications &&
+    Array.isArray(formData.notifications) &&
+    formData.notifications.length > 0;
+  const notifications = isMultipleMode
+    ? formData.notifications
+    : formData.notifyType || formData.type
+      ? [
+          {
+            notifyType: formData.notifyType || formData.type || "discord",
+            webhookUrl: formData.webhookUrl,
+            telegramBotToken: formData.telegramBotToken,
+            telegramChatId: formData.telegramChatId,
+            telegramParseMode: formData.telegramParseMode,
+            telegramDisableWebPreview: formData.telegramDisableWebPreview,
+            template: formData.template || "default",
+            customMessage: formData.customMessage,
+          },
+        ]
+      : [];
+
+  const updateNotifications = (newNotifications: any[]) => {
+    if (newNotifications.length === 0) {
+      setFormData({
+        ...formData,
+        notifications: undefined,
+        notifyType: undefined,
+        type: undefined,
+        webhookUrl: undefined,
+        telegramBotToken: undefined,
+        telegramChatId: undefined,
+        telegramParseMode: undefined,
+        telegramDisableWebPreview: undefined,
+        template: undefined,
+        customMessage: undefined,
+      });
+    } else if (newNotifications.length === 1) {
+      const single = newNotifications[0];
+      setFormData({
+        ...formData,
+        notifications: undefined,
+        notifyType: single.notifyType,
+        type: single.notifyType,
+        webhookUrl: single.webhookUrl,
+        telegramBotToken: single.telegramBotToken,
+        telegramChatId: single.telegramChatId,
+        telegramParseMode: single.telegramParseMode,
+        telegramDisableWebPreview: single.telegramDisableWebPreview,
+        template: single.template,
+        customMessage: single.customMessage,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        notifications: newNotifications,
+        notifyType: undefined,
+        type: undefined,
+        webhookUrl: undefined,
+        telegramBotToken: undefined,
+        telegramChatId: undefined,
+        telegramParseMode: undefined,
+        telegramDisableWebPreview: undefined,
+        template: undefined,
+        customMessage: undefined,
+      });
+    }
+  };
+
+  const addNotification = () => {
+    const newNotifications = [
+      ...notifications,
+      {
+        notifyType: "discord",
+        template: "default",
+      },
+    ];
+    updateNotifications(newNotifications);
+  };
+
+  const removeNotification = (index: number) => {
+    const newNotifications = notifications.filter((_: any, i: number) => i !== index);
+    updateNotifications(newNotifications);
+  };
+
+  const updateNotification = (index: number, updatedNotification: any) => {
+    const newNotifications = [...notifications];
+    newNotifications[index] = updatedNotification;
+    updateNotifications(newNotifications);
+  };
+
   return (
     <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium mb-2">Notification Type</label>
-        <select
-          value={formData.type || "discord"}
-          onChange={(e) => {
-            const nextType = e.target.value;
-
-            if (nextType === "telegram") {
-              setFormData({
-                ...formData,
-                type: nextType,
-                notifyType: nextType,
-                webhookUrl: undefined,
-              });
-              return;
-            }
-
-            setFormData({
-              ...formData,
-              type: nextType,
-              notifyType: nextType,
-              telegramBotToken: undefined,
-              telegramChatId: undefined,
-              telegramParseMode: undefined,
-              telegramDisableWebPreview: undefined,
-            });
-          }}
-          className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+      <div className="flex items-center justify-between">
+        <label className="block text-sm font-medium">Notifications</label>
+        <button
+          type="button"
+          onClick={addNotification}
+          className="px-3 py-1.5 text-sm bg-black text-white rounded-lg hover:bg-neutral-800 transition-colors"
         >
-          <option value="discord">Discord</option>
-          <option value="telegram">Telegram</option>
-          <option value="slack">Slack (Coming Soon)</option>
-          <option value="email">Email (Coming Soon)</option>
-          <option value="webhook">Custom Webhook</option>
-        </select>
+          + Add Notification
+        </button>
       </div>
 
-      {(formData.type === "discord" || formData.type === "webhook") && (
-        <>
-          <div>
-            <label className="block text-sm font-medium mb-2">Webhook URL</label>
-            <input
-              type="url"
-              value={formData.webhookUrl || ""}
-              onChange={(e) => setFormData({ ...formData, webhookUrl: e.target.value })}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
-              placeholder="https://discord.com/api/webhooks/..."
-              required
-            />
-            {formData.type === "discord" && (
-              <p className="text-xs text-neutral-500 mt-1">
-                Get from: Server Settings → Integrations → Webhooks
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Message Template</label>
-            <select
-              value={formData.template || "default"}
-              onChange={(e) => setFormData({ ...formData, template: e.target.value })}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+      {notifications.length === 0 ? (
+        <div className="text-sm text-neutral-500 text-center py-4">
+          No notifications configured. Click "Add Notification" to get started.
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {notifications.map((notification: any, index: number) => (
+            <div
+              key={index}
+              className="p-4 border border-neutral-200 rounded-lg space-y-3 bg-neutral-50"
             >
-              <option value="default">Default (Auto-select)</option>
-              <option value="success">Success (Green embed)</option>
-              <option value="error">Error (Red embed)</option>
-              <option value="minimal">Minimal (Single line)</option>
-              <option value="detailed">Detailed (Full context)</option>
-            </select>
-          </div>
-        </>
-      )}
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold">Notification {index + 1}</h4>
+                {notifications.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeNotification(index)}
+                    className="text-red-600 hover:text-red-700 text-sm"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
 
-      {formData.type === "telegram" && (
-        <>
-          <div>
-            <label className="block text-sm font-medium mb-2">Bot Token</label>
-            <input
-              type="password"
-              value={formData.telegramBotToken || ""}
-              onChange={(e) => setFormData({ ...formData, telegramBotToken: e.target.value })}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
-              placeholder="123456:ABC-DEF..."
-              required
-            />
-            <p className="text-xs text-neutral-500 mt-1">
-              Create a bot via @BotFather and paste the token here.
-            </p>
-          </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Type</label>
+                <select
+                  value={notification.notifyType || "discord"}
+                  onChange={(e) => {
+                    const nextType = e.target.value;
+                    const updated = { ...notification, notifyType: nextType };
+                    if (nextType === "telegram") {
+                      updated.webhookUrl = undefined;
+                    } else {
+                      updated.telegramBotToken = undefined;
+                      updated.telegramChatId = undefined;
+                      updated.telegramParseMode = undefined;
+                      updated.telegramDisableWebPreview = undefined;
+                    }
+                    updateNotification(index, updated);
+                  }}
+                  className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                >
+                  <option value="discord">Discord</option>
+                  <option value="telegram">Telegram</option>
+                  <option value="webhook">Custom Webhook</option>
+                </select>
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Chat ID</label>
-            <input
-              type="text"
-              value={formData.telegramChatId || ""}
-              onChange={(e) => setFormData({ ...formData, telegramChatId: e.target.value })}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
-              placeholder="e.g. 123456789 or -1001234567890"
-              required
-            />
-          </div>
+              {(notification.notifyType === "discord" || notification.notifyType === "webhook") && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Webhook URL</label>
+                    <input
+                      type="url"
+                      value={notification.webhookUrl || ""}
+                      onChange={(e) =>
+                        updateNotification(index, { ...notification, webhookUrl: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                      placeholder="https://discord.com/api/webhooks/..."
+                      required
+                    />
+                    {notification.notifyType === "discord" && (
+                      <p className="text-xs text-neutral-500 mt-1">
+                        Get from: Server Settings → Integrations → Webhooks
+                      </p>
+                    )}
+                  </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Parse Mode (optional)</label>
-            <select
-              value={formData.telegramParseMode || ""}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  telegramParseMode: e.target.value || undefined,
-                })
-              }
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-            >
-              <option value="">Plain text</option>
-              <option value="Markdown">Markdown</option>
-              <option value="MarkdownV2">MarkdownV2</option>
-              <option value="HTML">HTML</option>
-            </select>
-          </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Message Template</label>
+                    <select
+                      value={notification.template || "default"}
+                      onChange={(e) =>
+                        updateNotification(index, { ...notification, template: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                    >
+                      <option value="default">Default (Auto-select)</option>
+                      <option value="success">Success (Green embed)</option>
+                      <option value="error">Error (Red embed)</option>
+                      <option value="minimal">Minimal (Single line)</option>
+                      <option value="detailed">Detailed (Full context)</option>
+                    </select>
+                  </div>
+                </>
+              )}
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Message Template</label>
-            <select
-              value={formData.template || "default"}
-              onChange={(e) => setFormData({ ...formData, template: e.target.value })}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-            >
-              <option value="default">Default</option>
-              <option value="success">Success</option>
-              <option value="error">Error</option>
-              <option value="minimal">Minimal</option>
-              <option value="detailed">Detailed</option>
-            </select>
-          </div>
+              {notification.notifyType === "telegram" && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Bot Token</label>
+                    <input
+                      type="password"
+                      value={notification.telegramBotToken || ""}
+                      onChange={(e) =>
+                        updateNotification(index, {
+                          ...notification,
+                          telegramBotToken: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                      placeholder="123456:ABC-DEF..."
+                      required
+                    />
+                    <p className="text-xs text-neutral-500 mt-1">
+                      Create a bot via @BotFather and paste the token here.
+                    </p>
+                  </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Custom Message (optional)</label>
-            <textarea
-              value={formData.customMessage || ""}
-              onChange={(e) => setFormData({ ...formData, customMessage: e.target.value })}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
-              placeholder="This will be prepended to the template"
-              rows={2}
-            />
-          </div>
-        </>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Chat ID</label>
+                    <input
+                      type="text"
+                      value={notification.telegramChatId || ""}
+                      onChange={(e) =>
+                        updateNotification(index, {
+                          ...notification,
+                          telegramChatId: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                      placeholder="e.g. 123456789 or -1001234567890"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Parse Mode (optional)</label>
+                    <select
+                      value={notification.telegramParseMode || ""}
+                      onChange={(e) =>
+                        updateNotification(index, {
+                          ...notification,
+                          telegramParseMode: e.target.value || undefined,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                    >
+                      <option value="">Plain text</option>
+                      <option value="Markdown">Markdown</option>
+                      <option value="MarkdownV2">MarkdownV2</option>
+                      <option value="HTML">HTML</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Message Template</label>
+                    <select
+                      value={notification.template || "default"}
+                      onChange={(e) =>
+                        updateNotification(index, { ...notification, template: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                    >
+                      <option value="default">Default</option>
+                      <option value="success">Success</option>
+                      <option value="error">Error</option>
+                      <option value="minimal">Minimal</option>
+                      <option value="detailed">Detailed</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Custom Message (optional)
+                    </label>
+                    <textarea
+                      value={notification.customMessage || ""}
+                      onChange={(e) =>
+                        updateNotification(index, {
+                          ...notification,
+                          customMessage: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                      placeholder="This will be prepended to the template"
+                      rows={2}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
