@@ -4,6 +4,19 @@
   "private": true,
   "description": "Solana-native automation platform for DAO operators and NFT community managers",
   "scripts": {
+    "dev": "concurrently \"pnpm --filter web dev\" \"pnpm --filter api dev\" \"pnpm --filter worker dev\" \"pnpm --filter listener dev\"",
+    "dev:web": "pnpm --filter web dev",
+    "dev:api": "pnpm --filter api dev",
+    "dev:worker": "pnpm --filter worker dev",
+    "dev:listener": "pnpm --filter listener dev",
+    "build": "pnpm --filter web build && pnpm --filter api build && pnpm --filter worker build && pnpm --filter listener build",
+    "db:generate": "pnpm --filter db generate",
+    "db:migrate": "pnpm --filter db migrate",
+    "db:studio": "pnpm --filter db studio",
+    "db:push": "pnpm --filter db push",
+    "lint": "pnpm -r lint",
+    "type-check": "pnpm -r type-check",
+    "clean": "pnpm -r clean && rm -rf node_modules",
     "prepare": "husky"
   },
   "devDependencies": {

@@ -106,7 +106,7 @@ Worker picks up job
 - websocket reconnections
 - rpc node inconsistencies
 - slot confirmations vs finality;
-**Solution**: multi-layer deduplication
+  **Solution**: multi-layer deduplication
 
 1. **execution id generation**
 
@@ -131,9 +131,11 @@ Worker picks up job
 4. **Redis Cache** (24h TTL)
    ```
    SET exec:{executionId}
-
- "1" EX 86400
    ```
+
+"1" EX 86400
+
+```
 
 ## Safety Mechanisms
 
@@ -292,13 +294,13 @@ All workflow operations logged to `audit_logs`; table:
 ### Built-in Tools
 
 - **Bull; Board**: http://localhost:3002
-  - Queue status
-  - Job inspection
-  - Retry management
+- Queue status
+- Job inspection
+- Retry management
 
 - **Drizzle Studio**: `pnpm db:studio`
-  - Database browser
-  - Manual data edits
+- Database browser
+- Manual data edits
 
 ### Future Integrations
 
@@ -344,3 +346,4 @@ All workflow operations logged to `audit_logs`; table:
 ---
 
 **Last Updated**: 2026-01-01
+```
