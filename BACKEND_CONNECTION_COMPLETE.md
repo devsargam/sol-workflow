@@ -11,23 +11,27 @@ Frontend (Next.js) → API (Hono) → Database (PostgreSQL) → Listener (Solana
 ## 🔗 Full Integration Flow
 
 ### 1. **Frontend ↔ API** ✅
+
 - React Query provider set up
 - API client functions created
 - Hooks for workflows CRUD
 - Form submits to API
 
 ### 2. **API ↔ Database** ✅
+
 - All routes use Drizzle ORM
 - Workflows stored in PostgreSQL
 - Enable/disable toggles update DB
 - Soft delete implemented
 
 ### 3. **Listener ↔ Database** ✅
+
 - Loads active workflows from DB
 - Subscribes to Solana for each enabled workflow
 - Reloads every 30 seconds for new workflows
 
 ### 4. **Listener ↔ Solana** ✅
+
 - WebSocket connection to Solana RPC
 - Account change subscriptions
 - Ready to detect balance changes
@@ -61,6 +65,7 @@ pnpm dev
 ### Watch the Magic Happen
 
 **In the listener terminal, you'll see:**
+
 ```
 🔄 Reloading workflows...
 📋 Currently 1 active workflows
@@ -75,12 +80,14 @@ pnpm dev
 ### Backend Changes
 
 **apps/api/src/routes/workflows.ts**
+
 - ✅ Replaced in-memory Map with Drizzle queries
 - ✅ All CRUD operations use PostgreSQL
 - ✅ Proper error handling
 - ✅ Soft delete support
 
 **apps/listener/src/index.ts**
+
 - ✅ Loads workflows from database
 - ✅ Filters only enabled workflows
 - ✅ Subscribes to Solana for each workflow
@@ -89,18 +96,22 @@ pnpm dev
 ### Frontend Changes
 
 **apps/web/src/components/providers/query-provider.tsx**
+
 - ✅ React Query provider configured
 
 **apps/web/src/lib/api.ts**
+
 - ✅ API client functions (fetch, create, update, delete, toggle)
 - ✅ TypeScript types for Workflow and Execution
 
 **apps/web/src/lib/hooks/use-workflows.ts**
+
 - ✅ React Query hooks
 - ✅ Automatic cache invalidation
 - ✅ Optimistic updates
 
 **apps/web/src/app/workflows/page.tsx**
+
 - ✅ Full workflow creation form
 - ✅ Workflow list with real data
 - ✅ Enable/disable toggle

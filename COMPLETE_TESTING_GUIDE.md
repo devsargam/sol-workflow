@@ -3,22 +3,26 @@
 ## ✨ New Features Added
 
 ### 1. **Real-time Balance Display** 📊
+
 - Shows current SOL balance for watched wallets
 - Auto-refreshes every 10 seconds
 - Displays both SOL and lamports
 
 ### 2. **Execution History** 📜
+
 - Complete log of all workflow executions
 - See trigger data, transaction signatures, errors
 - Real-time updates every 5 seconds
 - Filter by workflow
 
 ### 3. **Balance Fetching API** ⚡
+
 - `/solana/balance/:address` - Get current balance
 - `/solana/account/:address` - Get account info
 - `/solana/health` - Check Solana connection
 
 ### 4. **Database-Logged Executions** 💾
+
 - All executions saved to PostgreSQL
 - Idempotency checking in Redis + Database
 - Track processing time, errors, notifications
@@ -36,6 +40,7 @@ pnpm dev
 ```
 
 You should see:
+
 - **Terminal 1 (Web)**: `ready started server on 0.0.0.0:3000`
 - **Terminal 2 (API)**: `🚀 API server running on http://localhost:3001`
 - **Terminal 3 (Worker)**: `🔄 Worker started and listening for jobs...`
@@ -113,12 +118,14 @@ solana airdrop 1 <YOUR_WATCHED_ADDRESS> --url devnet
 **What happens next (in order):**
 
 1. **Listener detects change**:
+
    ```
    🔔 Account change detected for <address>
    Publishing job to queue: workflow-event
    ```
 
 2. **Worker picks up job**:
+
    ```
    📥 Processing execution abc123... for workflow def456...
    ✅ Created execution record in database
@@ -155,12 +162,14 @@ Want to check any wallet's balance?
 ## 📊 What You Can Monitor
 
 ### On the Workflows Page
+
 - ✅ List of all workflows
 - ✅ Enable/disable toggle
 - ✅ **Real-time balance** for active workflows
 - ✅ Workflow trigger and action details
 
 ### On the Executions Page
+
 - ✅ All execution history
 - ✅ Status (success, failed, filtered, processing)
 - ✅ Trigger data (balance changes, events)
@@ -190,6 +199,7 @@ curl http://localhost:3001/executions?workflow_id=<ID>
 ### Balance Display Component
 
 Shows in workflow cards when enabled:
+
 ```
 ┌──────────────────────────────────┐
 │ Current Balance        ↻ Refresh  │
@@ -201,6 +211,7 @@ Shows in workflow cards when enabled:
 ```
 
 Features:
+
 - Auto-refreshes every 10 seconds
 - Manual refresh button
 - Shows both SOL and lamports
@@ -264,12 +275,14 @@ Balance updates automatically
 ### Balance doesn't show
 
 **Check:**
+
 ```bash
 # Test balance endpoint directly
 curl http://localhost:3001/solana/balance/11111111111111111111111111111112
 ```
 
 If this fails, check:
+
 - Is API running?
 - Is Solana RPC URL correct in `.env`?
 - Try with a known valid address
@@ -277,6 +290,7 @@ If this fails, check:
 ### No executions appear
 
 **Check:**
+
 1. Is workflow **enabled** (green button)?
 2. Did you trigger a balance change (airdrop)?
 3. Check listener logs for subscription
@@ -295,6 +309,7 @@ pnpm db:studio
 ## 📈 Performance Metrics
 
 With the current setup:
+
 - **Balance refresh**: Every 10 seconds
 - **Execution updates**: Every 5 seconds
 - **Listener reload**: Every 30 seconds
@@ -315,6 +330,7 @@ With the current setup:
 ## 🚧 What's Still Mock
 
 The worker currently mocks:
+
 - ❌ Actual transaction building
 - ❌ Transaction signing
 - ❌ Sending to Solana

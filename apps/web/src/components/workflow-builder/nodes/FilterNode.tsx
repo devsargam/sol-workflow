@@ -2,8 +2,8 @@
 
 import { cn } from "@/lib/utils";
 import { Handle, NodeProps, Position } from "@xyflow/react";
-import { SearchIcon } from "lucide-react";
 import { memo } from "react";
+import { getFilterIcon } from "../icons";
 import type { FilterNodeData } from "../types";
 
 export const FilterNode = memo(({ data, selected }: NodeProps) => {
@@ -28,9 +28,7 @@ export const FilterNode = memo(({ data, selected }: NodeProps) => {
       />
 
       <div className="flex items-center gap-2 mb-1">
-        <span className="text-xl">
-          <SearchIcon className="w-6 h-6" />
-        </span>
+        <span className="text-xl">{getFilterIcon()}</span>
         <div className="flex-1">
           <div className="text-base font-semibold text-black">
             Filter

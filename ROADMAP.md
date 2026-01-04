@@ -18,6 +18,7 @@
 ### Week 1-2: Backend Integration
 
 **API Server** (`apps/api`)
+
 - [ ] Replace in-memory storage with Drizzle queries
 - [ ] Add workflow CRUD endpoints with proper validation
 - [ ] Implement execution history endpoints
@@ -26,6 +27,7 @@
 - [ ] API documentation (OpenAPI)
 
 **Database** (`packages/db`)
+
 - [ ] Add indexes for performance
   - `executions (workflow_id, created_at DESC)`
   - `trigger_subscriptions (workflow_id, active)`
@@ -34,12 +36,14 @@
 - [ ] Database backup scripts
 
 **Testing**
+
 - [ ] API integration tests
 - [ ] Database migration tests
 
 ### Week 3-4: Workflow Execution Engine
 
 **Worker Service** (`apps/worker`)
+
 - [ ] Implement filter evaluation logic
   - [ ] Equals, not_equals, greater_than, less_than operators
   - [ ] Contains, regex operators for strings
@@ -61,12 +65,14 @@
   - [ ] Error notification to users
 
 **Discord Integration** (`packages/discord`)
+
 - [ ] Test all notification templates
 - [ ] Add template customization support
 - [ ] Implement rate limit handling
 - [ ] Webhook validation
 
 **Testing**
+
 - [ ] Unit tests for transaction builders
 - [ ] Unit tests for filter evaluation
 - [ ] Integration tests with Redis
@@ -75,6 +81,7 @@
 ### Week 5-6: Event Listener & Subscriptions
 
 **Listener Service** (`apps/listener`)
+
 - [ ] Load workflows from database on startup
 - [ ] Dynamic subscription management
   - [ ] Subscribe when workflow enabled
@@ -95,11 +102,13 @@
   - [ ] Alert on subscription failures
 
 **Database Updates**
+
 - [ ] Store subscription metadata
 - [ ] Track last event timestamp per subscription
 - [ ] Log subscription errors for debugging
 
 **Testing**
+
 - [ ] Mock Solana events for testing
 - [ ] Test subscription lifecycle
 - [ ] Test reconnection logic
@@ -110,6 +119,7 @@
 **Web UI** (`apps/web`)
 
 **Workflow Builder**
+
 - [ ] Step-by-step workflow creation wizard
   - [ ] Step 1: Trigger selection
   - [ ] Step 2: Filter configuration
@@ -131,6 +141,7 @@
   - [ ] Step status indicators
 
 **Workflow Management**
+
 - [ ] Workflow list view
   - [ ] Enable/disable toggle
   - [ ] Edit/delete actions
@@ -148,6 +159,7 @@
   - [ ] Timeline view
 
 **Components**
+
 - [ ] Solana wallet adapter integration
 - [ ] Account display components
 - [ ] Transaction signature formatter
@@ -155,29 +167,34 @@
 - [ ] Loading states
 
 **State Management**
+
 - [ ] React Query for server state
 - [ ] Zustand for local state (form drafts)
 - [ ] Optimistic updates for enable/disable
 
 **Testing**
+
 - [ ] Component tests (Vitest + Testing Library)
 - [ ] E2E tests (Playwright)
 
 ### Week 9: Safety & Limits
 
 **PDA Authorities** (`packages/solana`)
+
 - [ ] Create PDA derivation functions
 - [ ] Implement PDA-based signing
 - [ ] Add spending limit checks at PDA level
 - [ ] Documentation for PDA setup
 
 **Rate Limiting**
+
 - [ ] Implement per-workflow execution limits
 - [ ] Add global rate limits
 - [ ] User-friendly error messages when limits hit
 - [ ] Admin override capability (future)
 
 **Testing**
+
 - [ ] Test PDA derivation
 - [ ] Test rate limit enforcement
 - [ ] Test amount limit checks
@@ -186,12 +203,14 @@
 ### Week 10: Polish & Documentation
 
 **Monitoring**
+
 - [ ] Bull Board integration
 - [ ] Health check endpoints for all services
 - [ ] Metrics collection (execution count, success rate, avg duration)
 - [ ] Error rate monitoring
 
 **Documentation**
+
 - [ ] User guide
   - [ ] How to create a workflow
   - [ ] Trigger type examples
@@ -209,6 +228,7 @@
   - [ ] Discord webhook setup
 
 **Final Testing**
+
 - [ ] Full E2E workflow tests on devnet
 - [ ] Load testing (simulate 100 concurrent workflows)
 - [ ] Chaos testing (kill services, check recovery)
@@ -257,18 +277,21 @@
 ## Success Metrics (Phase 1)
 
 **Technical**
+
 - [ ] 99% uptime for API server
 - [ ] < 5s average workflow execution time
 - [ ] < 1% failed executions (excluding user errors)
 - [ ] Support 500+ concurrent workflows
 
 **User Experience**
+
 - [ ] Workflow creation in < 5 minutes
 - [ ] Clear error messages for 90% of failures
 - [ ] 100% idempotent execution
 - [ ] Real-time updates < 2s latency
 
 **Security**
+
 - [ ] Zero fund custody (non-custodial)
 - [ ] All transactions signed with user authority
 - [ ] Rate limits prevent abuse

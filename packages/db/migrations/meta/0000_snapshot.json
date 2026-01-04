@@ -214,12 +214,8 @@
           "name": "executions_workflow_id_workflows_id_fk",
           "tableFrom": "executions",
           "tableTo": "workflows",
-          "columnsFrom": [
-            "workflow_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workflow_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -229,9 +225,7 @@
         "executions_execution_id_unique": {
           "name": "executions_execution_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "execution_id"
-          ]
+          "columns": ["execution_id"]
         }
       },
       "policies": {},
@@ -319,12 +313,8 @@
           "name": "trigger_subscriptions_workflow_id_workflows_id_fk",
           "tableFrom": "trigger_subscriptions",
           "tableTo": "workflows",
-          "columnsFrom": [
-            "workflow_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workflow_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -403,12 +393,8 @@
           "name": "audit_logs_workflow_id_workflows_id_fk",
           "tableFrom": "audit_logs",
           "tableTo": "workflows",
-          "columnsFrom": [
-            "workflow_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workflow_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
