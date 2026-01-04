@@ -17,6 +17,8 @@ export const ActionNode = memo(({ data, selected }: NodeProps) => {
         return "Send Token";
       case "call_program":
         return "Call Program";
+      case "do_nothing":
+        return "Do Nothing";
       default:
         return "Action";
     }
