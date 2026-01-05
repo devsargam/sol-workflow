@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import type { Node } from "@xyflow/react";
 
 interface NodeConfigPanelProps {
@@ -10,11 +10,42 @@ interface NodeConfigPanelProps {
 }
 
 export function NodeConfigPanel({ node, onUpdate, onClose }: NodeConfigPanelProps) {
-  const [formData, setFormData] = useState(node.data);
+  const normalizeFormData = useCallback(
+    (data: any) => {
+      const normalized = { ...data };
+
+      if (node.type === "trigger") {
+        if (!normalized.type && normalized.triggerType) {
+          normalized.type = normalized.triggerType;
+        } else if (!normalized.type && !normalized.triggerType) {
+          normalized.type = "balance_change";
+          normalized.triggerType = "balance_change";
+        } else if (normalized.type && !normalized.triggerType) {
+          normalized.triggerType = normalized.type;
+        }
+      }
+
+      if (node.type === "action") {
+        if (!normalized.type && normalized.actionType) {
+          normalized.type = normalized.actionType;
+        } else if (!normalized.type && !normalized.actionType) {
+          normalized.type = "send_sol";
+          normalized.actionType = "send_sol";
+        } else if (normalized.type && !normalized.actionType) {
+          normalized.actionType = normalized.type;
+        }
+      }
+
+      return normalized;
+    },
+    [node.type]
+  );
+
+  const [formData, setFormData] = useState(() => normalizeFormData(node.data));
 
   useEffect(() => {
-    setFormData(node.data);
-  }, [node]);
+    setFormData(normalizeFormData(node.data));
+  }, [node, normalizeFormData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,18 +114,20 @@ export function NodeConfigPanel({ node, onUpdate, onClose }: NodeConfigPanelProp
 
 // Trigger Configuration
 function TriggerConfig({ formData, setFormData }: any) {
+  const triggerType = formData.type || formData.triggerType || "balance_change";
+
   return (
     <div className="space-y-4">
       <div>
         <label className="block text-sm font-medium mb-2">Trigger Type</label>
         <select
-          value={formData.type || "balance_change"}
+          value={triggerType}
           onChange={(e) =>
             setFormData({
               ...formData,
               type: e.target.value,
               triggerType: e.target.value,
-              config: {},
+              config: formData.config || {},
             })
           }
           className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
@@ -108,7 +141,7 @@ function TriggerConfig({ formData, setFormData }: any) {
         </select>
       </div>
 
-      {formData.type === "balance_change" && (
+      {triggerType === "balance_change" && (
         <>
           <div>
             <label className="block text-sm font-medium mb-2">Wallet Address</label>
@@ -162,7 +195,7 @@ function TriggerConfig({ formData, setFormData }: any) {
         </>
       )}
 
-      {formData.type === "token_receipt" && (
+      {triggerType === "token_receipt" && (
         <>
           <div>
             <label className="block text-sm font-medium mb-2">Token Account</label>
@@ -198,7 +231,7 @@ function TriggerConfig({ formData, setFormData }: any) {
         </>
       )}
 
-      {formData.type === "nft_receipt" && (
+      {triggerType === "nft_receipt" && (
         <>
           <div>
             <label className="block text-sm font-medium mb-2">Wallet Address</label>
@@ -251,7 +284,7 @@ function TriggerConfig({ formData, setFormData }: any) {
         </>
       )}
 
-      {formData.type === "program_log" && (
+      {triggerType === "program_log" && (
         <>
           <div>
             <label className="block text-sm font-medium mb-2">Program ID</label>
@@ -287,7 +320,7 @@ function TriggerConfig({ formData, setFormData }: any) {
         </>
       )}
 
-      {formData.type === "cron" && (
+      {triggerType === "cron" && (
         <>
           <div>
             <label className="block text-sm font-medium mb-2">Schedule (Cron Expression)</label>
@@ -493,18 +526,20 @@ function FilterConfig({ formData, setFormData }: any) {
 
 // Action Configuration
 function ActionConfig({ formData, setFormData }: any) {
+  const actionType = formData.type || formData.actionType || "send_sol";
+
   return (
     <div className="space-y-4">
       <div>
         <label className="block text-sm font-medium mb-2">Action Type</label>
         <select
-          value={formData.type || "send_sol"}
+          value={actionType}
           onChange={(e) =>
             setFormData({
               ...formData,
               type: e.target.value,
               actionType: e.target.value,
-              config: {},
+              config: formData.config || {},
             })
           }
           className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
@@ -516,7 +551,7 @@ function ActionConfig({ formData, setFormData }: any) {
         </select>
       </div>
 
-      {formData.type === "send_sol" && (
+      {actionType === "send_sol" && (
         <>
           <div>
             <label className="block text-sm font-medium mb-2">To Address</label>
@@ -569,7 +604,7 @@ function ActionConfig({ formData, setFormData }: any) {
         </>
       )}
 
-      {formData.type === "send_spl_token" && (
+      {actionType === "send_spl_token" && (
         <>
           <div>
             <label className="block text-sm font-medium mb-2">Token Mint</label>
@@ -653,7 +688,7 @@ function ActionConfig({ formData, setFormData }: any) {
         </>
       )}
 
-      {formData.type === "call_program" && (
+      {actionType === "call_program" && (
         <>
           <div>
             <label className="block text-sm font-medium mb-2">Program ID</label>
