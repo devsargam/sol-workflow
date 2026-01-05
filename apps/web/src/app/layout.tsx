@@ -1,7 +1,7 @@
-import { QueryProvider } from "@/components/providers/query-provider";
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { Provider } from "@/components/providers/provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -30,9 +30,9 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased min-h-screen bg-neutral-50`}
       >
-        <QueryProvider>
+        <Provider>
           <main>{children}</main>
-        </QueryProvider>
+        </Provider>
       </body>
     </html>
   );

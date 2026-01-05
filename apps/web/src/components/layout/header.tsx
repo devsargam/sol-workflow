@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
+import { usePrivy, useWallets } from "@privy-io/react-auth";
 
 function WorkflowIcon({ className }: { className?: string }) {
   return (
@@ -26,6 +27,16 @@ function WorkflowIcon({ className }: { className?: string }) {
 
 export function Header() {
   const pathname = usePathname();
+  const { ready, authenticated, login, logout, user } = usePrivy();
+  const { wallets } = useWallets();
+
+  const handleLogin = () => {
+    login();
+  };
+
+  const handleLogout = () => {
+    logout();
+  };
 
   return (
     <header className="border-b border-black bg-white/80 backdrop-blur-sm sticky top-0 z-50">
@@ -59,6 +70,40 @@ export function Header() {
             Executions
           </Link>
         </nav>
+
+        <div className="flex items-center gap-4">
+          {ready && (
+            <>
+              {authenticated ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 text-sm text-neutral-600">
+                    {user?.email?.address && (
+                      <span className="hidden sm:inline">{user.email.address}</span>
+                    )}
+                    {wallets.length > 0 && wallets[0] && (
+                      <span className="hidden sm:inline font-mono text-xs">
+                        {wallets[0].address.slice(0, 4)}...{wallets[0].address.slice(-4)}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="px-4 py-2 text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleLogin}
+                  className="px-4 py-2 bg-black text-white rounded-md hover:bg-neutral-800 transition-colors text-sm font-medium"
+                >
+                  Login
+                </button>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </header>
   );

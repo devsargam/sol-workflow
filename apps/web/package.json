@@ -10,10 +10,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@solana/wallet-adapter-base": "^0.9.23",
-    "@solana/wallet-adapter-react": "^0.15.35",
-    "@solana/wallet-adapter-react-ui": "^0.9.35",
-    "@solana/wallet-adapter-wallets": "^0.19.32",
+    "@privy-io/react-auth": "^3.10.0",
+    "@repo/types": "workspace:*",
     "@solana/web3.js": "^1.98.0",
     "@tanstack/react-query": "^5.62.11",
     "@xyflow/react": "^12.10.0",
@@ -26,7 +24,6 @@
     "react-dom": "19.2.3",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
-    "@repo/types": "workspace:*",
     "utils": "workspace:*",
     "zod": "^3.24.1",
     "zustand": "^5.0.2"
@@ -42,11 +39,5 @@
     "postcss": "^8.4.33",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3"
-  },
-  "pnpm": {
-    "overrides": {
-      "@types/react": "19.2.7",
-      "@types/react-dom": "19.2.3"
-    }
   }
 }
