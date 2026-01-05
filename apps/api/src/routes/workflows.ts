@@ -10,8 +10,12 @@ import {
 import { Hono } from "hono";
 import { z } from "zod";
 import { getCronScheduler } from "../index";
+import { authMiddleware, AuthenticatedContext } from "../middleware/auth";
 
 const workflows = new Hono();
+
+// Apply auth middleware to all routes
+workflows.use("*", authMiddleware);
 
 // Validation schema for creating/updating workflows
 const createWorkflowSchema = z.object({
@@ -21,10 +25,17 @@ const createWorkflowSchema = z.object({
   metadata: WorkflowMetadataSchema.optional(),
 });
 
-// List all workflows
-workflows.get("/", async (c) => {
+workflows.get("/", async (c: AuthenticatedContext) => {
   try {
-    const allWorkflows = await db.select().from(workflowsTable);
+    const userId = c.user?.id;
+    if (!userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const allWorkflows = await db
+      .select()
+      .from(workflowsTable)
+      .where(eq(workflowsTable.userId, userId));
 
     return c.json({ workflows: allWorkflows });
   } catch (error) {
@@ -33,10 +44,15 @@ workflows.get("/", async (c) => {
   }
 });
 
-// Get workflow by ID
-workflows.get("/:id", async (c) => {
+workflows.get("/:id", async (c: AuthenticatedContext) => {
   try {
+    const userId = c.user?.id;
     const id = c.req.param("id");
+
+    if (!userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
     const [workflow] = await db
       .select()
       .from(workflowsTable)
@@ -45,6 +61,10 @@ workflows.get("/:id", async (c) => {
 
     if (!workflow) {
       return c.json({ error: "Workflow not found" }, 404);
+    }
+
+    if (workflow.userId !== userId) {
+      return c.json({ error: "Forbidden" }, 403);
     }
 
     return c.json({ workflow });
@@ -57,6 +77,12 @@ workflows.get("/:id", async (c) => {
 // Create workflow
 workflows.post("/", zValidator("json", createWorkflowSchema), async (c) => {
   try {
+    const ctx = c as unknown as AuthenticatedContext;
+    const userId = ctx.user?.id;
+    if (!userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
     const data = c.req.valid("json");
 
     // Validate the graph structure
@@ -104,6 +130,7 @@ workflows.post("/", zValidator("json", createWorkflowSchema), async (c) => {
       .values({
         name: data.name,
         description: data.description,
+        userId: userId,
         graph: data.graph,
         metadata: data.metadata || {
           version: WORKFLOW_METADATA.VERSION,
@@ -125,11 +152,32 @@ workflows.post("/", zValidator("json", createWorkflowSchema), async (c) => {
   }
 });
 
-// Update workflow
+// Update workflow (check ownership)
 workflows.patch("/:id", zValidator("json", createWorkflowSchema.partial()), async (c) => {
   try {
+    const ctx = c as unknown as AuthenticatedContext;
+    const userId = ctx.user?.id;
     const id = c.req.param("id");
     const data = c.req.valid("json");
+
+    if (!userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    // Check ownership
+    const [existing] = await db
+      .select()
+      .from(workflowsTable)
+      .where(eq(workflowsTable.id, id))
+      .limit(1);
+
+    if (!existing) {
+      return c.json({ error: "Workflow not found" }, 404);
+    }
+
+    if (existing.userId !== userId) {
+      return c.json({ error: "Forbidden" }, 403);
+    }
 
     const updateData: any = { updatedAt: new Date() };
 
@@ -215,9 +263,29 @@ workflows.patch("/:id", zValidator("json", createWorkflowSchema.partial()), asyn
   }
 });
 
-workflows.delete("/:id", async (c) => {
+workflows.delete("/:id", async (c: AuthenticatedContext) => {
   try {
+    const userId = c.user?.id;
     const id = c.req.param("id");
+
+    if (!userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    // Check ownership
+    const [existing] = await db
+      .select()
+      .from(workflowsTable)
+      .where(eq(workflowsTable.id, id))
+      .limit(1);
+
+    if (!existing) {
+      return c.json({ error: "Workflow not found" }, 404);
+    }
+
+    if (existing.userId !== userId) {
+      return c.json({ error: "Forbidden" }, 403);
+    }
 
     const cronScheduler = getCronScheduler();
     if (cronScheduler) {
@@ -237,10 +305,15 @@ workflows.delete("/:id", async (c) => {
   }
 });
 
-// Toggle workflow enabled/disabled
-workflows.post("/:id/toggle", async (c) => {
+// Toggle workflow enabled/disabled (check ownership)
+workflows.post("/:id/toggle", async (c: AuthenticatedContext) => {
   try {
+    const userId = c.user?.id;
     const id = c.req.param("id");
+
+    if (!userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
 
     // Fetch current workflow
     const [current] = await db
@@ -251,6 +324,11 @@ workflows.post("/:id/toggle", async (c) => {
 
     if (!current) {
       return c.json({ error: "Workflow not found" }, 404);
+    }
+
+    // Check ownership
+    if (current.userId !== userId) {
+      return c.json({ error: "Forbidden" }, 403);
     }
 
     const newEnabledState = !current.enabled;
