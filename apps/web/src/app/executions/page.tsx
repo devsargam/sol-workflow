@@ -1,11 +1,14 @@
 "use client";
 
+import { usePrivy } from "@privy-io/react-auth";
 import { Header } from "@/components/layout/header";
+import { AuthError } from "@/components/ui/auth-error";
 import { useExecutions } from "@/lib/hooks/use-executions";
 import { useWorkflows } from "@/lib/hooks/use-workflows";
 import { ExecutionStatus } from "utils";
 
 export default function ExecutionsPage() {
+  const { authenticated, ready } = usePrivy();
   const { data: executionsData, isLoading, error } = useExecutions();
   const { data: workflowsData } = useWorkflows();
 
@@ -76,14 +79,21 @@ export default function ExecutionsPage() {
           </div>
         )}
 
-        {/* Error State */}
         {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-6">
-            <p className="text-red-600">Error loading executions: {(error as Error).message}</p>
-          </div>
+          <>
+            {ready && !authenticated ? (
+              <AuthError
+                message="Please log in to view execution history."
+                onRetry={() => window.location.reload()}
+              />
+            ) : (
+              <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+                <p className="text-red-600">Error loading executions: {(error as Error).message}</p>
+              </div>
+            )}
+          </>
         )}
 
-        {/* Empty State */}
         {executionsData?.executions && executionsData.executions.length === 0 && (
           <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-12 text-center">
             <div className="max-w-sm mx-auto">

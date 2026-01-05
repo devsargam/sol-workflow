@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { usePrivy } from "@privy-io/react-auth";
 import { Header } from "@/components/layout/header";
 import { DeleteModal } from "@/components/ui/delete-modal";
+import { AuthError } from "@/components/ui/auth-error";
 import { useDeleteWorkflow, useToggleWorkflow, useWorkflows } from "@/lib/hooks/use-workflows";
 
 export default function WorkflowsPage() {
+  const { authenticated, ready } = usePrivy();
   const { data, isLoading, error } = useWorkflows();
   const deleteWorkflowMutation = useDeleteWorkflow();
   const toggleWorkflow = useToggleWorkflow();
@@ -69,9 +72,18 @@ export default function WorkflowsPage() {
         )}
 
         {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-6">
-            <p className="text-red-600">Error loading workflows: {(error as Error).message}</p>
-          </div>
+          <>
+            {ready && !authenticated ? (
+              <AuthError
+                message="Please log in to view your workflows."
+                onRetry={() => window.location.reload()}
+              />
+            ) : (
+              <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+                <p className="text-red-600">Error loading workflows: {(error as Error).message}</p>
+              </div>
+            )}
+          </>
         )}
 
         {data?.workflows && data.workflows.length === 0 && (
