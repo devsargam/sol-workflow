@@ -23,16 +23,13 @@ export default function WorkflowBuilderClientPage() {
   const [errors, setErrors] = useState<string[]>([]);
   const [showErrors, setShowErrors] = useState(false);
 
-  // Load existing workflow data when editing
   useEffect(() => {
     if (existingWorkflow?.workflow) {
       const workflow = existingWorkflow.workflow;
       setWorkflowName(workflow.name);
       setWorkflowDescription(workflow.description || "");
 
-      // Load the workflow graph into the visual builder
       if (builderRef.current && workflow.graph) {
-        // Load the graph directly
         builderRef.current.loadWorkflow(workflow.graph);
       }
     }
@@ -44,7 +41,6 @@ export default function WorkflowBuilderClientPage() {
     setShowErrors(false);
 
     try {
-      // Get workflow graph from React Flow
       const graph = builderRef.current?.getWorkflowData();
 
       if (!graph) {
@@ -67,10 +63,8 @@ export default function WorkflowBuilderClientPage() {
         return;
       }
 
-      // Use "Untitled workflow" if no name is provided
       const finalWorkflowName = workflowName.trim() || "Untitled workflow";
 
-      // Prepare workflow data for API
       const workflowData = {
         name: finalWorkflowName,
         description: workflowDescription,
@@ -87,10 +81,8 @@ export default function WorkflowBuilderClientPage() {
       };
 
       if (editId) {
-        // Update existing workflow
         await updateWorkflow.mutateAsync({ id: editId, data: workflowData });
       } else {
-        // Create new workflow
         await createWorkflow.mutateAsync(workflowData);
       }
 
@@ -113,7 +105,6 @@ export default function WorkflowBuilderClientPage() {
     }
   };
 
-  // Show loading state while fetching workflow
   if (editId && isLoadingWorkflow) {
     return (
       <div className="h-screen flex items-center justify-center bg-neutral-50">
@@ -127,7 +118,6 @@ export default function WorkflowBuilderClientPage() {
 
   return (
     <div className="h-screen flex flex-col bg-neutral-50">
-      {/* Clean Header */}
       <header className="bg-white border-b border-neutral-200">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between gap-6">
@@ -172,7 +162,6 @@ export default function WorkflowBuilderClientPage() {
               </div>
             </div>
 
-            {/* Right Section */}
             <div className="flex items-center gap-2">
               <button
                 onClick={() => router.push("/workflows")}
