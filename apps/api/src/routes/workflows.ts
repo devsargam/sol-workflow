@@ -215,12 +215,10 @@ workflows.patch("/:id", zValidator("json", createWorkflowSchema.partial()), asyn
   }
 });
 
-// Delete workflow
 workflows.delete("/:id", async (c) => {
   try {
     const id = c.req.param("id");
 
-    // Remove any cron jobs for this workflow before deleting
     const cronScheduler = getCronScheduler();
     if (cronScheduler) {
       await cronScheduler.removeAllForWorkflow(id);

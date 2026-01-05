@@ -1,17 +1,41 @@
 "use client";
 
+import { useState } from "react";
 import { Header } from "@/components/layout/header";
-import { useToggleWorkflow, useWorkflows } from "@/lib/hooks/use-workflows";
+import { DeleteModal } from "@/components/ui/delete-modal";
+import { useDeleteWorkflow, useToggleWorkflow, useWorkflows } from "@/lib/hooks/use-workflows";
 
 export default function WorkflowsPage() {
   const { data, isLoading, error } = useWorkflows();
+  const deleteWorkflowMutation = useDeleteWorkflow();
   const toggleWorkflow = useToggleWorkflow();
+  const [workflowToDelete, setWorkflowToDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
+  const handleDeleteClick = (workflow: { id: string; name: string }) => {
+    setWorkflowToDelete(workflow);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (workflowToDelete) {
+      deleteWorkflowMutation.mutate(workflowToDelete.id, {
+        onSuccess: () => {
+          setWorkflowToDelete(null);
+        },
+      });
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setWorkflowToDelete(null);
+  };
 
   return (
     <>
       <Header />
       <div className="max-w-5xl mx-auto px-6 py-12">
-        {/* Header */}
         <div className="flex justify-between items-start mb-12">
           <div className="max-w-2xl">
             <h1 className="text-4xl font-bold tracking-tight mb-2">Workflows</h1>
@@ -35,7 +59,6 @@ export default function WorkflowsPage() {
           </button>
         </div>
 
-        {/* Loading State */}
         {isLoading && (
           <div className="rounded-xl border border-neutral-200 bg-white p-12 text-center">
             <div className="inline-flex items-center gap-2 text-neutral-600">
@@ -45,14 +68,12 @@ export default function WorkflowsPage() {
           </div>
         )}
 
-        {/* Error State */}
         {error && (
           <div className="rounded-xl border border-red-200 bg-red-50 p-6">
             <p className="text-red-600">Error loading workflows: {(error as Error).message}</p>
           </div>
         )}
 
-        {/* Empty State */}
         {data?.workflows && data.workflows.length === 0 && (
           <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-12 text-center">
             <div className="max-w-sm mx-auto">
@@ -93,7 +114,6 @@ export default function WorkflowsPage() {
           </div>
         )}
 
-        {/* Workflows List */}
         {data?.workflows && data.workflows.length > 0 && (
           <div className="space-y-4">
             {data.workflows.map((workflow) => (
@@ -101,7 +121,6 @@ export default function WorkflowsPage() {
                 key={workflow.id}
                 className="rounded-xl border border-neutral-200 bg-white p-6 hover:shadow-md transition-shadow"
               >
-                {/* Header */}
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold mb-1">{workflow.name}</h3>
@@ -132,6 +151,25 @@ export default function WorkflowsPage() {
                       </svg>
                     </button>
                     <button
+                      onClick={() => handleDeleteClick({ id: workflow.id, name: workflow.name })}
+                      className="p-2 hover:bg-red-100 rounded-lg transition-colors group"
+                      title="Delete workflow"
+                    >
+                      <svg
+                        className="w-4 h-4 text-neutral-600 group-hover:text-red-700"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
+                    <button
                       onClick={() => toggleWorkflow.mutate(workflow.id)}
                       disabled={toggleWorkflow.isPending}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
@@ -145,7 +183,6 @@ export default function WorkflowsPage() {
                   </div>
                 </div>
 
-                {/* Workflow Details */}
                 <div className="grid grid-cols-2 gap-6 mb-6">
                   <div>
                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">
@@ -210,7 +247,6 @@ export default function WorkflowsPage() {
                   </div>
                 </div>
 
-                {/* Footer */}
                 <div className="pt-4 border-t border-neutral-100 text-xs text-neutral-500">
                   Created {new Date(workflow.createdAt).toLocaleDateString()}
                 </div>
@@ -219,6 +255,20 @@ export default function WorkflowsPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteModal
+        isOpen={!!workflowToDelete}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Workflow"
+        description={
+          workflowToDelete
+            ? `Are you sure you want to delete "${workflowToDelete.name}"? This action cannot be undone.`
+            : ""
+        }
+        isLoading={deleteWorkflowMutation.isPending}
+      />
     </>
   );
 }

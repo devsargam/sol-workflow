@@ -24,7 +24,6 @@ import { NotifyNode } from "./nodes/NotifyNode";
 import { TriggerNode } from "./nodes/TriggerNode";
 import { Sidebar } from "./Sidebar";
 
-// Define custom node types
 const nodeTypes = {
   trigger: TriggerNode,
   filter: FilterNode,
@@ -32,7 +31,6 @@ const nodeTypes = {
   notify: NotifyNode,
 };
 
-// Initial nodes for a new workflow
 const getInitialNodes = (): Node[] => [
   {
     id: "trigger-1",
@@ -77,7 +75,6 @@ const getInitialNodes = (): Node[] => [
   },
 ];
 
-// Initial edges connecting the nodes
 const getInitialEdges = (): Edge[] => [
   {
     id: "e1-2",
@@ -113,10 +110,8 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
 
-  // Expose methods via ref
   useImperativeHandle(ref, () => ({
     getWorkflowData: () => {
-      // Return the graph structure directly for V2 API
       return {
         nodes: nodes.map((n) => {
           const baseNode = {
@@ -128,7 +123,6 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
             } as any,
           };
 
-          // Map fields based on node type
           switch (n.type) {
             case "trigger":
               baseNode.data.nodeType = "trigger";
@@ -224,19 +218,74 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
     },
     loadWorkflow: (workflow: any) => {
       if (workflow.nodes && workflow.edges) {
-        // Load graph format directly (V2 API)
-        setNodes(workflow.nodes);
+        const normalizedNodes = workflow.nodes.map((node: Node) => {
+          const nodeData = node.data || {};
+          const nestedData = (nodeData as any)?.data || {};
+
+          const normalizedData: any = {
+            label: nodeData.label || node.type || "",
+            ...nodeData,
+          };
+
+          if (node.type === "trigger") {
+            normalizedData.triggerType =
+              normalizedData.triggerType ||
+              normalizedData.type ||
+              nestedData.triggerType ||
+              "balance_change";
+            normalizedData.type = normalizedData.triggerType;
+            normalizedData.config = normalizedData.config || nestedData.config || {};
+            if (!normalizedData.config || typeof normalizedData.config !== "object") {
+              normalizedData.config = {};
+            }
+          }
+
+          if (node.type === "action") {
+            normalizedData.actionType =
+              normalizedData.actionType ||
+              normalizedData.type ||
+              nestedData.actionType ||
+              "send_sol";
+            normalizedData.type = normalizedData.actionType;
+            normalizedData.config = normalizedData.config || nestedData.config || {};
+            if (!normalizedData.config || typeof normalizedData.config !== "object") {
+              normalizedData.config = {};
+            }
+          }
+
+          if (node.type === "filter") {
+            normalizedData.conditions = normalizedData.conditions || nestedData.conditions || [];
+            normalizedData.logic = normalizedData.logic || nestedData.logic || "and";
+          }
+
+          if (node.type === "notify") {
+            normalizedData.notifyType =
+              normalizedData.notifyType ||
+              normalizedData.type ||
+              nestedData.notifyType ||
+              "discord";
+            normalizedData.type = normalizedData.notifyType;
+            normalizedData.webhookUrl = normalizedData.webhookUrl || nestedData.webhookUrl || "";
+            normalizedData.template = normalizedData.template || nestedData.template || "default";
+            if (normalizedData.notifications && Array.isArray(normalizedData.notifications)) {
+            }
+          }
+
+          return {
+            ...node,
+            data: normalizedData,
+          };
+        });
+
+        setNodes(normalizedNodes);
         setEdges(workflow.edges);
       } else if (workflow._visual) {
-        // Load from saved visual representation (legacy)
         setNodes(workflow._visual.nodes || getInitialNodes());
         setEdges(workflow._visual.edges || getInitialEdges());
       } else {
-        // Convert from API format to visual nodes
         const newNodes: Node[] = [];
         const newEdges: Edge[] = [];
 
-        // Create trigger node
         if (workflow.trigger || workflow.triggerType) {
           newNodes.push({
             id: "trigger-1",
@@ -250,7 +299,6 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
           });
         }
 
-        // Create filter node
         newNodes.push({
           id: "filter-1",
           type: "filter",
@@ -261,7 +309,6 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
           },
         });
 
-        // Create action node
         if (workflow.action || workflow.actionType) {
           newNodes.push({
             id: "action-1",
@@ -275,7 +322,6 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
           });
         }
 
-        // Create notify node
         if (workflow.notify || workflow.notifyType) {
           newNodes.push({
             id: "notify-1",
@@ -290,7 +336,6 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
           });
         }
 
-        // Create edges between nodes
         if (newNodes.length > 1) {
           for (let i = 0; i < newNodes.length - 1; i++) {
             const sourceNode = newNodes[i];
@@ -313,7 +358,6 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
     },
   }));
 
-  // Handle new connections
   const onConnect: OnConnect = useCallback(
     (connection: Connection) => {
       setEdges((eds) =>
@@ -330,17 +374,14 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
     [setEdges]
   );
 
-  // Handle node click
   const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
     setSelectedNode(node);
   }, []);
 
-  // Handle pane click (deselect)
   const onPaneClick = useCallback(() => {
     setSelectedNode(null);
   }, []);
 
-  // Update node data
   const updateNodeData = useCallback(
     (nodeId: string, data: any) => {
       setNodes((nds) =>
@@ -361,20 +402,17 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
     [setNodes]
   );
 
-  // Handle drag over
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
   }, []);
 
-  // Handle drop
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
 
       const type = event.dataTransfer.getData("application/reactflow");
 
-      // Check if the dropped element is valid
       if (typeof type === "undefined" || !type) {
         return;
       }
@@ -419,14 +457,6 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
           <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
           <Controls />
           <MiniMap />
-
-          {/*<Panel
-            position="top-left"
-            className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 m-4"
-          >
-            <h2 className="text-xl font-semibold mb-2">Workflow Builder</h2>
-            <p className="text-sm text-neutral-600">Configure nodes by clicking on them</p>
-          </Panel>*/}
         </ReactFlow>
       </div>
 
