@@ -1,7 +1,22 @@
 // API client for graph-based workflows
 import { ENV_DEFAULTS, WORKFLOW_METADATA, API } from "utils";
+import { getAccessToken } from "@privy-io/react-auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || ENV_DEFAULTS.NEXT_PUBLIC_API_URL;
+
+async function getAuthHeaders(): Promise<HeadersInit> {
+  try {
+    const token = await getAccessToken();
+    return {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  } catch (error) {
+    return {
+      "Content-Type": "application/json",
+    };
+  }
+}
 
 export interface WorkflowGraph {
   nodes: any[];
@@ -41,21 +56,31 @@ export interface CreateWorkflowData {
 
 // Workflows API
 export async function fetchWorkflows(): Promise<{ workflows: Workflow[] }> {
-  const res = await fetch(`${API_URL}${API.ROUTES.WORKFLOWS}`);
-  if (!res.ok) throw new Error("Failed to fetch workflows");
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}${API.ROUTES.WORKFLOWS}`, { headers });
+  if (!res.ok) {
+    if (res.status === 401) throw new Error("Unauthorized - Please login");
+    throw new Error("Failed to fetch workflows");
+  }
   return res.json();
 }
 
 export async function fetchWorkflow(id: string): Promise<{ workflow: Workflow }> {
-  const res = await fetch(`${API_URL}${API.ROUTES.WORKFLOWS}/${id}`);
-  if (!res.ok) throw new Error("Failed to fetch workflow");
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}${API.ROUTES.WORKFLOWS}/${id}`, { headers });
+  if (!res.ok) {
+    if (res.status === 401) throw new Error("Unauthorized - Please login");
+    if (res.status === 403) throw new Error("Forbidden - You don't have access to this workflow");
+    throw new Error("Failed to fetch workflow");
+  }
   return res.json();
 }
 
 export async function createWorkflow(data: CreateWorkflowData): Promise<{ workflow: Workflow }> {
+  const headers = await getAuthHeaders();
   const res = await fetch(`${API_URL}${API.ROUTES.WORKFLOWS}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({
       ...data,
       metadata: {
@@ -69,14 +94,15 @@ export async function createWorkflow(data: CreateWorkflowData): Promise<{ workfl
   const json = await res.json().catch(() => null);
 
   if (!res.ok) {
+    if (res.status === 401) throw new Error("Unauthorized - Please login");
     const message =
       typeof (json as any)?.error === "string"
         ? (json as any).error
         : typeof (json as any)?.message === "string"
-          ? (json as any).message
-          : json
-            ? JSON.stringify(json)
-            : `Failed to create workflow (${res.status})`;
+        ? (json as any).message
+        : json
+        ? JSON.stringify(json)
+        : `Failed to create workflow (${res.status})`;
     throw new Error(message);
   }
   return json as { workflow: Workflow };
@@ -86,9 +112,10 @@ export async function updateWorkflow(
   id: string,
   data: Partial<CreateWorkflowData>
 ): Promise<{ workflow: Workflow }> {
+  const headers = await getAuthHeaders();
   const res = await fetch(`${API_URL}${API.ROUTES.WORKFLOWS}/${id}`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({
       ...data,
       metadata: data.metadata
@@ -100,6 +127,8 @@ export async function updateWorkflow(
     }),
   });
   if (!res.ok) {
+    if (res.status === 401) throw new Error("Unauthorized - Please login");
+    if (res.status === 403) throw new Error("Forbidden - You don't have access to this workflow");
     const error = await res.json();
     throw new Error(error.error || "Failed to update workflow");
   }
@@ -107,18 +136,30 @@ export async function updateWorkflow(
 }
 
 export async function deleteWorkflow(id: string): Promise<{ workflow: Workflow }> {
+  const headers = await getAuthHeaders();
   const res = await fetch(`${API_URL}${API.ROUTES.WORKFLOWS}/${id}`, {
     method: "DELETE",
+    headers,
   });
-  if (!res.ok) throw new Error("Failed to delete workflow");
+  if (!res.ok) {
+    if (res.status === 401) throw new Error("Unauthorized - Please login");
+    if (res.status === 403) throw new Error("Forbidden - You don't have access to this workflow");
+    throw new Error("Failed to delete workflow");
+  }
   return res.json();
 }
 
 export async function toggleWorkflow(id: string): Promise<{ workflow: Workflow }> {
+  const headers = await getAuthHeaders();
   const res = await fetch(`${API_URL}${API.ROUTES.WORKFLOWS}/${id}/toggle`, {
     method: "POST",
+    headers,
   });
-  if (!res.ok) throw new Error("Failed to toggle workflow");
+  if (!res.ok) {
+    if (res.status === 401) throw new Error("Unauthorized - Please login");
+    if (res.status === 403) throw new Error("Forbidden - You don't have access to this workflow");
+    throw new Error("Failed to toggle workflow");
+  }
   return res.json();
 }
 

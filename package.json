@@ -16,7 +16,8 @@
     "db:push": "pnpm --filter db push",
     "lint": "pnpm -r lint",
     "type-check": "pnpm -r type-check",
-    "clean": "pnpm -r clean && rm -rf node_modules"
+    "clean": "pnpm -r clean && rm -rf node_modules",
+    "prepare": "husky"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

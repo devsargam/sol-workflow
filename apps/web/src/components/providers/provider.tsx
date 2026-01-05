@@ -13,11 +13,18 @@ export function Provider({ children }: { children: React.ReactNode }) {
     <PrivyProvider
       appId={appId}
       config={{
-        loginMethods: ["email", "wallet", "sms"],
+        loginMethods: ["email"],
         appearance: {
           theme: "light",
           accentColor: "#000000",
           logo: undefined,
+        },
+        embeddedWallets: {
+          // createOnLogin:{
+          //     solana:{
+          //         accountSuffix: "sol-workflow",
+          //     }
+          // }
         },
       }}
     >

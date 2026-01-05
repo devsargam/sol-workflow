@@ -6,6 +6,7 @@ import { validateWorkflowGraphForBuilder } from "@repo/types";
 import { log } from "utils";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { Header } from "@/components/layout/header";
 
 export default function WorkflowBuilderClientPage() {
   const router = useRouter();
@@ -118,6 +119,7 @@ export default function WorkflowBuilderClientPage() {
 
   return (
     <div className="h-screen flex flex-col bg-neutral-50">
+      <Header />
       <header className="bg-white border-b border-neutral-200">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between gap-6">
