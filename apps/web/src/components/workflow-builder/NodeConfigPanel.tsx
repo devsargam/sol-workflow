@@ -737,19 +737,19 @@ function NotifyConfig({ formData, setFormData }: any) {
   const notifications = isMultipleMode
     ? formData.notifications
     : formData.notifyType || formData.type
-      ? [
-          {
-            notifyType: formData.notifyType || formData.type || "discord",
-            webhookUrl: formData.webhookUrl,
-            telegramBotToken: formData.telegramBotToken,
-            telegramChatId: formData.telegramChatId,
-            telegramParseMode: formData.telegramParseMode,
-            telegramDisableWebPreview: formData.telegramDisableWebPreview,
-            template: formData.template || "default",
-            customMessage: formData.customMessage,
-          },
-        ]
-      : [];
+    ? [
+        {
+          notifyType: formData.notifyType || formData.type || "discord",
+          webhookUrl: formData.webhookUrl,
+          telegramBotToken: formData.telegramBotToken,
+          telegramChatId: formData.telegramChatId,
+          telegramParseMode: formData.telegramParseMode,
+          telegramDisableWebPreview: formData.telegramDisableWebPreview,
+          template: formData.template || "default",
+          customMessage: formData.customMessage,
+        },
+      ]
+    : [];
 
   const updateNotifications = (newNotifications: any[]) => {
     if (newNotifications.length === 0) {
@@ -893,12 +893,21 @@ function NotifyConfig({ formData, setFormData }: any) {
                         updateNotification(index, { ...notification, webhookUrl: e.target.value })
                       }
                       className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
-                      placeholder="https://discord.com/api/webhooks/..."
+                      placeholder={
+                        notification.notifyType === "webhook"
+                          ? "https://your-server.com/api/webhook"
+                          : "https://discord.com/api/webhooks/..."
+                      }
                       required
                     />
                     {notification.notifyType === "discord" && (
                       <p className="text-xs text-neutral-500 mt-1">
                         Get from: Server Settings → Integrations → Webhooks
+                      </p>
+                    )}
+                    {notification.notifyType === "webhook" && (
+                      <p className="text-xs text-neutral-500 mt-1">
+                        Enter any HTTP endpoint URL that accepts POST requests
                       </p>
                     )}
                   </div>
@@ -913,11 +922,32 @@ function NotifyConfig({ formData, setFormData }: any) {
                       className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
                     >
                       <option value="default">Default (Auto-select)</option>
-                      <option value="success">Success (Green embed)</option>
-                      <option value="error">Error (Red embed)</option>
+                      <option value="success">Success</option>
+                      <option value="error">Error</option>
                       <option value="minimal">Minimal (Single line)</option>
                       <option value="detailed">Detailed (Full context)</option>
                     </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Custom Message (optional)
+                    </label>
+                    <textarea
+                      value={notification.customMessage || ""}
+                      onChange={(e) =>
+                        updateNotification(index, {
+                          ...notification,
+                          customMessage: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                      placeholder="Override template with custom message..."
+                      rows={3}
+                    />
+                    <p className="text-xs text-neutral-500 mt-1">
+                      If provided, this will override the template message
+                    </p>
                   </div>
                 </>
               )}

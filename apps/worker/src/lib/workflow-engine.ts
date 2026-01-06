@@ -431,7 +431,14 @@ class NotifyNodeExecutor implements NodeExecutor {
       ) {
         await this.sendTelegramNotification(notificationConfig, context);
       } else if (notificationConfig.notifyType === "webhook" && notificationConfig.webhookUrl) {
-        await this.sendWebhook(notificationConfig, context);
+        await this.sendWebhook(
+          {
+            webhookUrl: notificationConfig.webhookUrl,
+            template: notificationConfig.template,
+            customMessage: notificationConfig.customMessage,
+          },
+          context
+        );
       } else {
         console.warn(
           `Notification ${notificationId}: Type ${notificationConfig.notifyType} not yet implemented or missing required fields`
@@ -537,25 +544,154 @@ class NotifyNodeExecutor implements NodeExecutor {
   private async sendWebhook(
     data: {
       webhookUrl?: string;
+      template?: string;
+      customMessage?: string;
     },
     context: ExecutionContext
   ) {
+    const [workflow] = await db
+      .select()
+      .from(workflowsTable)
+      .where(eq(workflowsTable.id, context.workflowId))
+      .limit(1);
+
+    if (!workflow) {
+      throw new Error(`Workflow ${context.workflowId} not found`);
+    }
+
+    const txSignature = context.variables.get("txSignature");
+
+    const graph = workflow.graph as any;
+    const triggerNode = graph?.nodes?.find((n: any) => n.type === NodeType.TRIGGER);
+    const triggerType = triggerNode?.data?.triggerType || "unknown";
+
+    const executionStatus = context.hasErrors ? "failed" : "success";
+
+    let formattedMessage = "";
+    if (data.customMessage) {
+      formattedMessage = data.customMessage;
+    } else {
+      formattedMessage = this.formatWebhookMessage(data.template || "default", {
+        workflowName: workflow.name,
+        executionId: context.executionId,
+        txSignature,
+        status: executionStatus,
+        triggerType,
+        triggerData: context.triggerData,
+        variables: Object.fromEntries(context.variables),
+      });
+    }
+
+    const payload = {
+      workflowId: context.workflowId,
+      workflowName: workflow.name,
+      executionId: context.executionId,
+      status: executionStatus,
+      timestamp: new Date().toISOString(),
+
+      triggerType,
+      triggerData: context.triggerData,
+
+      variables: Object.fromEntries(context.variables),
+      executionPath: context.executionPath,
+      hasErrors: context.hasErrors,
+
+      ...(txSignature && { txSignature }),
+
+      message: formattedMessage,
+      template: data.template || "default",
+    };
+
     const response = await fetch(data.webhookUrl!, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "User-Agent": "SOL-Workflow/1.0",
       },
-      body: JSON.stringify({
-        workflowId: context.workflowId,
-        executionId: context.executionId,
-        triggerData: context.triggerData,
-        variables: Object.fromEntries(context.variables),
-        executionPath: context.executionPath,
-      }),
+      body: JSON.stringify(payload),
     });
 
+    console.log("Webhook response:", response);
     if (!response.ok) {
-      throw new Error(`Webhook failed: ${response.statusText}`);
+      const errorText = await response.text().catch(() => response.statusText);
+      throw new Error(`Webhook failed: ${response.status} - ${errorText}`);
+    }
+  }
+
+  private formatWebhookMessage(
+    template: string,
+    context: {
+      workflowName: string;
+      executionId: string;
+      txSignature?: string;
+      status: string;
+      triggerType: string;
+      triggerData?: any;
+      variables?: Record<string, any>;
+    }
+  ): string {
+    const statusEmoji = context.status === "success" ? "✅" : "❌";
+    const statusText = context.status === "success" ? "Success" : "Failed";
+
+    switch (template) {
+      case "minimal":
+        return `${statusEmoji} Workflow "${context.workflowName}" executed: ${statusText}`;
+
+      case "success":
+        return (
+          `🎉 Workflow Executed Successfully\n\n` +
+          `Workflow: ${context.workflowName}\n` +
+          `Status: ✅ Success\n` +
+          `Trigger: ${context.triggerType.replace("_", " ").toUpperCase()}\n` +
+          `Execution ID: ${context.executionId}\n` +
+          (context.txSignature ? `Transaction: https://solscan.io/tx/${context.txSignature}\n` : "")
+        );
+
+      case "error":
+        return (
+          `⚠️ Workflow Execution Failed\n\n` +
+          `Workflow: ${context.workflowName}\n` +
+          `Status: ❌ Failed\n` +
+          `Trigger: ${context.triggerType.replace("_", " ").toUpperCase()}\n` +
+          `Execution ID: ${context.executionId}`
+        );
+
+      case "detailed":
+        const lines = [
+          `${statusEmoji} Workflow Execution Report`,
+          "",
+          `Workflow: ${context.workflowName}`,
+          `Status: ${statusText}`,
+          `Trigger: ${context.triggerType.replace("_", " ").toUpperCase()}`,
+          `Execution ID: ${context.executionId}`,
+        ];
+
+        if (context.txSignature) {
+          lines.push(`Transaction: https://solscan.io/tx/${context.txSignature}`);
+        }
+
+        if (context.triggerData) {
+          lines.push("");
+          lines.push("Trigger Data:");
+          lines.push(JSON.stringify(context.triggerData, null, 2).substring(0, 1000));
+        }
+
+        if (context.variables && Object.keys(context.variables).length > 0) {
+          lines.push("");
+          lines.push("Variables:");
+          lines.push(JSON.stringify(context.variables, null, 2).substring(0, 1000));
+        }
+
+        return lines.join("\n");
+
+      default:
+        return (
+          `${statusEmoji} Workflow "${context.workflowName}" executed\n\n` +
+          `Status: ${statusText}\n` +
+          `Execution ID: ${context.executionId}\n` +
+          `Trigger: ${context.triggerType.replace("_", " ").toUpperCase()}` +
+          (context.txSignature ? `\nTransaction: https://solscan.io/tx/${context.txSignature}` : "")
+        );
     }
   }
 }
