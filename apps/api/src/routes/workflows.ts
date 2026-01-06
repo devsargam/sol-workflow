@@ -15,10 +15,8 @@ import { createAuditLog, extractClientInfo } from "../lib/audit-logger";
 
 const workflows = new Hono();
 
-// Apply auth middleware to all routes
 workflows.use("*", authMiddleware);
 
-// Validation schema for creating/updating workflows
 const createWorkflowSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),

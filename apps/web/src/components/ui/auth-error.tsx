@@ -15,25 +15,25 @@ export function AuthError({ message, onRetry }: AuthErrorProps) {
   };
 
   return (
-    <div className="rounded-xl border border-amber-200 bg-amber-50 p-8 text-center">
+    <div className="border border-black bg-white p-12 text-center">
       <div className="max-w-md mx-auto">
-        <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="w-16 h-16 border-2 border-black rounded-full flex items-center justify-center mx-auto mb-6">
           <svg
-            className="w-8 h-8 text-amber-600"
+            className="w-8 h-8 text-neutral-900"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            strokeWidth={2}
           >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth={2}
               d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
             />
           </svg>
         </div>
-        <h3 className="text-lg font-semibold text-amber-900 mb-2">Authentication Required</h3>
-        <p className="text-sm text-amber-700 mb-6">
+        <h3 className="text-xl font-semibold text-neutral-900 mb-3">Authentication Required</h3>
+        <p className="text-sm text-neutral-600 mb-8">
           {message || "Please log in to access this page and view your workflows."}
         </p>
         <div className="flex items-center justify-center gap-3">
@@ -54,7 +54,7 @@ export function AuthError({ message, onRetry }: AuthErrorProps) {
           {onRetry && (
             <button
               onClick={onRetry}
-              className="px-6 py-2.5 text-sm font-medium text-amber-700 hover:text-amber-900 hover:bg-amber-100 rounded-lg transition-colors"
+              className="px-6 py-2.5 border border-black text-sm font-medium text-neutral-900 hover:bg-neutral-50 rounded-lg transition-colors"
             >
               Retry
             </button>

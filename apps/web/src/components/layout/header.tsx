@@ -30,16 +30,6 @@ export function Header() {
   const { ready, authenticated, login, logout, user } = usePrivy();
   const { wallets } = useWallets();
 
-  console.log(authenticated);
-  console.log(user);
-  console.log(wallets);
-  console.log(ready);
-  console.log(pathname);
-  console.log(authenticated);
-  console.log(user);
-  console.log(wallets);
-  console.log(ready);
-  console.log(pathname);
   const handleLogin = () => {
     login();
   };
