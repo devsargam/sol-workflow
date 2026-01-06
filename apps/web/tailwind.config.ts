@@ -59,6 +59,8 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-inter)", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],
+        dynapuff: ['"DynaPuff"', "cursive"],
+        script: ['"Style Script"', "cursive"],
       },
       keyframes: {
         "accordion-down": {
