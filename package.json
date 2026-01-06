@@ -4,28 +4,29 @@
   "private": true,
   "description": "Solana-native automation platform for DAO operators and NFT community managers",
   "scripts": {
-    "dev": "pnpm --filter web --filter api --filter worker --filter listener dev",
-    "dev:web": "pnpm --filter web dev",
-    "dev:api": "pnpm --filter api dev",
-    "dev:worker": "pnpm --filter worker dev",
-    "dev:listener": "pnpm --filter listener dev",
-    "build": "pnpm --filter web build && pnpm --filter api build && pnpm --filter worker build && pnpm --filter listener build",
-    "db:generate": "pnpm --filter db generate",
-    "db:migrate": "pnpm --filter db migrate",
-    "db:studio": "pnpm --filter db studio",
-    "db:push": "pnpm --filter db push",
-    "lint": "pnpm -r lint",
-    "type-check": "pnpm -r type-check",
-    "clean": "pnpm -r clean && rm -rf node_modules",
+    "dev": "turbo dev",
+    "dev:web": "turbo dev --filter=web",
+    "dev:api": "turbo dev --filter=api",
+    "dev:worker": "turbo dev --filter=worker",
+    "dev:listener": "turbo dev --filter=listener",
+    "build": "turbo build",
+    "db:generate": "turbo db:generate --filter=@repo/db",
+    "db:migrate": "turbo db:migrate --filter=@repo/db",
+    "db:studio": "turbo db:studio --filter=@repo/db",
+    "db:push": "turbo db:push --filter=@repo/db",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check",
+    "clean": "turbo clean && rm -rf node_modules .turbo",
     "prepare": "husky"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
+    "turbo": "^2.7.3",
     "ultracite": "7.0.5"
   },
   "engines": {
     "node": ">=20.0.0",
-    "pnpm": ">=8.0.0"
+    "pnpm": ">=9.0.0"
   },
-  "packageManager": "pnpm@8.15.1"
+  "packageManager": "pnpm@9.15.0"
 }
