@@ -66,7 +66,7 @@ export function WorkflowAnimation({ className }: { className?: string }) {
 
         {/* Center - Sol Workflow */}
         <div className="flex flex-col justify-center">
-          <Circle ref={centerRef} className="size-16">
+          <Circle ref={centerRef} className="size-24">
             <Icons.workflow />
           </Circle>
         </div>
@@ -148,171 +148,90 @@ export function WorkflowAnimation({ className }: { className?: string }) {
 }
 
 const Icons = {
-  // Solana logo
+  // Solana logo - official style
   solana: () => (
-    <svg viewBox="0 0 24 24" fill="none" className="size-6">
-      <path
-        d="M4.5 18.5L7.5 15.5H19.5L16.5 18.5H4.5Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M4.5 5.5L7.5 8.5H19.5L16.5 5.5H4.5Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M4.5 12L7.5 9H19.5L16.5 12H4.5Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg viewBox="0 0 24 24" fill="currentColor" className="size-6">
+      <path d="M6.04 16.2a.63.63 0 01.45-.19h13.18c.28 0 .43.35.23.55l-2.65 2.65a.63.63 0 01-.45.19H3.62a.32.32 0 01-.23-.55l2.65-2.65z" />
+      <path d="M6.04 4.6a.65.65 0 01.45-.18h13.18c.28 0 .43.34.23.54L17.25 7.6a.63.63 0 01-.45.19H3.62a.32.32 0 01-.23-.55L6.04 4.6z" />
+      <path d="M17.25 10.35a.63.63 0 00-.45-.19H3.62a.32.32 0 00-.23.55l2.65 2.65c.12.12.28.19.45.19h13.18c.28 0 .43-.35.23-.55l-2.65-2.65z" />
     </svg>
   ),
 
-  // Clock for cron/schedule
+  // Clock - clean timer icon
   clock: () => (
     <svg viewBox="0 0 24 24" fill="none" className="size-6">
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M12 6V12L16 14"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   ),
 
-  // Wallet
+  // Wallet - clean wallet icon
   wallet: () => (
     <svg viewBox="0 0 24 24" fill="none" className="size-6">
-      <rect x="3" y="6" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M3 10H21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="16" cy="14" r="1" fill="currentColor" />
+      <path
+        d="M19 7V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2v-2"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M15 7h4a2 2 0 012 2v6a2 2 0 01-2 2h-4a3 3 0 010-6h0a3 3 0 000-4z"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <circle cx="16" cy="12" r="1" fill="currentColor" />
     </svg>
   ),
 
-  // Code for program logs
+  // Code - terminal/code brackets
   code: () => (
     <svg viewBox="0 0 24 24" fill="none" className="size-6">
       <path
-        d="M8 6L3 12L8 18"
+        d="M7 8l-4 4 4 4M17 8l4 4-4 4M14 4l-4 16"
         stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M16 6L21 12L16 18"
-        stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
     </svg>
   ),
 
-  // Workflow center icon
+  // Workflow center - hub/node icon
   workflow: () => (
-    <svg viewBox="0 0 24 24" fill="none" className="size-8">
-      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M12 3V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M12 18V21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M3 12H6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M18 12H21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path
-        d="M5.63604 5.63604L7.75736 7.75736"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M16.2426 16.2426L18.364 18.364"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M5.63604 18.364L7.75736 16.2426"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M16.2426 7.75736L18.364 5.63604"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
+    <svg viewBox="0 0 24 24" fill="none" className="size-12">
+      <circle cx="12" cy="12" r="4" fill="currentColor" />
+      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="2" strokeDasharray="4 2" />
     </svg>
   ),
 
-  // Discord
+  // Discord - official logo style
   discord: () => (
-    <svg viewBox="0 0 24 24" fill="none" className="size-6">
-      <path
-        d="M9.5 11.5C9.5 12.3284 8.82843 13 8 13C7.17157 13 6.5 12.3284 6.5 11.5C6.5 10.6716 7.17157 10 8 10C8.82843 10 9.5 10.6716 9.5 11.5Z"
-        fill="currentColor"
-      />
-      <path
-        d="M17.5 11.5C17.5 12.3284 16.8284 13 16 13C15.1716 13 14.5 12.3284 14.5 11.5C14.5 10.6716 15.1716 10 16 10C16.8284 10 17.5 10.6716 17.5 11.5Z"
-        fill="currentColor"
-      />
-      <path
-        d="M5.5 7C5.5 5.61929 6.61929 4.5 8 4.5H16C17.3807 4.5 18.5 5.61929 18.5 7V15.5C18.5 16.8807 17.3807 18 16 18H12L8.5 20.5V18H8C6.61929 18 5.5 16.8807 5.5 15.5V7Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg viewBox="0 0 24 24" fill="currentColor" className="size-6">
+      <path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 00-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 00-4.8 0c-.14-.34-.35-.76-.54-1.09-.01-.02-.04-.03-.07-.03-1.5.26-2.93.71-4.27 1.33-.01 0-.02.01-.03.02-2.72 4.07-3.47 8.03-3.1 11.95 0 .02.01.04.03.05 1.8 1.32 3.53 2.12 5.24 2.65.03.01.06 0 .07-.02.4-.55.76-1.13 1.07-1.74.02-.04 0-.08-.04-.09-.57-.22-1.11-.48-1.64-.78-.04-.02-.04-.08-.01-.11.11-.08.22-.17.33-.25.02-.02.05-.02.07-.01 3.44 1.57 7.15 1.57 10.55 0 .02-.01.05-.01.07.01.11.09.22.17.33.26.04.03.04.09-.01.11-.52.31-1.07.56-1.64.78-.04.01-.05.06-.04.09.32.61.68 1.19 1.07 1.74.02.03.05.03.07.02 1.72-.53 3.45-1.33 5.25-2.65.02-.01.03-.03.03-.05.44-4.53-.73-8.46-3.1-11.95-.01-.01-.02-.02-.04-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12 0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12 0 1.17-.83 2.12-1.89 2.12z" />
     </svg>
   ),
 
-  // Telegram
+  // Telegram - official logo style
   telegram: () => (
-    <svg viewBox="0 0 24 24" fill="none" className="size-6">
-      <path
-        d="M21 5L10 13"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M21 5L14 21L10 13L3 10L21 5Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg viewBox="0 0 24 24" fill="currentColor" className="size-6">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.03-1.99 1.27-5.62 3.72-.53.36-1.01.54-1.44.53-.47-.01-1.38-.27-2.06-.49-.83-.27-1.49-.42-1.43-.88.03-.24.37-.49 1.02-.74 3.99-1.74 6.65-2.89 7.99-3.45 3.8-1.6 4.59-1.88 5.1-1.89.11 0 .37.03.54.17.14.12.18.28.2.45-.02.07-.02.27-.04.42z" />
     </svg>
   ),
 
-  // Webhook
+  // Webhook - API/connection icon
   webhook: () => (
     <svg viewBox="0 0 24 24" fill="none" className="size-6">
-      <circle cx="6" cy="18" r="3" stroke="currentColor" strokeWidth="1.5" />
-      <circle cx="18" cy="18" r="3" stroke="currentColor" strokeWidth="1.5" />
-      <circle cx="12" cy="6" r="3" stroke="currentColor" strokeWidth="1.5" />
       <path
-        d="M12 9V12L6 15"
+        d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"
         stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="2"
         strokeLinecap="round"
-        strokeLinejoin="round"
       />
       <path
-        d="M12 12L18 15"
+        d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"
         stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="2"
         strokeLinecap="round"
-        strokeLinejoin="round"
       />
     </svg>
   ),

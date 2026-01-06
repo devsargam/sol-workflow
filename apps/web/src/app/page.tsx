@@ -95,6 +95,16 @@ export default function HomePage() {
 
         {/* Footer */}
         <Footer />
+
+        {/* Large Brand Text */}
+        <div className="max-w-[1000px] mx-auto border-x border-black py-2 overflow-hidden">
+          <div className="flex items-center justify-center">
+            <span
+              style={{ "--text": "'SOL Workflow'" } as React.CSSProperties}
+              className="relative pointer-events-none text-center before:bg-gradient-to-b before:from-neutral-500 before:to-neutral-400/70 before:to-80% before:bg-clip-text before:text-transparent before:content-[var(--text)] after:absolute after:inset-0 after:bg-neutral-600/70 after:bg-clip-text after:text-transparent after:mix-blend-darken after:content-[var(--text)] after:[text-shadow:0_1px_0_white] text-[clamp(2rem,10vw,6rem)] overflow-hidden font-mono tracking-tighter font-medium"
+            />
+          </div>
+        </div>
       </main>
     </>
   );
@@ -168,7 +178,7 @@ function Integrations() {
 
 function Footer() {
   return (
-    <footer className="max-w-[1000px] mx-auto border-x border-b border-black">
+    <footer className="max-w-[1000px] mx-auto border-x border-black">
       <div className="grid md:grid-cols-4 grid-cols-2 gap-8 p-8 border-b border-black">
         {/* Brand */}
         <div className="col-span-2 md:col-span-1">
@@ -234,7 +244,7 @@ function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="p-6 text-center text-sm text-neutral-500">
+      <div className="pt-6 text-center text-sm text-neutral-500">
         <p>&copy; {new Date().getFullYear()} SOL Workflow. All rights reserved.</p>
       </div>
     </footer>

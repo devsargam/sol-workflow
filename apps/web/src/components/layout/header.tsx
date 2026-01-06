@@ -1,8 +1,16 @@
 "use client";
 
-import { SettingsIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
+function WorkflowIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <circle cx="12" cy="12" r="4" fill="currentColor" />
+      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="2" strokeDasharray="4 2" />
+    </svg>
+  );
+}
 
 export function Header() {
   const pathname = usePathname();
@@ -10,13 +18,9 @@ export function Header() {
   return (
     <header className="border-b border-black bg-white/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group relative">
-          <SettingsIcon className="aspect-square h-8 duration-700" />
-          <div className="w-36">
-            <span className="text-xl w-36 font-dynapuff decoration-wavy underline absolute -top-0">
-              SOL Workflow
-            </span>
-          </div>
+        <Link href="/" className="flex items-center gap-2 group">
+          <WorkflowIcon className="size-8" />
+          <span className="text-xl font-dynapuff">SOL Workflow</span>
         </Link>
 
         <nav className="flex items-center gap-1">
