@@ -101,6 +101,18 @@ export async function estimateTransactionFee(
   connection: Connection,
   transaction: Transaction
 ): Promise<number> {
-  const { feeCalculator } = await connection.getRecentBlockhash();
-  return feeCalculator.lamportsPerSignature * transaction.signatures.length;
+  // Get the latest blockhash to use for fee calculation
+  const { blockhash } = await connection.getLatestBlockhash();
+  transaction.recentBlockhash = blockhash;
+
+  // Use getFeeForMessage for modern fee calculation
+  const message = transaction.compileMessage();
+  const feeResult = await connection.getFeeForMessage(message);
+
+  if (feeResult.value === null) {
+    // Fallback to a reasonable default if fee calculation fails
+    return 5000 * transaction.signatures.length;
+  }
+
+  return feeResult.value;
 }

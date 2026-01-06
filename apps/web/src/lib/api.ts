@@ -99,10 +99,10 @@ export async function createWorkflow(data: CreateWorkflowData): Promise<{ workfl
       typeof (json as any)?.error === "string"
         ? (json as any).error
         : typeof (json as any)?.message === "string"
-        ? (json as any).message
-        : json
-        ? JSON.stringify(json)
-        : `Failed to create workflow (${res.status})`;
+          ? (json as any).message
+          : json
+            ? JSON.stringify(json)
+            : `Failed to create workflow (${res.status})`;
     throw new Error(message);
   }
   return json as { workflow: Workflow };

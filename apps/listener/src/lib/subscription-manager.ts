@@ -10,6 +10,7 @@ import {
   generateExecutionId,
 } from "utils";
 import type { WorkflowGraph } from "@repo/types";
+import { db, triggerSubscriptions, eq } from "@repo/db";
 
 interface Workflow {
   id: string;
@@ -35,6 +36,107 @@ export class SubscriptionManager {
   constructor(connection: Connection, queue: Queue) {
     this.connection = connection;
     this.queue = queue;
+  }
+
+  /**
+   * Persist subscription to database
+   */
+  private async persistSubscription(
+    workflowId: string,
+    triggerNodeId: string,
+    subscriptionType: string,
+    solanaAddress: string,
+    subscriptionId: number
+  ): Promise<void> {
+    try {
+      await db.insert(triggerSubscriptions).values({
+        workflowId,
+        subscriptionType,
+        solanaAddress,
+        subscriptionId,
+        active: "true",
+      });
+      log.debug(`Persisted subscription to database`, {
+        service: "listener",
+        workflowId,
+        triggerNodeId,
+        subscriptionType,
+        solanaAddress,
+      });
+    } catch (error) {
+      log.error(`Failed to persist subscription to database`, error as Error, {
+        service: "listener",
+        workflowId,
+        triggerNodeId,
+      });
+    }
+  }
+
+  /**
+   * Update subscription status in database
+   */
+  private async updateSubscriptionStatus(
+    workflowId: string,
+    active: boolean,
+    lastError?: string
+  ): Promise<void> {
+    try {
+      const updateData: any = { active: active ? "true" : "false" };
+      if (lastError) {
+        updateData.lastError = lastError;
+        updateData.lastErrorAt = new Date();
+        // Increment error count
+        const [existing] = await db
+          .select()
+          .from(triggerSubscriptions)
+          .where(eq(triggerSubscriptions.workflowId, workflowId))
+          .limit(1);
+        if (existing) {
+          updateData.errorCount = existing.errorCount + 1;
+        }
+      }
+      await db
+        .update(triggerSubscriptions)
+        .set(updateData)
+        .where(eq(triggerSubscriptions.workflowId, workflowId));
+    } catch (error) {
+      log.error(`Failed to update subscription status`, error as Error, {
+        service: "listener",
+        workflowId,
+      });
+    }
+  }
+
+  /**
+   * Record last event time for a subscription
+   */
+  private async recordEventTime(workflowId: string): Promise<void> {
+    try {
+      await db
+        .update(triggerSubscriptions)
+        .set({ lastEventAt: new Date() })
+        .where(eq(triggerSubscriptions.workflowId, workflowId));
+    } catch (error) {
+      // Don't log every time - this is non-critical
+    }
+  }
+
+  /**
+   * Remove subscription from database
+   */
+  private async removeSubscriptionFromDb(workflowId: string): Promise<void> {
+    try {
+      await db.delete(triggerSubscriptions).where(eq(triggerSubscriptions.workflowId, workflowId));
+      log.debug(`Removed subscription from database`, {
+        service: "listener",
+        workflowId,
+      });
+    } catch (error) {
+      log.error(`Failed to remove subscription from database`, error as Error, {
+        service: "listener",
+        workflowId,
+      });
+    }
   }
 
   async subscribe(workflow: Workflow): Promise<void> {
@@ -195,6 +297,9 @@ export class SubscriptionManager {
           }
         );
 
+        // Record event time in database
+        await this.recordEventTime(workflow.id);
+
         log.info(`✅ Queued execution ${executionId} for workflow ${workflow.id}`, {
           service: "listener",
           workflowId: workflow.id,
@@ -206,6 +311,16 @@ export class SubscriptionManager {
     );
 
     this.subscriptions.set(`${workflow.id}-${triggerNodeId}`, subscriptionId);
+
+    // Persist subscription to database
+    await this.persistSubscription(
+      workflow.id,
+      triggerNodeId,
+      "account",
+      address.toBase58(),
+      subscriptionId
+    );
+
     log.info(`✅ Subscribed to balance changes for ${address.toBase58()}`, {
       service: "listener",
       workflowId: workflow.id,
@@ -264,6 +379,9 @@ export class SubscriptionManager {
           }
         );
 
+        // Record event time in database
+        await this.recordEventTime(workflow.id);
+
         log.info(`✅ Queued execution ${executionId} for workflow ${workflow.id}`, {
           service: "listener",
           workflowId: workflow.id,
@@ -275,6 +393,16 @@ export class SubscriptionManager {
     );
 
     this.subscriptions.set(`${workflow.id}-${triggerNodeId}`, subscriptionId);
+
+    // Persist subscription to database
+    await this.persistSubscription(
+      workflow.id,
+      triggerNodeId,
+      "token_account",
+      address.toBase58(),
+      subscriptionId
+    );
+
     log.info(`✅ Subscribed to ${triggerType} for ${address.toBase58()}`, {
       service: "listener",
       workflowId: workflow.id,
@@ -340,6 +468,9 @@ export class SubscriptionManager {
           }
         );
 
+        // Record event time in database
+        await this.recordEventTime(workflow.id);
+
         log.info(`✅ Queued execution ${executionId} for workflow ${workflow.id}`, {
           service: "listener",
           workflowId: workflow.id,
@@ -351,6 +482,16 @@ export class SubscriptionManager {
     );
 
     this.subscriptions.set(`${workflow.id}-${triggerNodeId}`, subscriptionId);
+
+    // Persist subscription to database
+    await this.persistSubscription(
+      workflow.id,
+      triggerNodeId,
+      "logs",
+      programId.toBase58(),
+      subscriptionId
+    );
+
     log.info(`✅ Subscribed to program logs for ${programId.toBase58()}`, {
       service: "listener",
       workflowId: workflow.id,
@@ -371,6 +512,9 @@ export class SubscriptionManager {
         });
       }
     }
+
+    // Remove from database
+    await this.removeSubscriptionFromDb(workflowId);
   }
 
   async unsubscribeAll(): Promise<void> {

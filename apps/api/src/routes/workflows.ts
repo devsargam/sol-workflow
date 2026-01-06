@@ -11,6 +11,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { getCronScheduler } from "../index";
 import { authMiddleware, AuthenticatedContext } from "../middleware/auth";
+import { createAuditLog, extractClientInfo } from "../lib/audit-logger";
 
 const workflows = new Hono();
 
@@ -145,6 +146,24 @@ workflows.post("/", zValidator("json", createWorkflowSchema), async (c) => {
     // Note: Cron jobs are not scheduled here since workflow is created as disabled
     // They will be scheduled when the workflow is enabled via toggle
 
+    // Log workflow creation
+    if (workflow) {
+      const clientInfo = extractClientInfo(c);
+      await createAuditLog({
+        workflowId: workflow.id,
+        eventType: "workflow_created",
+        eventData: {
+          name: workflow.name,
+          description: workflow.description,
+          nodeCount: data.graph.nodes.length,
+          edgeCount: data.graph.edges.length,
+        },
+        actorId: userId,
+        actorType: "user",
+        ...clientInfo,
+      });
+    }
+
     return c.json({ workflow }, 201);
   } catch (error) {
     console.error("Error creating workflow:", error);
@@ -256,6 +275,21 @@ workflows.patch("/:id", zValidator("json", createWorkflowSchema.partial()), asyn
       );
     }
 
+    // Log workflow update
+    const clientInfo = extractClientInfo(c);
+    await createAuditLog({
+      workflowId: workflow.id,
+      eventType: "workflow_updated",
+      eventData: {
+        updatedFields: Object.keys(data),
+        previousName: existing.name,
+        newName: workflow.name,
+      },
+      actorId: userId,
+      actorType: "user",
+      ...clientInfo,
+    });
+
     return c.json({ workflow });
   } catch (error) {
     console.error("Error updating workflow:", error);
@@ -297,6 +331,20 @@ workflows.delete("/:id", async (c: AuthenticatedContext) => {
     if (!workflow) {
       return c.json({ error: "Workflow not found" }, 404);
     }
+
+    // Log workflow deletion
+    const clientInfo = extractClientInfo(c as any);
+    await createAuditLog({
+      workflowId: id, // Use original ID since workflow is deleted
+      eventType: "workflow_deleted",
+      eventData: {
+        name: workflow.name,
+        wasEnabled: workflow.enabled,
+      },
+      actorId: userId,
+      actorType: "user",
+      ...clientInfo,
+    });
 
     return c.json({ workflow });
   } catch (error) {
@@ -357,6 +405,21 @@ workflows.post("/:id/toggle", async (c: AuthenticatedContext) => {
         newEnabledState
       );
     }
+
+    // Log workflow enable/disable
+    const clientInfo = extractClientInfo(c as any);
+    await createAuditLog({
+      workflowId: workflow.id,
+      eventType: newEnabledState ? "workflow_enabled" : "workflow_disabled",
+      eventData: {
+        name: workflow.name,
+        previousState: current.enabled,
+        newState: newEnabledState,
+      },
+      actorId: userId,
+      actorType: "user",
+      ...clientInfo,
+    });
 
     return c.json({ workflow });
   } catch (error) {

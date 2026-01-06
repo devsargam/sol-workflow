@@ -81,13 +81,103 @@ app.route(API.ROUTES.WORKFLOWS, workflowRoutes); // Graph-based API
 app.route(API.ROUTES.EXECUTIONS, executionRoutes);
 app.route(API.ROUTES.SOLANA, solanaRoutes);
 
-// Health check endpoint with cron stats
+// Health check endpoint with comprehensive stats
 app.get("/health", async (c) => {
-  const cronStats = cronScheduler ? await cronScheduler.getStats() : null;
-  return c.json({
+  const health: {
+    status: "ok" | "degraded" | "unhealthy";
+    timestamp: string;
+    services: {
+      database: { status: string; latency?: number; error?: string };
+      redis: { status: string; latency?: number; error?: string };
+      cron: { status: string; activeJobs?: number; error?: string } | null;
+    };
+    uptime: number;
+  } = {
     status: "ok",
-    cron: cronStats,
-  });
+    timestamp: new Date().toISOString(),
+    services: {
+      database: { status: "unknown" },
+      redis: { status: "unknown" },
+      cron: null,
+    },
+    uptime: process.uptime(),
+  };
+
+  // Check database connectivity
+  try {
+    const dbStart = Date.now();
+    await db.select().from(workflowsTable).limit(1);
+    health.services.database = {
+      status: "healthy",
+      latency: Date.now() - dbStart,
+    };
+  } catch (error) {
+    health.services.database = {
+      status: "unhealthy",
+      error: (error as Error).message,
+    };
+    health.status = "degraded";
+  }
+
+  // Check Redis connectivity
+  try {
+    const redisStart = Date.now();
+    await redis.ping();
+    health.services.redis = {
+      status: "healthy",
+      latency: Date.now() - redisStart,
+    };
+  } catch (error) {
+    health.services.redis = {
+      status: "unhealthy",
+      error: (error as Error).message,
+    };
+    health.status = "degraded";
+  }
+
+  // Check cron scheduler
+  if (cronScheduler) {
+    try {
+      const cronStats = await cronScheduler.getStats();
+      health.services.cron = {
+        status: "healthy",
+        activeJobs: cronStats.activeCronJobs,
+      };
+    } catch (error) {
+      health.services.cron = {
+        status: "unhealthy",
+        error: (error as Error).message,
+      };
+      health.status = "degraded";
+    }
+  }
+
+  // If any critical service is down, mark as unhealthy
+  if (
+    health.services.database.status === "unhealthy" ||
+    health.services.redis.status === "unhealthy"
+  ) {
+    health.status = "unhealthy";
+  }
+
+  const statusCode = health.status === "ok" ? 200 : health.status === "degraded" ? 200 : 503;
+  return c.json(health, statusCode);
+});
+
+// Readiness check for Kubernetes
+app.get("/ready", async (c) => {
+  try {
+    // Quick check that critical services are available
+    await Promise.all([db.select().from(workflowsTable).limit(1), redis.ping()]);
+    return c.json({ ready: true });
+  } catch {
+    return c.json({ ready: false }, 503);
+  }
+});
+
+// Liveness check for Kubernetes
+app.get("/live", (c) => {
+  return c.json({ alive: true });
 });
 
 const port = Number(process.env.PORT) || ENV_DEFAULTS.PORT;

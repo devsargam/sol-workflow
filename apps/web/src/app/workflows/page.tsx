@@ -7,6 +7,80 @@ import { DeleteModal } from "@/components/ui/delete-modal";
 import { AuthError } from "@/components/ui/auth-error";
 import { useDeleteWorkflow, useToggleWorkflow, useWorkflows } from "@/lib/hooks/use-workflows";
 
+// Helper to get trigger info from workflow graph
+function getTriggerInfo(graph: any) {
+  const triggerNode = graph?.nodes?.find((node: any) => node.type === "trigger");
+  if (!triggerNode) return { type: "Unknown", address: null, icon: "question" };
+
+  const triggerType = triggerNode.data?.triggerType || "unknown";
+  const config = triggerNode.data?.config || {};
+
+  const triggerLabels: Record<string, string> = {
+    balance_change: "Balance Change",
+    token_receipt: "Token Receipt",
+    nft_receipt: "NFT Receipt",
+    transaction_status: "Transaction Status",
+    program_log: "Program Log",
+    cron: "Scheduled (Cron)",
+  };
+
+  return {
+    type: triggerLabels[triggerType] || triggerType,
+    address: config.address || config.programId || config.schedule || null,
+    icon: triggerType,
+  };
+}
+
+// Helper to get action info from workflow graph
+function getActionInfo(graph: any) {
+  const actionNode = graph?.nodes?.find((node: any) => node.type === "action");
+  if (!actionNode) return { type: "No Action", description: null, icon: "none" };
+
+  const actionType = actionNode.data?.actionType || "unknown";
+  const config = actionNode.data?.config || {};
+
+  const actionLabels: Record<string, string> = {
+    send_sol: "Send SOL",
+    send_spl_token: "Send Token",
+    call_program: "Call Program",
+    do_nothing: "No Action",
+  };
+
+  let description = null;
+  if (actionType === "send_sol" && config.toAddress) {
+    description = `To: ${config.toAddress.slice(0, 8)}...`;
+  } else if (actionType === "send_spl_token" && config.tokenMint) {
+    description = `Token: ${config.tokenMint.slice(0, 8)}...`;
+  } else if (actionType === "call_program" && config.programId) {
+    description = `Program: ${config.programId.slice(0, 8)}...`;
+  }
+
+  return {
+    type: actionLabels[actionType] || actionType,
+    description,
+    icon: actionType,
+  };
+}
+
+// Helper to get notification info from workflow graph
+function getNotifyInfo(graph: any) {
+  const notifyNode = graph?.nodes?.find((node: any) => node.type === "notify");
+  if (!notifyNode) return null;
+
+  const notifyType = notifyNode.data?.notifyType || "unknown";
+  const notifyLabels: Record<string, string> = {
+    discord: "Discord",
+    telegram: "Telegram",
+    slack: "Slack",
+    email: "Email",
+    webhook: "Webhook",
+  };
+
+  return {
+    type: notifyLabels[notifyType] || notifyType,
+  };
+}
+
 export default function WorkflowsPage() {
   const { authenticated, ready } = usePrivy();
   const { data, isLoading, error } = useWorkflows();
@@ -128,7 +202,7 @@ export default function WorkflowsPage() {
 
         {data?.workflows && data.workflows.length > 0 && (
           <div className="space-y-4">
-            {data.workflows.map((workflow) => (
+            {data.workflows.map((workflow: any) => (
               <div
                 key={workflow.id}
                 className="rounded-xl border border-neutral-200 bg-white p-6 hover:shadow-md transition-shadow"
@@ -195,69 +269,7 @@ export default function WorkflowsPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">
-                      Trigger
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <svg
-                          className="w-4 h-4 text-blue-600"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Balance Change</p>
-                        <p className="text-xs font-mono text-neutral-500 truncate max-w-[200px]">
-                          {
-                            workflow.graph.nodes.find((node: any) => node.type === "trigger")?.data
-                              ?.address
-                          }
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">Action</p>
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <svg
-                          className="w-4 h-4 text-purple-600"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                          />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Send SOL</p>
-                        <p className="text-xs text-neutral-500">Automated transfer</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <WorkflowDetails graph={workflow.graph} />
 
                 <div className="pt-4 border-t border-neutral-100 text-xs text-neutral-500">
                   Created {new Date(workflow.createdAt).toLocaleDateString()}
@@ -283,4 +295,208 @@ export default function WorkflowsPage() {
       />
     </>
   );
+}
+
+// Component to display workflow trigger and action details
+function WorkflowDetails({ graph }: { graph: any }) {
+  const triggerInfo = getTriggerInfo(graph);
+  const actionInfo = getActionInfo(graph);
+  const notifyInfo = getNotifyInfo(graph);
+
+  return (
+    <div className="grid grid-cols-2 gap-6 mb-6">
+      <div>
+        <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">Trigger</p>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+            <TriggerIcon type={triggerInfo.icon} />
+          </div>
+          <div>
+            <p className="text-sm font-medium">{triggerInfo.type}</p>
+            {triggerInfo.address && (
+              <p className="text-xs font-mono text-neutral-500 truncate max-w-[200px]">
+                {triggerInfo.address}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+      <div>
+        <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">Action</p>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+            <ActionIcon type={actionInfo.icon} />
+          </div>
+          <div>
+            <p className="text-sm font-medium">{actionInfo.type}</p>
+            <p className="text-xs text-neutral-500">
+              {actionInfo.description ||
+                (notifyInfo ? `+ ${notifyInfo.type} notification` : "Automated")}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TriggerIcon({ type }: { type: string }) {
+  switch (type) {
+    case "balance_change":
+      return (
+        <svg
+          className="w-4 h-4 text-blue-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      );
+    case "token_receipt":
+    case "nft_receipt":
+      return (
+        <svg
+          className="w-4 h-4 text-blue-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+          />
+        </svg>
+      );
+    case "program_log":
+      return (
+        <svg
+          className="w-4 h-4 text-blue-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+      );
+    case "cron":
+      return (
+        <svg
+          className="w-4 h-4 text-blue-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      );
+    default:
+      return (
+        <svg
+          className="w-4 h-4 text-blue-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+          />
+        </svg>
+      );
+  }
+}
+
+function ActionIcon({ type }: { type: string }) {
+  switch (type) {
+    case "send_sol":
+      return (
+        <svg
+          className="w-4 h-4 text-purple-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+          />
+        </svg>
+      );
+    case "send_spl_token":
+      return (
+        <svg
+          className="w-4 h-4 text-purple-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+          />
+        </svg>
+      );
+    case "call_program":
+      return (
+        <svg
+          className="w-4 h-4 text-purple-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+          />
+        </svg>
+      );
+    default:
+      return (
+        <svg
+          className="w-4 h-4 text-purple-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M13 10V3L4 14h7v7l9-11h-7z"
+          />
+        </svg>
+      );
+  }
 }
