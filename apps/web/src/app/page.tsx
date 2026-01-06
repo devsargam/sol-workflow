@@ -46,13 +46,13 @@ export default function HomePage() {
             </div>
           </div>
           <div className="w-full text-center p-8 border-b border-black">
-            {/* Workflow Animation */}
-            <WorkflowAnimation />
-          </div>
-          <div className="w-full text-center p-8 border-b border-black">
             <p className="font-semibold text-sm uppercase text-neutral-800">Use Cases</p>
           </div>
           <UseCases />
+          <div className="w-full text-center p-8 border-b border-black">
+            {/* Workflow Animation */}
+            <WorkflowAnimation />
+          </div>
         </section>
       </main>
     </>
@@ -68,9 +68,9 @@ function UseCases() {
           <div className="h-[400px] w-[400px] bg-neutral-400 rounded-sm"></div>
         </div>
         <div className="flex flex-col gap-y-1 px-5 pb-4 items-center w-full text-center">
-          <div className="font-semibold tracking-tight text-lg">Tool Integration</div>
+          <div className="font-semibold tracking-tight text-lg">Dollar Cost Average</div>
           <div className="text-sm text-muted-foreground">
-            Seamlessly integrate external APIs and tools into agent workflows.
+            Automate recurring token purchases at set intervals to reduce volatility impact.
           </div>
         </div>
       </div>
@@ -80,9 +80,9 @@ function UseCases() {
           <div className="h-[400px] w-[400px] bg-neutral-400 rounded-sm"></div>
         </div>
         <div className="flex flex-col gap-y-1 px-5 pb-4 items-center w-full text-center">
-          <div className="font-semibold tracking-tight text-lg">Tool Integration</div>
+          <div className="font-semibold tracking-tight text-lg">Whale Wallet Tracker</div>
           <div className="text-sm text-muted-foreground">
-            Seamlessly integrate external APIs and tools into agent workflows.
+            Get instant alerts when whale wallets make moves. Stay ahead of market movements.
           </div>
         </div>
       </div>
@@ -92,9 +92,9 @@ function UseCases() {
           <div className="h-[400px] w-[400px] bg-neutral-400 rounded-sm"></div>
         </div>
         <div className="flex flex-col gap-y-1 px-5 pb-4 items-center w-full text-center">
-          <div className="font-semibold tracking-tight text-lg">Tool Integration</div>
+          <div className="font-semibold tracking-tight text-lg">Auto Funds Distribution</div>
           <div className="text-sm text-muted-foreground">
-            Seamlessly integrate external APIs and tools into agent workflows.
+            Automatically distribute tokens to multiple wallets based on predefined rules.
           </div>
         </div>
       </div>
