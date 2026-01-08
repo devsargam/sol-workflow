@@ -110,6 +110,7 @@ export const SingleNotificationConfigSchema = z
   .object({
     notifyType: z.enum(["discord", "telegram", "slack", "email", "webhook"]),
     webhookUrl: z.string().optional(),
+    webhookSecret: z.string().optional(),
     telegramBotToken: z.string().min(1).optional(),
     telegramChatId: z.string().min(1).optional(),
     telegramParseMode: z.enum(["Markdown", "MarkdownV2", "HTML"]).optional(),
@@ -123,6 +124,14 @@ export const SingleNotificationConfigSchema = z
         code: z.ZodIssueCode.custom,
         path: ["webhookUrl"],
         message: "webhookUrl is required for discord/webhook notifications",
+      });
+    }
+
+    if (data.notifyType === "webhook" && !data.webhookSecret) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["webhookSecret"],
+        message: "webhookSecret is required for webhook notifications",
       });
     }
 
@@ -148,6 +157,7 @@ export const NotifyNodeDataSchema = z
   .object({
     notifyType: z.enum(["discord", "telegram", "slack", "email", "webhook"]).optional(),
     webhookUrl: z.string().optional(),
+    webhookSecret: z.string().optional(),
     telegramBotToken: z.string().min(1).optional(),
     telegramChatId: z.string().min(1).optional(),
     telegramParseMode: z.enum(["Markdown", "MarkdownV2", "HTML"]).optional(),
@@ -168,6 +178,14 @@ export const NotifyNodeDataSchema = z
             code: z.ZodIssueCode.custom,
             path: ["notifications", index, "webhookUrl"],
             message: "webhookUrl is required for discord/webhook notifications",
+          });
+        }
+
+        if (notification.notifyType === "webhook" && !notification.webhookSecret) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["notifications", index, "webhookSecret"],
+            message: "webhookSecret is required for webhook notifications",
           });
         }
 
@@ -194,6 +212,14 @@ export const NotifyNodeDataSchema = z
           code: z.ZodIssueCode.custom,
           path: ["webhookUrl"],
           message: "webhookUrl is required for discord/webhook notifications",
+        });
+      }
+
+      if (data.notifyType === "webhook" && !data.webhookSecret) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["webhookSecret"],
+          message: "webhookSecret is required for webhook notifications",
         });
       }
 

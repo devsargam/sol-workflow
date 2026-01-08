@@ -382,6 +382,7 @@ class NotifyNodeExecutor implements NodeExecutor {
           {
             notifyType: data.notifyType,
             webhookUrl: data.webhookUrl,
+            webhookSecret: data.webhookSecret,
             telegramBotToken: data.telegramBotToken,
             telegramChatId: data.telegramChatId,
             telegramParseMode: data.telegramParseMode,
@@ -399,9 +400,8 @@ class NotifyNodeExecutor implements NodeExecutor {
       }
     } catch (error) {
       console.error(`Notify node ${node.id} failed:`, error);
-      // Notifications are non-fatal
       return {
-        success: true, // Don't fail the workflow for notification errors
+        success: true,
         error: (error as Error).message,
       };
     }
@@ -411,6 +411,7 @@ class NotifyNodeExecutor implements NodeExecutor {
     notificationConfig: {
       notifyType: string;
       webhookUrl?: string;
+      webhookSecret?: string;
       telegramBotToken?: string;
       telegramChatId?: string;
       telegramParseMode?: "Markdown" | "MarkdownV2" | "HTML";
@@ -434,6 +435,7 @@ class NotifyNodeExecutor implements NodeExecutor {
         await this.sendWebhook(
           {
             webhookUrl: notificationConfig.webhookUrl,
+            webhookSecret: notificationConfig.webhookSecret,
             template: notificationConfig.template,
             customMessage: notificationConfig.customMessage,
           },
@@ -544,6 +546,7 @@ class NotifyNodeExecutor implements NodeExecutor {
   private async sendWebhook(
     data: {
       webhookUrl?: string;
+      webhookSecret?: string;
       template?: string;
       customMessage?: string;
     },
@@ -602,19 +605,89 @@ class NotifyNodeExecutor implements NodeExecutor {
       template: data.template || "default",
     };
 
-    const response = await fetch(data.webhookUrl!, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "SOL-Workflow/1.0",
-      },
-      body: JSON.stringify(payload),
-    });
+    // Build headers with optional secret
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "User-Agent": "SOL-Workflow/1.0",
+    };
 
-    console.log("Webhook response:", response);
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => response.statusText);
-      throw new Error(`Webhook failed: ${response.status} - ${errorText}`);
+    // Add secret header if provided
+    if (data.webhookSecret) {
+      headers["X-Webhook-Secret"] = data.webhookSecret;
+    }
+
+    // Retry configuration
+    const maxRetries = 3;
+    const baseDelay = 1000; // 1 second
+    let lastError: Error | null = null;
+
+    // Exponential backoff retry loop
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(data.webhookUrl!, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(payload),
+          // Add timeout to prevent hanging
+          signal: AbortSignal.timeout(30000), // 30 second timeout
+        });
+
+        if (response.ok) {
+          console.log(`Webhook sent successfully (attempt ${attempt + 1})`);
+          return; // Success, exit retry loop
+        }
+
+        // Check if it's a retryable error (5xx or network errors)
+        const status = response.status;
+        const isRetryable = status >= 500 || status === 429; // Server errors or rate limit
+
+        if (!isRetryable || attempt === maxRetries) {
+          // Client error (4xx) or final attempt - don't retry
+          const errorText = await response.text().catch(() => response.statusText);
+          throw new Error(`Webhook failed: ${status} - ${errorText}`);
+        }
+
+        // Calculate exponential backoff delay: baseDelay * 2^attempt
+        const delay = baseDelay * Math.pow(2, attempt);
+        console.warn(
+          `Webhook attempt ${attempt + 1} failed with ${status}, retrying in ${delay}ms...`
+        );
+
+        // Wait before retrying
+        await new Promise((resolve) => setTimeout(resolve, delay));
+
+        // Update last error for final throw if all retries fail
+        const errorText = await response.text().catch(() => response.statusText);
+        lastError = new Error(`Webhook failed: ${status} - ${errorText}`);
+      } catch (error: any) {
+        // Handle network errors, timeouts, etc.
+        const isNetworkError =
+          error.name === "AbortError" ||
+          error.name === "TypeError" ||
+          error.code === "ECONNREFUSED" ||
+          error.code === "ETIMEDOUT";
+
+        if (!isNetworkError || attempt === maxRetries) {
+          // Non-retryable error or final attempt
+          throw error;
+        }
+
+        // Calculate exponential backoff delay
+        const delay = baseDelay * Math.pow(2, attempt);
+        console.warn(
+          `Webhook attempt ${attempt + 1} failed with network error, retrying in ${delay}ms...`,
+          error.message
+        );
+
+        // Wait before retrying
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        lastError = error;
+      }
+    }
+
+    // If we exhausted all retries, throw the last error
+    if (lastError) {
+      throw lastError;
     }
   }
 
