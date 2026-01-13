@@ -10,17 +10,17 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "bullmq": "^5.35.7",
-    "ioredis": "^5.4.1",
-    "@solana/web3.js": "^1.98.0",
     "@coral-xyz/anchor": "^0.30.1",
-    "zod": "^3.24.1",
     "@repo/db": "workspace:*",
     "@repo/discord": "workspace:*",
+    "@repo/kalshi": "workspace:*",
     "@repo/telegram": "workspace:*",
-    "drizzle-orm": "^0.36.4",
+    "@repo/types": "workspace:*",
+    "@solana/web3.js": "^1.98.0",
+    "bullmq": "^5.35.7",
+    "ioredis": "^5.4.1",
     "utils": "workspace:*",
-    "@repo/types": "workspace:*"
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/node": "^20.11.5",

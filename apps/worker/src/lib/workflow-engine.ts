@@ -1,23 +1,15 @@
-import {
-  Connection,
-  PublicKey,
-  Transaction,
-  Keypair,
-  SystemProgram,
-  sendAndConfirmTransaction,
-} from "@solana/web3.js";
+import { Connection } from "@solana/web3.js";
 import type {
   WorkflowGraph,
   WorkflowNode,
-  WorkflowEdge,
-  TriggerNodeData,
   FilterNodeData,
   ActionNodeData,
   NotifyNodeData,
 } from "@repo/types";
 import { createDiscordClient, getTemplate } from "@repo/discord";
 import { createTelegramClient, getTemplate as getTelegramTemplate } from "@repo/telegram";
-import { NodeType } from "utils";
+import { createKalshiClient } from "@repo/kalshi";
+import { logger, NodeType } from "utils";
 import { db, workflows as workflowsTable, eq } from "@repo/db";
 
 interface ExecutionContext {
@@ -27,6 +19,7 @@ interface ExecutionContext {
   variables: Map<string, any>; // For passing data between nodes
   executionPath: string[]; // Track which nodes were executed
   hasErrors: boolean; // Track if any errors occurred during execution
+  workflowMetadata?: any; // Workflow metadata including Kalshi credentials
 }
 
 interface NodeExecutor {
@@ -234,13 +227,13 @@ class FilterNodeExecutor implements NodeExecutor {
   }
 
   private evaluateCondition(
-    condition: { field: string; operator: string; value: any },
+    condition: { field: string; operator: string; value?: any },
     triggerData: any,
     variables: Map<string, any>
   ): boolean {
     // Get the field value from trigger data or variables
     const fieldValue = this.getFieldValue(condition.field, triggerData, variables);
-    const compareValue = condition.value;
+    const compareValue = condition.value ?? null;
 
     switch (condition.operator) {
       case "equals":
@@ -307,6 +300,13 @@ class ActionNodeExecutor implements NodeExecutor {
         case "call_program":
           txSignature = await this.callProgram(data.config, context);
           break;
+        case "kalshi_place_order":
+          const kalshiResult = await this.placeKalshiOrder(data.config, context);
+          context.variables.set("kalshiOrder", kalshiResult);
+          return {
+            success: true,
+            output: kalshiResult,
+          };
         case "do_nothing":
           console.log(`Do Nothing action executed for node ${node.id}`);
           return { success: true, output: null };
@@ -355,6 +355,102 @@ class ActionNodeExecutor implements NodeExecutor {
 
     // For now, return a mock signature
     return `mock_program_tx_${Date.now()}`;
+  }
+
+  private async placeKalshiOrder(config: any, context: ExecutionContext): Promise<any> {
+    const credentials = context.workflowMetadata?.kalshiCredentials;
+    if (!credentials) {
+      throw new Error("Kalshi credentials not configured in workflow metadata");
+    }
+
+    const ticker = config.ticker || config.marketId;
+    if (!ticker || !config.side || !config.count || config.price === undefined) {
+      throw new Error("Kalshi order requires ticker, side, count, and price");
+    }
+
+    const client = createKalshiClient(credentials);
+
+    const cost = (config.price * config.count) / 100;
+
+    const kalshiLimits = context.workflowMetadata?.kalshiLimits;
+    if (kalshiLimits?.maxCostPerOrder && cost > kalshiLimits.maxCostPerOrder) {
+      throw new Error(
+        `Order cost $${cost.toFixed(2)} exceeds workflow limit $${kalshiLimits.maxCostPerOrder}`
+      );
+    }
+
+    if (config.maxCost && cost > config.maxCost) {
+      throw new Error(`Order cost $${cost.toFixed(2)} exceeds config limit $${config.maxCost}`);
+    }
+
+    if (!credentials.demoMode) {
+      try {
+        const market = await client.getMarket(ticker);
+        if (market.close_time && new Date(market.close_time) <= new Date()) {
+          throw new Error(`Market ${ticker} is closed`);
+        }
+      } catch (error: any) {
+        logger.warn(`Could not verify market status: ${error.message}`, {
+          workflowId: context.workflowId,
+          executionId: context.executionId,
+          ticker,
+        });
+      }
+    }
+
+    if (config.maxPositionSize && !credentials.demoMode) {
+      try {
+        const positions = await client.getPositions();
+        const currentExposure = positions.positions
+          .filter((p: any) => p.market_id === ticker)
+          .reduce((sum: number, p: any) => sum + Math.abs(p.size || 0), 0);
+
+        if (currentExposure + config.count > config.maxPositionSize) {
+          throw new Error(
+            `Position size limit exceeded: ${currentExposure + config.count} > ${
+              config.maxPositionSize
+            }`
+          );
+        }
+      } catch (error: any) {
+        logger.warn(`Could not check position limits: ${error.message}`, {
+          workflowId: context.workflowId,
+          executionId: context.executionId,
+          ticker,
+        });
+      }
+    }
+
+    const action = config.action || "buy";
+    const orderType = config.type || "limit";
+
+    const orderResult = await client.placeOrder(
+      ticker,
+      config.side,
+      action,
+      config.count,
+      config.price,
+      orderType
+    );
+
+    logger.info(
+      ` Kalshi order placed: ${
+        orderResult.orderId
+      } (${action.toUpperCase()} ${config.side.toUpperCase()} ${config.count} @ ${config.price}¢)`,
+      {
+        workflowId: context.workflowId,
+        executionId: context.executionId,
+        ticker,
+        action,
+        side: config.side,
+        count: config.count,
+        price: config.price,
+        orderType,
+        orderResult,
+      }
+    );
+
+    return orderResult;
   }
 }
 

@@ -1,9 +1,16 @@
 import Redis from "ioredis";
 import { Connection } from "@solana/web3.js";
-import { db, executions as executionsTable, eq } from "@repo/db";
+import { db, executions as executionsTable, workflows as workflowsTable, eq } from "@repo/db";
 import { WorkflowEngine } from "../lib/workflow-engine";
 import type { WorkflowGraph } from "@repo/types";
-import { ExecutionStatus, REDIS, DATABASE, ENV_DEFAULTS, getExecutionRedisKey } from "utils";
+import {
+  ExecutionStatus,
+  REDIS,
+  DATABASE,
+  ENV_DEFAULTS,
+  getExecutionRedisKey,
+  logger,
+} from "utils";
 
 interface WorkflowEventData {
   workflowId: string;
@@ -52,7 +59,16 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
     throw error;
   }
 
-  // Step 3: Execute the workflow graph using the engine
+  const [workflow] = await db
+    .select()
+    .from(workflowsTable)
+    .where(eq(workflowsTable.id, workflowId))
+    .limit(1);
+
+  if (!workflow) {
+    throw new Error(`Workflow ${workflowId} not found`);
+  }
+
   const connection = new Connection(process.env.SOLANA_RPC_URL || ENV_DEFAULTS.SOLANA_RPC_URL);
 
   const engine = new WorkflowEngine(connection);
@@ -65,6 +81,7 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
     variables: new Map<string, any>(),
     executionPath: [],
     hasErrors: false,
+    workflowMetadata: workflow.metadata as any,
   };
 
   try {
@@ -73,6 +90,12 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
     if (result.success) {
       // Mark as successful
       const txSignature = context.variables.get("txSignature") || null;
+      const kalshiOrder = context.variables.get("kalshiOrder") || null;
+
+      const executionMetadata: any = {};
+      if (kalshiOrder) {
+        executionMetadata.kalshiOrder = kalshiOrder;
+      }
 
       await db
         .update(executionsTable)
@@ -80,6 +103,7 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
           status: ExecutionStatus.SUCCESS,
           txSignature,
           completedAt: new Date(),
+          metadata: executionMetadata,
         })
         .where(eq(executionsTable.executionId, executionId));
 
@@ -108,6 +132,7 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
           status: ExecutionStatus.FAILED,
           txError: errorMessage,
           completedAt: new Date(),
+          metadata: { errors: result.errors },
         })
         .where(eq(executionsTable.executionId, executionId));
 
@@ -117,7 +142,10 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
         ExecutionStatus.FAILED
       );
 
-      console.error(`❌ Execution ${executionId} failed:`, result.errors);
+      logger.error(`Execution ${executionId} failed:`, new Error(result.errors.join("; ")), {
+        workflowId,
+        executionId,
+      });
 
       return {
         status: ExecutionStatus.FAILED,
@@ -127,7 +155,10 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
       };
     }
   } catch (error) {
-    console.error(`❌ Unexpected error in execution ${executionId}:`, error);
+    logger.error(`Unexpected error in execution ${executionId}:`, new Error(error as string), {
+      workflowId,
+      executionId,
+    });
 
     await db
       .update(executionsTable)
@@ -135,6 +166,7 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
         status: ExecutionStatus.FAILED,
         txError: (error as Error).message,
         completedAt: new Date(),
+        metadata: { error: (error as Error).message },
       })
       .where(eq(executionsTable.executionId, executionId));
 
