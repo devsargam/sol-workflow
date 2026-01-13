@@ -32,15 +32,28 @@ export interface ActionNodeData {
   label?: string;
   type?: string;
   config?: {
+    // Send SOL specific
     toAddress?: string;
     amount?: number;
     fromKeypair?: string;
+    // Send SPL Token specific
     tokenMint?: string;
     fromTokenAccount?: string;
     toTokenAccount?: string;
     decimals?: number;
+    // Call Program specific
     programId?: string;
     instruction?: string;
+    // Kalshi specific
+    ticker?: string;
+    marketId?: string; // Backward compatibility
+    side?: "yes" | "no";
+    action?: "buy" | "sell";
+    count?: number;
+    price?: number;
+    type?: "limit" | "market";
+    maxCost?: number;
+    maxPositionSize?: number;
   };
 }
 

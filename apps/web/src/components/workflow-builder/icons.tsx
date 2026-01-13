@@ -14,12 +14,18 @@ import {
   RocketIcon,
   SearchIcon,
   SendIcon,
+  TrendingUpIcon,
   ZapIcon,
 } from "lucide-react";
 import { type ComponentType, type ReactElement } from "react";
 
 export type NotificationType = "discord" | "telegram" | "slack" | "email" | "webhook";
-export type ActionType = "send_sol" | "send_spl_token" | "call_program" | "do_nothing";
+export type ActionType =
+  | "send_sol"
+  | "send_spl_token"
+  | "call_program"
+  | "do_nothing"
+  | "kalshi_place_order";
 export type TriggerType =
   | "balance_change"
   | "token_receipt"
@@ -40,6 +46,7 @@ export const ACTION_ICONS: Record<ActionType, ComponentType<{ className?: string
   send_spl_token: CircleDollarSignIcon,
   call_program: CodeIcon,
   do_nothing: CircleOffIcon,
+  kalshi_place_order: TrendingUpIcon,
 };
 
 export const TRIGGER_ICONS: Record<TriggerType, ComponentType<{ className?: string }>> = {

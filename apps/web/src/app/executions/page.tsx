@@ -195,13 +195,62 @@ export default function ExecutionsPage() {
                         </div>
                       )}
 
+                      {execution.metadata?.kalshiOrder && (
+                        <div>
+                          <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">
+                            Kalshi Order
+                          </p>
+                          <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                            <div className="space-y-1 text-sm">
+                              <div className="flex items-center justify-between">
+                                <span className="text-blue-900 font-medium">Order ID:</span>
+                                <span className="text-blue-700 font-mono text-xs">
+                                  {execution.metadata.kalshiOrder.orderId}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-blue-900 font-medium">Side:</span>
+                                <span className="text-blue-700">
+                                  {execution.metadata.kalshiOrder.side?.toUpperCase()}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-blue-900 font-medium">Count:</span>
+                                <span className="text-blue-700">
+                                  {execution.metadata.kalshiOrder.count} contracts
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-blue-900 font-medium">Price:</span>
+                                <span className="text-blue-700">
+                                  {execution.metadata.kalshiOrder.price}¢
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-blue-900 font-medium">Status:</span>
+                                <span className="text-blue-700 capitalize">
+                                  {execution.metadata.kalshiOrder.status}
+                                </span>
+                              </div>
+                              {execution.metadata.kalshiOrder.demo && (
+                                <div className="pt-2 mt-2 border-t border-blue-200">
+                                  <span className="text-xs text-blue-600 font-medium">
+                                    🎭 Demo Mode
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {/* Error */}
                       {execution.txError && (
                         <div>
                           <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">
                             Error
                           </p>
-                          <p className="text-sm text-red-600 bg-red-50 border border-red-200 p-3 rounded-lg">
+                          <p className="text-sm text-red-600 bg-red-50 border border-red-200 p-3 rounded-lg whitespace-pre-wrap">
                             {execution.txError}
                           </p>
                         </div>

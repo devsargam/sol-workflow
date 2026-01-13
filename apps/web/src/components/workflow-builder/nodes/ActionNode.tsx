@@ -17,6 +17,8 @@ export const ActionNode = memo(({ data, selected }: NodeProps) => {
         return "Send Token";
       case "call_program":
         return "Call Program";
+      case "kalshi_place_order":
+        return "Kalshi Order";
       case "do_nothing":
         return "Do Nothing";
       default:
@@ -40,6 +42,18 @@ export const ActionNode = memo(({ data, selected }: NodeProps) => {
       case "call_program":
         if (config?.programId) {
           return `${config.programId.slice(0, 8)}...`;
+        }
+        break;
+      case "kalshi_place_order":
+        if (config?.ticker || config?.marketId) {
+          const ticker = config.ticker || config.marketId || "";
+          const side = config.side ? config.side.toUpperCase() : "";
+          const count = config.count || 0;
+          const price = config.price || 0;
+          if (side && count && price) {
+            return `${side} ${count} @ ${price}¢`;
+          }
+          return ticker.slice(0, 12) + "...";
         }
         break;
     }

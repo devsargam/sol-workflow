@@ -547,6 +547,7 @@ function ActionConfig({ formData, setFormData }: any) {
           <option value="send_sol">Send SOL</option>
           <option value="send_spl_token">Send SPL Token</option>
           <option value="call_program">Call Program</option>
+          <option value="kalshi_place_order">Kalshi Place Order</option>
           <option value="do_nothing">Do Nothing</option>
         </select>
       </div>
@@ -724,6 +725,158 @@ function ActionConfig({ formData, setFormData }: any) {
           </div>
         </>
       )}
+
+      {actionType === "kalshi_place_order" && (
+        <>
+          <div>
+            <label className="block text-sm font-medium mb-2">Market Ticker</label>
+            <input
+              type="text"
+              value={formData.config?.ticker || formData.config?.marketId || ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  config: { ...formData.config, ticker: e.target.value, marketId: e.target.value },
+                })
+              }
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              placeholder="e.g., NASDAQ-2024-U-5000"
+              required
+            />
+            <p className="text-xs text-neutral-500 mt-1">
+              Kalshi market ticker (e.g., NASDAQ-2024-U-5000)
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Side</label>
+            <select
+              value={formData.config?.side || "yes"}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  config: { ...formData.config, side: e.target.value },
+                })
+              }
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+            >
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Action</label>
+            <select
+              value={formData.config?.action || "buy"}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  config: { ...formData.config, action: e.target.value },
+                })
+              }
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+            >
+              <option value="buy">Buy</option>
+              <option value="sell">Sell</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Count (Contracts)</label>
+            <input
+              type="number"
+              value={formData.config?.count || ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  config: { ...formData.config, count: parseInt(e.target.value) || 0 },
+                })
+              }
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+              placeholder="10"
+              min="1"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Price (cents, 1-99)</label>
+            <input
+              type="number"
+              value={formData.config?.price || ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  config: { ...formData.config, price: parseInt(e.target.value) || 0 },
+                })
+              }
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+              placeholder="60"
+              min="1"
+              max="99"
+              required
+            />
+            <p className="text-xs text-neutral-500 mt-1">
+              Price in cents (1-99). Cost = (price × count) / 100
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Order Type</label>
+            <select
+              value={formData.config?.type || "limit"}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  config: { ...formData.config, type: e.target.value },
+                })
+              }
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+            >
+              <option value="limit">Limit</option>
+              <option value="market">Market</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Max Cost ($) - Optional</label>
+            <input
+              type="number"
+              value={formData.config?.maxCost || ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  config: { ...formData.config, maxCost: parseFloat(e.target.value) || undefined },
+                })
+              }
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+              placeholder="10.00"
+              step="0.01"
+              min="0"
+            />
+            <p className="text-xs text-neutral-500 mt-1">
+              Safety limit: Order will fail if cost exceeds this
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Max Position Size - Optional</label>
+            <input
+              type="number"
+              value={formData.config?.maxPositionSize || ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  config: {
+                    ...formData.config,
+                    maxPositionSize: parseInt(e.target.value) || undefined,
+                  },
+                })
+              }
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+              placeholder="100"
+              min="1"
+            />
+            <p className="text-xs text-neutral-500 mt-1">
+              Maximum contracts to hold for this market
+            </p>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -737,19 +890,19 @@ function NotifyConfig({ formData, setFormData }: any) {
   const notifications = isMultipleMode
     ? formData.notifications
     : formData.notifyType || formData.type
-      ? [
-          {
-            notifyType: formData.notifyType || formData.type || "discord",
-            webhookUrl: formData.webhookUrl,
-            telegramBotToken: formData.telegramBotToken,
-            telegramChatId: formData.telegramChatId,
-            telegramParseMode: formData.telegramParseMode,
-            telegramDisableWebPreview: formData.telegramDisableWebPreview,
-            template: formData.template || "default",
-            customMessage: formData.customMessage,
-          },
-        ]
-      : [];
+    ? [
+        {
+          notifyType: formData.notifyType || formData.type || "discord",
+          webhookUrl: formData.webhookUrl,
+          telegramBotToken: formData.telegramBotToken,
+          telegramChatId: formData.telegramChatId,
+          telegramParseMode: formData.telegramParseMode,
+          telegramDisableWebPreview: formData.telegramDisableWebPreview,
+          template: formData.template || "default",
+          customMessage: formData.customMessage,
+        },
+      ]
+    : [];
 
   const updateNotifications = (newNotifications: any[]) => {
     if (newNotifications.length === 0) {
