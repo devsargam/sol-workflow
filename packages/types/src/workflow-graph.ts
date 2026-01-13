@@ -79,7 +79,13 @@ export const FilterNodeDataSchema = z.object({
 
 // Action node data schema
 export const ActionNodeDataSchema = z.object({
-  actionType: z.enum(["send_sol", "send_spl_token", "call_program", "do_nothing"]),
+  actionType: z.enum([
+    "send_sol",
+    "send_spl_token",
+    "call_program",
+    "do_nothing",
+    "kalshi_place_order",
+  ]),
   config: z.object({
     // Send SOL specific
     fromKeypair: z.string().optional(),
@@ -103,6 +109,16 @@ export const ActionNodeDataSchema = z.object({
     // PDA support
     usePDA: z.boolean().optional(),
     pdaSeed: z.string().optional(),
+
+    ticker: z.string().optional(), // Market ticker (Kalshi API uses "ticker" not "marketId")
+    marketId: z.string().optional(), // Backward compatibility alias for ticker
+    side: z.enum(["yes", "no"]).optional(),
+    action: z.enum(["buy", "sell"]).optional(), // Required by Kalshi API
+    count: z.number().optional(),
+    price: z.number().optional(),
+    type: z.enum(["limit", "market"]).optional(), // Order type
+    maxCost: z.number().optional(),
+    maxPositionSize: z.number().optional(),
   }),
 });
 
@@ -263,16 +279,29 @@ export const WorkflowGraphSchema = z.object({
     .optional(),
 });
 
-// Workflow metadata schema
 export const WorkflowMetadataSchema = z.object({
   version: z.string().default("1.0.0"),
-  maxSolPerTx: z.number().default(1000000), // in lamports
+  maxSolPerTx: z.number().default(1000000),
   maxExecutionsPerHour: z.number().default(10),
-  createdWith: z.string().optional(), // e.g., "visual-builder", "api"
+  createdWith: z.string().optional(),
   lastModifiedWith: z.string().optional(),
+  kalshiCredentials: z
+    .object({
+      apiKey: z.string().min(1),
+      privateKeyPem: z.string().min(1).optional(),
+      privateKeyPath: z.string().min(1).optional(),
+      demoMode: z.boolean().default(true),
+    })
+    .optional(),
+  kalshiLimits: z
+    .object({
+      maxCostPerOrder: z.number().positive().optional(),
+      maxDailyVolume: z.number().positive().optional(),
+      maxOpenPositions: z.number().int().positive().optional(),
+    })
+    .optional(),
 });
 
-// Complete workflow schema (for database storage)
 export const WorkflowSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1).max(100),
@@ -285,7 +314,6 @@ export const WorkflowSchema = z.object({
   deletedAt: z.date().nullable().optional(),
 });
 
-// Types exported from schemas
 export type NodePosition = z.infer<typeof NodePositionSchema>;
 export type TriggerNodeData = z.infer<typeof TriggerNodeDataSchema>;
 export type FilterNodeData = z.infer<typeof FilterNodeDataSchema>;
@@ -298,29 +326,24 @@ export type WorkflowGraph = z.infer<typeof WorkflowGraphSchema>;
 export type WorkflowMetadata = z.infer<typeof WorkflowMetadataSchema>;
 export type Workflow = z.infer<typeof WorkflowSchema>;
 
-// Helper function to validate a workflow graph
 export function validateWorkflowGraph(graph: unknown): WorkflowGraph {
   return WorkflowGraphSchema.parse(graph);
 }
 
-// Helper function to check if a graph is valid for execution
 export function isExecutableGraph(graph: WorkflowGraph): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
-  // Must have at least one trigger node
   const triggerNodes = graph.nodes.filter((n) => n.type === "trigger");
   if (triggerNodes.length === 0) {
     errors.push("Workflow must have at least one trigger node");
   }
 
-  // Must have at least one action OR notify node (workflows can be notification-only)
   const actionNodes = graph.nodes.filter((n) => n.type === "action");
   const notifyNodes = graph.nodes.filter((n) => n.type === "notify");
   if (actionNodes.length === 0 && notifyNodes.length === 0) {
     errors.push("Workflow must have at least one action or notify node");
   }
 
-  // Check that all edges reference valid nodes
   const nodeIds = new Set(graph.nodes.map((n) => n.id));
   for (const edge of graph.edges) {
     if (!nodeIds.has(edge.source)) {
@@ -331,7 +354,6 @@ export function isExecutableGraph(graph: WorkflowGraph): { valid: boolean; error
     }
   }
 
-  // Check for cycles (simplified check - just ensure no node points back to trigger)
   const triggerIds = new Set(triggerNodes.map((n) => n.id));
   for (const edge of graph.edges) {
     if (triggerIds.has(edge.target) && !triggerIds.has(edge.source)) {

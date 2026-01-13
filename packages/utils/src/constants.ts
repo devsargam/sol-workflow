@@ -5,6 +5,7 @@
 // ============================================================================
 // Queue and Event Constants
 // ============================================================================
+import crypto from "crypto";
 
 export const QUEUES = {
   WORKFLOW_EVENTS: "workflow-events",
@@ -265,7 +266,6 @@ export function generateExecutionId(
   identifier: string
 ): string {
   // Using dynamic import pattern for crypto to work in both Node and browser
-  const crypto = require("crypto");
   const hash = crypto.createHash("sha256");
   hash.update(`${workflowId}:${timestamp}:${identifier}`);
   return hash.digest("hex");
