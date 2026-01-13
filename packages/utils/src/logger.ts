@@ -71,7 +71,7 @@ export function createLogger(defaultContext?: LogContext) {
         console.debug(formatted);
         break;
       case LogLevel.INFO:
-        console.log(formatted);
+        console.info(formatted);
         break;
       case LogLevel.WARN:
         console.warn(formatted);

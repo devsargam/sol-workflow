@@ -15,8 +15,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "drizzle-orm": "^0.36.4",
     "postgres": "^3.4.5",
+    "drizzle-orm": "^0.36.4",
     "utils": "workspace:*"
   },
   "devDependencies": {

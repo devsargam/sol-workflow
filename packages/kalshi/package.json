@@ -1,0 +1,21 @@
+{
+  "name": "@repo/kalshi",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "kalshi-typescript": "3.4.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@repo/types": "workspace:*",
+    "@types/node": "^20.11.5",
+    "utils": "workspace:*",
+    "typescript": "^5.3.0"
+  }
+}
