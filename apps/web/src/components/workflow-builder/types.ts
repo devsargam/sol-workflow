@@ -49,6 +49,7 @@ export interface NotifyNodeData {
   type?: string;
   notifyType?: string;
   webhookUrl?: string;
+  webhookSecret?: string;
   template?: string;
   telegramBotToken?: string;
   telegramChatId?: string;
@@ -58,6 +59,7 @@ export interface NotifyNodeData {
   notifications?: Array<{
     notifyType: string;
     webhookUrl?: string;
+    webhookSecret?: string;
     telegramBotToken?: string;
     telegramChatId?: string;
     telegramParseMode?: "Markdown" | "MarkdownV2" | "HTML";

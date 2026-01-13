@@ -10,22 +10,18 @@ export default function HomePage() {
     <>
       <Header />
       <main>
-        {/* Hero Section */}
         <section className="max-w-[1000px] mx-auto border-x border-black flex flex-col items-center justify-center">
           <Hero />
 
-          {/* Use Cases Header */}
           <div className="w-full text-center p-8 border-b border-black">
             <p className="font-semibold text-sm uppercase text-neutral-800">Use Cases</p>
           </div>
           <UseCases />
 
-          {/* Workflow Animation */}
           <div className="w-full text-center p-8 border-b border-black">
             <WorkflowAnimation />
           </div>
 
-          {/* How It Works Header */}
           <div className="w-full text-center p-8 border-b border-black">
             <p className="font-semibold text-sm uppercase text-neutral-800">How It Works</p>
           </div>

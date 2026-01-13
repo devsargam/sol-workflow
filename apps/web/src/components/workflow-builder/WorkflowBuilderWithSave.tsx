@@ -149,6 +149,7 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
               ) {
                 delete baseNode.data.notifyType;
                 delete baseNode.data.webhookUrl;
+                delete baseNode.data.webhookSecret;
                 delete baseNode.data.telegramBotToken;
                 delete baseNode.data.telegramChatId;
                 delete baseNode.data.telegramParseMode;
@@ -163,6 +164,7 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
                       template: notif.template || "default",
                     };
                     if (notif.webhookUrl) mapped.webhookUrl = notif.webhookUrl;
+                    if (notif.webhookSecret) mapped.webhookSecret = notif.webhookSecret;
                     if (notif.telegramBotToken) mapped.telegramBotToken = notif.telegramBotToken;
                     if (notif.telegramChatId) mapped.telegramChatId = notif.telegramChatId;
                     if (notif.telegramParseMode) mapped.telegramParseMode = notif.telegramParseMode;
@@ -182,6 +184,7 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
                   baseNode.data.notifyType === "webhook"
                 ) {
                   if (n.data.webhookUrl) baseNode.data.webhookUrl = n.data.webhookUrl;
+                  if (n.data.webhookSecret) baseNode.data.webhookSecret = n.data.webhookSecret;
                 }
 
                 if (baseNode.data.notifyType === "telegram") {
@@ -266,6 +269,8 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
               "discord";
             normalizedData.type = normalizedData.notifyType;
             normalizedData.webhookUrl = normalizedData.webhookUrl || nestedData.webhookUrl || "";
+            normalizedData.webhookSecret =
+              normalizedData.webhookSecret || nestedData.webhookSecret || "";
             normalizedData.template = normalizedData.template || nestedData.template || "default";
             if (normalizedData.notifications && Array.isArray(normalizedData.notifications)) {
             }
@@ -331,6 +336,7 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
               label: "Notify",
               type: workflow.notify?.type || workflow.notifyType || "discord",
               webhookUrl: workflow.notify?.webhookUrl || workflow.notifyWebhookUrl || "",
+              webhookSecret: workflow.notify?.webhookSecret || "",
               template: workflow.notify?.template || workflow.notifyTemplate || "default",
             },
           });

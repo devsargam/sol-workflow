@@ -60,210 +60,211 @@ export default function ExecutionsPage() {
   return (
     <>
       <Header />
-      <div className="max-w-6xl mx-auto px-6 py-12">
-        {/* Header */}
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold tracking-tight mb-2">Execution History</h1>
-          <p className="text-neutral-600 text-lg">
-            Track all workflow executions and their results
-          </p>
-        </div>
-
-        {/* Loading State */}
-        {isLoading && (
-          <div className="rounded-xl border border-neutral-200 bg-white p-12 text-center">
-            <div className="inline-flex items-center gap-2 text-neutral-600">
-              <div className="w-4 h-4 border-2 border-neutral-300 border-t-black rounded-full animate-spin" />
-              <span>Loading executions...</span>
-            </div>
+      <main>
+        <section className="max-w-[1000px] mx-auto border-x border-black">
+          <div className="w-full text-center p-8 border-b border-black">
+            <h1 className="text-4xl font-dynapuff font-bold tracking-tight mb-2">
+              Execution History
+            </h1>
+            <p className="text-neutral-600">Track all workflow executions and their results</p>
           </div>
-        )}
 
-        {error && (
-          <>
-            {ready && !authenticated ? (
-              <AuthError
-                message="Please log in to view execution history."
-                onRetry={() => window.location.reload()}
-              />
-            ) : (
-              <div className="rounded-xl border border-red-200 bg-red-50 p-6">
-                <p className="text-red-600">Error loading executions: {(error as Error).message}</p>
+          {isLoading && (
+            <div className="border-b border-black p-12 text-center">
+              <div className="inline-flex items-center gap-2 text-neutral-600">
+                <div className="w-4 h-4 border-2 border-neutral-300 border-t-black rounded-full animate-spin" />
+                <span>Loading executions...</span>
               </div>
-            )}
-          </>
-        )}
+            </div>
+          )}
 
-        {executionsData?.executions && executionsData.executions.length === 0 && (
-          <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-12 text-center">
-            <div className="max-w-sm mx-auto">
-              <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-8 h-8 text-neutral-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+          {error && (
+            <div className="border-b border-black p-8">
+              {ready && !authenticated ? (
+                <AuthError
+                  message="Please log in to view execution history."
+                  onRetry={() => window.location.reload()}
+                />
+              ) : (
+                <div className="border border-black bg-white p-6">
+                  <p className="text-neutral-900">
+                    Error loading executions: {(error as Error).message}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {executionsData?.executions && executionsData.executions.length === 0 && (
+            <div className="border-b border-black p-12 text-center">
+              <div className="max-w-sm mx-auto">
+                <div className="w-16 h-16 border-2 border-black rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg
+                    className="w-8 h-8 text-neutral-900"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                     strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-neutral-900 mb-2">No executions yet</h3>
+                <p className="text-neutral-600">Create and enable a workflow to start monitoring</p>
               </div>
-              <h3 className="text-lg font-semibold mb-2">No executions yet</h3>
-              <p className="text-neutral-600">Create and enable a workflow to start monitoring</p>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Executions List */}
-        {executionsData?.executions && executionsData.executions.length > 0 && (
-          <div className="space-y-3">
-            {executionsData.executions.map((execution) => {
-              const statusConfig = getStatusConfig(execution.status);
+          {executionsData?.executions && executionsData.executions.length > 0 && (
+            <div>
+              {executionsData.executions.map((execution, index) => {
+                const statusConfig = getStatusConfig(execution.status);
+                const isLast = index === executionsData.executions.length - 1;
 
-              return (
-                <div
-                  key={execution.id}
-                  className="rounded-xl border border-neutral-200 bg-white p-6 hover:shadow-md transition-shadow"
-                >
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span
-                          className={`px-3 py-1 rounded-lg text-xs font-medium border ${statusConfig.bg} ${statusConfig.border} ${statusConfig.text}`}
-                        >
-                          {statusConfig.icon} {execution.status}
-                        </span>
-                        <span className="text-sm font-semibold">
-                          {getWorkflowName(execution.workflowId)}
-                        </span>
-                      </div>
-                      <p className="text-xs font-mono text-neutral-500">
-                        ID: {execution.executionId}
-                      </p>
-                    </div>
-                    <div className="text-right text-xs text-neutral-500">
-                      {new Date(execution.startedAt).toLocaleString()}
-                    </div>
-                  </div>
-
-                  {/* Content Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Trigger Data */}
-                    <div>
-                      <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">
-                        Trigger Data
-                      </p>
-                      <pre className="text-xs bg-neutral-50 border border-neutral-200 p-3 rounded-lg overflow-x-auto font-mono">
-                        {JSON.stringify(execution.triggerData, null, 2)}
-                      </pre>
-                    </div>
-
-                    {/* Execution Details */}
-                    <div className="space-y-3">
-                      {/* Transaction */}
-                      {execution.txSignature && (
-                        <div>
-                          <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">
-                            Transaction
-                          </p>
-                          <a
-                            href={`https://solscan.io/tx/${execution.txSignature}?cluster=devnet`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 text-sm font-mono text-blue-600 hover:text-blue-700 hover:underline"
+                return (
+                  <div
+                    key={execution.id}
+                    className={`border-b ${
+                      isLast ? "" : "border-black"
+                    } p-6 hover:bg-neutral-50 transition-colors`}
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span
+                            className={`px-3 py-1 text-xs font-medium border border-black ${
+                              execution.status === ExecutionStatus.SUCCESS
+                                ? "bg-white text-neutral-900"
+                                : execution.status === ExecutionStatus.FAILED
+                                ? "bg-black text-white"
+                                : "bg-white text-neutral-900"
+                            }`}
                           >
+                            {statusConfig.icon} {execution.status}
+                          </span>
+                          <span className="text-sm font-semibold text-neutral-900">
+                            {getWorkflowName(execution.workflowId)}
+                          </span>
+                        </div>
+                        <p className="text-xs font-mono text-neutral-600">
+                          ID: {execution.executionId}
+                        </p>
+                      </div>
+                      <div className="text-right text-xs text-neutral-600">
+                        {new Date(execution.startedAt).toLocaleString()}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <p className="text-xs text-neutral-600 uppercase tracking-wider mb-2 font-semibold">
+                          Trigger Data
+                        </p>
+                        <pre className="text-xs bg-white border border-black p-3 overflow-x-auto font-mono text-neutral-900">
+                          {JSON.stringify(execution.triggerData, null, 2)}
+                        </pre>
+                      </div>
+
+                      <div className="space-y-3">
+                        {execution.txSignature && (
+                          <div>
+                            <p className="text-xs text-neutral-600 uppercase tracking-wider mb-2 font-semibold">
+                              Transaction
+                            </p>
+                            <a
+                              href={`https://solscan.io/tx/${execution.txSignature}?cluster=devnet`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 text-sm font-mono text-neutral-900 hover:underline border-b border-black"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                />
+                              </svg>
+                              View on Solscan
+                            </a>
+                          </div>
+                        )}
+
+                        {execution.txError && (
+                          <div>
+                            <p className="text-xs text-neutral-600 uppercase tracking-wider mb-2 font-semibold">
+                              Error
+                            </p>
+                            <p className="text-sm text-neutral-900 bg-white border border-black p-3">
+                              {execution.txError}
+                            </p>
+                          </div>
+                        )}
+
+                        {execution.notificationSent && (
+                          <div className="flex items-center gap-2 text-sm text-neutral-900">
                             <svg
                               className="w-4 h-4"
                               fill="none"
                               viewBox="0 0 24 24"
                               stroke="currentColor"
+                              strokeWidth={2}
                             >
                               <path
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                d="M5 13l4 4L19 7"
                               />
                             </svg>
-                            View on Solscan
-                          </a>
-                        </div>
-                      )}
-
-                      {/* Error */}
-                      {execution.txError && (
-                        <div>
-                          <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">
-                            Error
-                          </p>
-                          <p className="text-sm text-red-600 bg-red-50 border border-red-200 p-3 rounded-lg">
-                            {execution.txError}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Notification Success */}
-                      {execution.notificationSent && (
-                        <div className="flex items-center gap-2 text-sm text-green-600">
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                          <span>
-                            Notification sent at{" "}
-                            {new Date(execution.notificationSent).toLocaleTimeString()}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Notification Error */}
-                      {execution.notificationError && (
-                        <div>
-                          <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">
-                            Notification Error
-                          </p>
-                          <p className="text-sm text-yellow-600 bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
-                            {execution.notificationError}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Footer */}
-                  {execution.completedAt && (
-                    <div className="mt-4 pt-4 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-500">
-                      <span>Completed: {new Date(execution.completedAt).toLocaleString()}</span>
-                      <span className="px-2 py-1 bg-neutral-100 rounded font-mono">
-                        {Math.round(
-                          (new Date(execution.completedAt).getTime() -
-                            new Date(execution.startedAt).getTime()) /
-                            1000
+                            <span>
+                              Notification sent at{" "}
+                              {new Date(execution.notificationSent).toLocaleTimeString()}
+                            </span>
+                          </div>
                         )}
-                        s
-                      </span>
+
+                        {execution.notificationError && (
+                          <div>
+                            <p className="text-xs text-neutral-600 uppercase tracking-wider mb-2 font-semibold">
+                              Notification Error
+                            </p>
+                            <p className="text-sm text-neutral-900 bg-white border border-black p-3">
+                              {execution.notificationError}
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+
+                    {execution.completedAt && (
+                      <div className="mt-4 pt-4 border-t border-black flex items-center justify-between text-xs text-neutral-600">
+                        <span>Completed: {new Date(execution.completedAt).toLocaleString()}</span>
+                        <span className="px-2 py-1 border border-black bg-white font-mono">
+                          {Math.round(
+                            (new Date(execution.completedAt).getTime() -
+                              new Date(execution.startedAt).getTime()) /
+                              1000
+                          )}
+                          s
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      </main>
     </>
   );
 }
