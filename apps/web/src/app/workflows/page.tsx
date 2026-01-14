@@ -6,8 +6,8 @@ import { Header } from "@/components/layout/header";
 import { DeleteModal } from "@/components/ui/delete-modal";
 import { AuthError } from "@/components/ui/auth-error";
 import { useDeleteWorkflow, useToggleWorkflow, useWorkflows } from "@/lib/hooks/use-workflows";
+import { motion } from "framer-motion";
 
-// Helper to get trigger info from workflow graph
 function getTriggerInfo(graph: any) {
   const triggerNode = graph?.nodes?.find((node: any) => node.type === "trigger");
   if (!triggerNode) return { type: "Unknown", address: null, icon: "question" };
@@ -31,7 +31,6 @@ function getTriggerInfo(graph: any) {
   };
 }
 
-// Helper to get action info from workflow graph
 function getActionInfo(graph: any) {
   const actionNode = graph?.nodes?.find((node: any) => node.type === "action");
   if (!actionNode) return { type: "No Action", description: null, icon: "none" };
@@ -44,6 +43,7 @@ function getActionInfo(graph: any) {
     send_spl_token: "Send Token",
     call_program: "Call Program",
     do_nothing: "No Action",
+    kalshi_place_order: "Kalshi Place Order",
   };
 
   let description = null;
@@ -53,6 +53,8 @@ function getActionInfo(graph: any) {
     description = `Token: ${config.tokenMint.slice(0, 8)}...`;
   } else if (actionType === "call_program" && config.programId) {
     description = `Program: ${config.programId.slice(0, 8)}...`;
+  } else if (actionType === "kalshi_place_order" && config.marketId) {
+    description = `Market: ${config.marketId.slice(0, 8)}...`;
   }
 
   return {
@@ -62,7 +64,6 @@ function getActionInfo(graph: any) {
   };
 }
 
-// Helper to get notification info from workflow graph
 function getNotifyInfo(graph: any) {
   const notifyNode = graph?.nodes?.find((node: any) => node.type === "notify");
   if (!notifyNode) return null;
@@ -112,79 +113,36 @@ export default function WorkflowsPage() {
   return (
     <>
       <Header />
-      <div className="max-w-5xl mx-auto px-6 py-12">
-        <div className="flex justify-between items-start mb-12">
-          <div className="max-w-2xl">
-            <h1 className="text-4xl font-bold tracking-tight mb-2">Workflows</h1>
-            <p className="text-neutral-600 text-lg">
-              Monitor Solana wallets and automate on-chain actions
-            </p>
-          </div>
-          <button
-            onClick={() => (window.location.href = "/workflows/builder")}
-            className="px-4 py-2.5 bg-black text-white rounded-lg hover:bg-neutral-800 transition-colors text-sm font-medium flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            Create Workflow
-          </button>
-        </div>
-
-        {isLoading && (
-          <div className="rounded-xl border border-neutral-200 bg-white p-12 text-center">
-            <div className="inline-flex items-center gap-2 text-neutral-600">
-              <div className="w-4 h-4 border-2 border-neutral-300 border-t-black rounded-full animate-spin" />
-              <span>Loading workflows...</span>
-            </div>
-          </div>
-        )}
-
-        {error && (
-          <>
-            {ready && !authenticated ? (
-              <AuthError
-                message="Please log in to view your workflows."
-                onRetry={() => window.location.reload()}
-              />
-            ) : (
-              <div className="rounded-xl border border-red-200 bg-red-50 p-6">
-                <p className="text-red-600">Error loading workflows: {(error as Error).message}</p>
-              </div>
-            )}
-          </>
-        )}
-
-        {data?.workflows && data.workflows.length === 0 && (
-          <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-12 text-center">
-            <div className="max-w-sm mx-auto">
-              <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-8 h-8 text-neutral-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+      <main>
+        <section className="max-w-[1000px] mx-auto border-x border-black">
+          <div className="w-full border-b border-black p-8 md:p-12">
+            <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+              <div className="flex-1">
+                <motion.h1
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="text-4xl md:text-5xl font-dynapuff font-bold tracking-tight mb-3"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                </svg>
+                  Workflows
+                </motion.h1>
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                  className="text-neutral-600 text-lg"
+                >
+                  Monitor Solana wallets and automate on-chain actions
+                </motion.p>
               </div>
-              <h3 className="text-lg font-semibold mb-2">No workflows yet</h3>
-              <p className="text-neutral-600 mb-4">
-                Create your first workflow with our visual builder
-              </p>
-              <button
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => (window.location.href = "/workflows/builder")}
-                className="px-4 py-2 bg-black text-white rounded-lg hover:bg-neutral-800 transition-colors text-sm font-medium flex items-center gap-2 mx-auto"
+                className="px-6 py-3 bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-800 transition-colors flex items-center gap-2"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
@@ -194,93 +152,169 @@ export default function WorkflowsPage() {
                     d="M12 4v16m8-8H4"
                   />
                 </svg>
-                Open Visual Builder
-              </button>
+                Create Workflow
+              </motion.button>
             </div>
           </div>
-        )}
 
-        {data?.workflows && data.workflows.length > 0 && (
-          <div className="space-y-4">
-            {data.workflows.map((workflow: any) => (
-              <div
-                key={workflow.id}
-                className="rounded-xl border border-neutral-200 bg-white p-6 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold mb-1">{workflow.name}</h3>
-                    {workflow.description && (
-                      <p className="text-sm text-neutral-600">{workflow.description}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() =>
-                        (window.location.href = `/workflows/builder?edit=${workflow.id}`)
-                      }
-                      className="p-2 hover:bg-neutral-100 rounded-lg transition-colors group"
-                      title="Edit workflow"
-                    >
-                      <svg
-                        className="w-4 h-4 text-neutral-600 group-hover:text-neutral-900"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick({ id: workflow.id, name: workflow.name })}
-                      className="p-2 hover:bg-red-100 rounded-lg transition-colors group"
-                      title="Delete workflow"
-                    >
-                      <svg
-                        className="w-4 h-4 text-neutral-600 group-hover:text-red-700"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => toggleWorkflow.mutate(workflow.id)}
-                      disabled={toggleWorkflow.isPending}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                        workflow.enabled
-                          ? "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
-                          : "bg-neutral-100 text-neutral-600 border border-neutral-200 hover:bg-neutral-200"
-                      }`}
-                    >
-                      {workflow.enabled ? "● Active" : "○ Disabled"}
-                    </button>
-                  </div>
-                </div>
-
-                <WorkflowDetails graph={workflow.graph} />
-
-                <div className="pt-4 border-t border-neutral-100 text-xs text-neutral-500">
-                  Created {new Date(workflow.createdAt).toLocaleDateString()}
-                </div>
+          {isLoading && (
+            <div className="w-full border-b border-black p-12 text-center">
+              <div className="inline-flex items-center gap-2 text-neutral-600">
+                <div className="w-4 h-4 border-2 border-neutral-300 border-t-black animate-spin" />
+                <span>Loading workflows...</span>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
+          )}
 
-      {/* Delete Confirmation Modal */}
+          {error && (
+            <div className="w-full border-b border-black">
+              {ready && !authenticated ? (
+                <div className="p-8">
+                  <AuthError
+                    message="Please log in to view your workflows."
+                    onRetry={() => window.location.reload()}
+                  />
+                </div>
+              ) : (
+                <div className="p-8 bg-red-50 border-b border-black">
+                  <p className="text-red-600">
+                    Error loading workflows: {(error as Error).message}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {data?.workflows && data.workflows.length === 0 && (
+            <div className="w-full border-b border-black p-12 text-center">
+              <div className="max-w-sm mx-auto">
+                <div className="w-16 h-16 bg-neutral-100 flex items-center justify-center mx-auto mb-4">
+                  <svg
+                    className="w-8 h-8 text-neutral-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold mb-2">No workflows yet</h3>
+                <p className="text-neutral-600 mb-4">
+                  Create your first workflow with our visual builder
+                </p>
+                <button
+                  onClick={() => (window.location.href = "/workflows/builder")}
+                  className="px-4 py-2 bg-neutral-900 text-white hover:bg-neutral-800 transition-colors text-sm font-medium flex items-center gap-2 mx-auto"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  Open Visual Builder
+                </button>
+              </div>
+            </div>
+          )}
+
+          {data?.workflows && data.workflows.length > 0 && (
+            <div className="w-full">
+              {data.workflows.map((workflow: any, index: number) => (
+                <motion.div
+                  key={workflow.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className={`w-full border-b border-black ${
+                    index === data.workflows.length - 1 ? "" : ""
+                  }`}
+                >
+                  <div className="p-8">
+                    <div className="flex flex-col md:flex-row items-start justify-between gap-6 mb-6">
+                      <div className="flex-1">
+                        <h3 className="text-xl font-semibold mb-2">{workflow.name}</h3>
+                        {workflow.description && (
+                          <p className="text-sm text-neutral-600">{workflow.description}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() =>
+                            (window.location.href = `/workflows/builder?edit=${workflow.id}`)
+                          }
+                          className="p-2 hover:bg-neutral-100 transition-colors group"
+                          title="Edit workflow"
+                        >
+                          <svg
+                            className="w-4 h-4 text-neutral-600 group-hover:text-neutral-900"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleDeleteClick({ id: workflow.id, name: workflow.name })
+                          }
+                          className="p-2 hover:bg-red-100 transition-colors group"
+                          title="Delete workflow"
+                        >
+                          <svg
+                            className="w-4 h-4 text-neutral-600 group-hover:text-red-700"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => toggleWorkflow.mutate(workflow.id)}
+                          disabled={toggleWorkflow.isPending}
+                          className={`px-4 py-2 text-sm font-medium transition-all border ${
+                            workflow.enabled
+                              ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                              : "bg-neutral-100 text-neutral-600 border-neutral-200 hover:bg-neutral-200"
+                          }`}
+                        >
+                          {workflow.enabled ? "● Active" : "○ Disabled"}
+                        </button>
+                      </div>
+                    </div>
+
+                    <WorkflowDetails graph={workflow.graph} />
+
+                    <div className="pt-4 border-t border-neutral-200 text-xs text-neutral-500">
+                      Created {new Date(workflow.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </section>
+      </main>
+
       <DeleteModal
         isOpen={!!workflowToDelete}
         onClose={handleDeleteCancel}
@@ -297,18 +331,17 @@ export default function WorkflowsPage() {
   );
 }
 
-// Component to display workflow trigger and action details
 function WorkflowDetails({ graph }: { graph: any }) {
   const triggerInfo = getTriggerInfo(graph);
   const actionInfo = getActionInfo(graph);
   const notifyInfo = getNotifyInfo(graph);
 
   return (
-    <div className="grid grid-cols-2 gap-6 mb-6">
-      <div>
-        <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">Trigger</p>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div className="border border-neutral-200 p-4">
+        <p className="text-xs text-neutral-500 uppercase tracking-wider mb-3">Trigger</p>
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center border border-blue-200">
             <TriggerIcon type={triggerInfo.icon} />
           </div>
           <div>
@@ -321,10 +354,10 @@ function WorkflowDetails({ graph }: { graph: any }) {
           </div>
         </div>
       </div>
-      <div>
-        <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">Action</p>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+      <div className="border border-neutral-200 p-4">
+        <p className="text-xs text-neutral-500 uppercase tracking-wider mb-3">Action</p>
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-purple-50 rounded-full flex items-center justify-center border border-purple-200">
             <ActionIcon type={actionInfo.icon} />
           </div>
           <div>
@@ -345,88 +378,100 @@ function TriggerIcon({ type }: { type: string }) {
     case "balance_change":
       return (
         <svg
-          className="w-4 h-4 text-blue-600"
-          fill="none"
+          className="w-5 h-5 text-blue-600"
           viewBox="0 0 24 24"
+          fill="none"
           stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
+          <circle cx="12" cy="12" r="10" fill="currentColor" fillOpacity="0.1" />
+          <path d="M12 6v12M9 9h6M9 15h6" stroke="currentColor" strokeWidth="2.5" />
           <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            d="M12 6c0-1.5-1.5-3-3-3s-3 1.5-3 3M12 18c0 1.5 1.5 3 3 3s3-1.5 3-3"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            fill="none"
           />
         </svg>
       );
     case "token_receipt":
+      return (
+        <svg
+          className="w-5 h-5 text-blue-600"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="12" cy="12" r="10" fill="currentColor" fillOpacity="0.1" />
+          <path d="M8 12h8M12 8v8M16 8l-4 4-4-4" stroke="currentColor" strokeWidth="2" />
+        </svg>
+      );
     case "nft_receipt":
       return (
         <svg
-          className="w-4 h-4 text-blue-600"
-          fill="none"
+          className="w-5 h-5 text-blue-600"
           viewBox="0 0 24 24"
+          fill="none"
           stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-          />
+          <circle cx="12" cy="12" r="10" fill="currentColor" fillOpacity="0.1" />
+          <rect x="8" y="8" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2" />
+          <path d="M8 8l4 4M12 12l4-4" stroke="currentColor" strokeWidth="1.5" />
         </svg>
       );
     case "program_log":
       return (
         <svg
-          className="w-4 h-4 text-blue-600"
-          fill="none"
+          className="w-5 h-5 text-blue-600"
           viewBox="0 0 24 24"
+          fill="none"
           stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
+          <circle cx="12" cy="12" r="10" fill="currentColor" fillOpacity="0.1" />
+          <path d="M8 10h8M8 14h8M8 18h5" stroke="currentColor" strokeWidth="2" />
+          <path d="M10 6h4v2h-4z" fill="currentColor" fillOpacity="0.3" />
         </svg>
       );
     case "cron":
       return (
         <svg
-          className="w-4 h-4 text-blue-600"
-          fill="none"
+          className="w-5 h-5 text-blue-600"
           viewBox="0 0 24 24"
+          fill="none"
           stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
+          <circle cx="12" cy="12" r="10" fill="currentColor" fillOpacity="0.1" />
+          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+          <path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
       );
     default:
       return (
         <svg
-          className="w-4 h-4 text-blue-600"
-          fill="none"
+          className="w-5 h-5 text-blue-600"
           viewBox="0 0 24 24"
+          fill="none"
           stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-          />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-          />
+          <circle cx="12" cy="12" r="10" fill="currentColor" fillOpacity="0.1" />
+          <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
         </svg>
       );
   }
@@ -437,64 +482,87 @@ function ActionIcon({ type }: { type: string }) {
     case "send_sol":
       return (
         <svg
-          className="w-4 h-4 text-purple-600"
-          fill="none"
+          className="w-5 h-5 text-purple-600"
           viewBox="0 0 24 24"
+          fill="none"
           stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-          />
+          <circle cx="12" cy="12" r="10" fill="currentColor" fillOpacity="0.1" />
+          <path d="M12 4l-8 8 8 8 8-8-8-8z" stroke="currentColor" strokeWidth="2" fill="none" />
+          <path d="M12 12v8" stroke="currentColor" strokeWidth="2" />
         </svg>
       );
     case "send_spl_token":
       return (
         <svg
-          className="w-4 h-4 text-purple-600"
-          fill="none"
+          className="w-5 h-5 text-purple-600"
           viewBox="0 0 24 24"
+          fill="none"
           stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-          />
+          <circle cx="12" cy="12" r="10" fill="currentColor" fillOpacity="0.1" />
+          <circle cx="12" cy="12" r="6" stroke="currentColor" strokeWidth="2" />
+          <path d="M12 6v12M6 12h12" stroke="currentColor" strokeWidth="2" />
         </svg>
       );
     case "call_program":
       return (
         <svg
-          className="w-4 h-4 text-purple-600"
-          fill="none"
+          className="w-5 h-5 text-purple-600"
           viewBox="0 0 24 24"
+          fill="none"
           stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
+          <circle cx="12" cy="12" r="10" fill="currentColor" fillOpacity="0.1" />
+          <path d="M8 12l4-4 4 4M8 12l4 4 4-4" stroke="currentColor" strokeWidth="2" />
+        </svg>
+      );
+    case "kalshi_place_order":
+      return (
+        <svg
+          className="w-5 h-5 text-purple-600"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="12" cy="12" r="10" fill="currentColor" fillOpacity="0.1" />
           <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+            d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            fill="none"
           />
         </svg>
       );
     default:
       return (
         <svg
-          className="w-4 h-4 text-purple-600"
-          fill="none"
+          className="w-5 h-5 text-purple-600"
           viewBox="0 0 24 24"
+          fill="none"
           stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
+          <circle cx="12" cy="12" r="10" fill="currentColor" fillOpacity="0.1" />
           <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M13 10V3L4 14h7v7l9-11h-7z"
+            d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            fill="none"
           />
         </svg>
       );

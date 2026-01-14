@@ -194,16 +194,25 @@ export interface Execution {
 }
 
 export async function fetchExecutions(workflowId?: string): Promise<{ executions: Execution[] }> {
+  const headers = await getAuthHeaders();
   const url = workflowId
-    ? `${API_URL}${API.ROUTES.EXECUTIONS}?workflowId=${workflowId}`
+    ? `${API_URL}${API.ROUTES.EXECUTIONS}?workflow_id=${workflowId}`
     : `${API_URL}${API.ROUTES.EXECUTIONS}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Failed to fetch executions");
+  const res = await fetch(url, { headers });
+  if (!res.ok) {
+    if (res.status === 401) throw new Error("Unauthorized - Please login");
+    throw new Error("Failed to fetch executions");
+  }
   return res.json();
 }
 
 export async function fetchExecution(id: string): Promise<{ execution: Execution }> {
-  const res = await fetch(`${API_URL}${API.ROUTES.EXECUTIONS}/${id}`);
-  if (!res.ok) throw new Error("Failed to fetch execution");
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}${API.ROUTES.EXECUTIONS}/${id}`, { headers });
+  if (!res.ok) {
+    if (res.status === 401) throw new Error("Unauthorized - Please login");
+    if (res.status === 404) throw new Error("Execution not found");
+    throw new Error("Failed to fetch execution");
+  }
   return res.json();
 }
