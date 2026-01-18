@@ -22,6 +22,7 @@ export const TriggerNodeDataSchema = z.object({
     "transaction_status",
     "program_log",
     "cron",
+    "market_price_check",
   ]),
   config: z.object({
     // Common fields
@@ -47,13 +48,15 @@ export const TriggerNodeDataSchema = z.object({
     accountInvolved: z.string().optional(),
     statusType: z.enum(["success", "failed", "any"]).optional(),
 
-    // Program log specific
     logPattern: z.string().optional(),
     mentionedAccounts: z.array(z.string()).optional(),
 
-    // Cron trigger specific
-    schedule: z.string().optional(), // Cron expression like "*/5 * * * *"
-    timezone: z.string().optional(), // Timezone like "UTC" or "America/New_York"
+    schedule: z.string().optional(),
+    timezone: z.string().optional(),
+
+    ticker: z.string().optional(),
+    interval: z.string().optional(),
+    baseCurrency: z.enum(["yes", "no"]).optional(),
   }),
 });
 
@@ -77,7 +80,6 @@ export const FilterNodeDataSchema = z.object({
   logic: z.enum(["and", "or"]).default("and"),
 });
 
-// Action node data schema
 export const ActionNodeDataSchema = z.object({
   actionType: z.enum([
     "send_sol",

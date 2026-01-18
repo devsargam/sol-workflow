@@ -8,6 +8,7 @@ export const TriggerTypeEnum = z.enum([
   "transaction_status",
   "program_log",
   "cron",
+  "market_price_check",
 ]);
 
 export type TriggerType = z.infer<typeof TriggerTypeEnum>;
@@ -66,6 +67,14 @@ export const CronTriggerConfigSchema = z.object({
 
 export type CronTriggerConfig = z.infer<typeof CronTriggerConfigSchema>;
 
+export const MarketPriceCheckTriggerConfigSchema = z.object({
+  ticker: z.string().min(1, "Market ticker is required"),
+  interval: z.string().min(1, "Check interval is required").default("1m"),
+  baseCurrency: z.enum(["yes", "no"]).optional(),
+});
+
+export type MarketPriceCheckTriggerConfig = z.infer<typeof MarketPriceCheckTriggerConfigSchema>;
+
 // Union schema for all trigger configs
 export const TriggerConfigSchema = z.union([
   BalanceChangeTriggerConfigSchema,
@@ -74,6 +83,7 @@ export const TriggerConfigSchema = z.union([
   TransactionStatusTriggerConfigSchema,
   ProgramLogTriggerConfigSchema,
   CronTriggerConfigSchema,
+  MarketPriceCheckTriggerConfigSchema,
 ]);
 
 export type TriggerConfig = z.infer<typeof TriggerConfigSchema>;

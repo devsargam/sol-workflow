@@ -26,6 +26,31 @@ const triggerValidators: Record<string, NodeValidator> = {
 
     return errors;
   },
+  market_price_check: (node) => {
+    const data = node.data as TriggerNodeData;
+    const config = data?.config || {};
+    const errors: ValidationError[] = [];
+
+    if (!config.ticker || typeof config.ticker !== "string" || config.ticker.trim().length === 0) {
+      errors.push(`Trigger node ${node.id}: Market ticker is required`);
+    }
+
+    const validIntervals = ["1m", "5m", "15m", "30m", "1h"];
+    if (!config.interval || !validIntervals.includes(config.interval)) {
+      errors.push(
+        `Trigger node ${node.id}: Check interval must be one of: ${validIntervals.join(", ")}`
+      );
+    }
+
+    const validCurrencies = ["yes", "no"];
+    if (config.baseCurrency && !validCurrencies.includes(config.baseCurrency)) {
+      errors.push(
+        `Trigger node ${node.id}: Base currency must be one of: ${validCurrencies.join(", ")}`
+      );
+    }
+
+    return errors;
+  },
   // Add more trigger validators here as needed:
 };
 
@@ -188,7 +213,9 @@ function validateNotifyNodes(nodes: WorkflowNode[]): ValidationError[] {
           );
         } else {
           errors.push(
-            `Notify node ${node.id} (notification ${i + 1}): Unknown notification type: ${notifyType}`
+            `Notify node ${node.id} (notification ${
+              i + 1
+            }): Unknown notification type: ${notifyType}`
           );
         }
       }

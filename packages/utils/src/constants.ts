@@ -159,6 +159,7 @@ export enum TriggerType {
   TRANSACTION_STATUS = "transaction_status",
   PROGRAM_LOG = "program_log",
   CRON = "cron",
+  MARKET_PRICE_CHECK = "market_price_check",
 }
 
 // ============================================================================
