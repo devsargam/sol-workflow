@@ -230,6 +230,7 @@ export function WorkflowBuilderContent() {
       {selectedNode && (
         <NodeConfigPanel
           node={selectedNode}
+          nodes={nodes}
           onUpdate={updateNodeData}
           onClose={() => setSelectedNode(null)}
         />

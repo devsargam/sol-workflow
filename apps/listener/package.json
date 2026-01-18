@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@repo/db": "workspace:*",
+    "@repo/kalshi": "workspace:*",
     "@repo/types": "workspace:*",
     "@solana/web3.js": "^1.98.0",
     "bullmq": "^5.35.7",
+    "croner": "^8.1.2",
     "ioredis": "^5.4.1",
     "utils": "workspace:*",
     "zod": "^3.24.1"

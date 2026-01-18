@@ -76,6 +76,15 @@ export default function WorkflowBuilderClientPage() {
           node.data?.actionType === "kalshi_place_order" || node.data?.type === "kalshi_place_order"
       );
 
+      const hasKalshiTrigger = graph.nodes.some(
+        (node: any) =>
+          node.type === "trigger" &&
+          (node.data?.triggerType === "market_price_check" ||
+            node.data?.type === "market_price_check")
+      );
+
+      const needsKalshiCredentials = hasKalshiAction || hasKalshiTrigger;
+
       if (hasKalshiAction) {
         // Validate Kalshi action configurations
         const kalshiNodes = graph.nodes.filter(
@@ -133,13 +142,25 @@ export default function WorkflowBuilderClientPage() {
         }
       }
 
+      if (hasKalshiTrigger) {
+        if (!kalshiApiKey || !kalshiPrivateKey) {
+          setErrors([
+            "Kalshi credentials are required for workflows with market price check triggers. Please configure them using the Kalshi button.",
+          ]);
+          setShowErrors(true);
+          setShowKalshiConfig(true);
+          setIsSaving(false);
+          return;
+        }
+      }
+
       const metadata: any = {
         version: "1.0.0",
         maxSolPerTx: 1000000,
         maxExecutionsPerHour: 10,
       };
 
-      if (hasKalshiAction && kalshiApiKey && kalshiPrivateKey) {
+      if (needsKalshiCredentials && kalshiApiKey && kalshiPrivateKey) {
         metadata.kalshiCredentials = {
           apiKey: kalshiApiKey,
           privateKeyPem: kalshiPrivateKey,
@@ -373,7 +394,6 @@ export default function WorkflowBuilderClientPage() {
         </div>
       )}
 
-      {/* Clean Error Display */}
       {showErrors && errors.length > 0 && (
         <div className="bg-red-50 border-b border-red-200">
           <div className="px-6 py-3 flex items-start gap-3">

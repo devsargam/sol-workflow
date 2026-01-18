@@ -13,9 +13,11 @@ export interface TriggerNodeData {
     minChange?: number;
     changeType?: string;
     minAmount?: number;
-    // Cron trigger specific
     schedule?: string;
     timezone?: string;
+    ticker?: string;
+    interval?: string;
+    baseCurrency?: "yes" | "no";
   };
 }
 
@@ -36,17 +38,14 @@ export interface ActionNodeData {
     toAddress?: string;
     amount?: number;
     fromKeypair?: string;
-    // Send SPL Token specific
     tokenMint?: string;
     fromTokenAccount?: string;
     toTokenAccount?: string;
     decimals?: number;
-    // Call Program specific
     programId?: string;
     instruction?: string;
-    // Kalshi specific
     ticker?: string;
-    marketId?: string; // Backward compatibility
+    marketId?: string;
     side?: "yes" | "no";
     action?: "buy" | "sell";
     count?: number;

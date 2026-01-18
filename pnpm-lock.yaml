@@ -75,6 +75,9 @@ importers:
       '@repo/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@repo/kalshi':
+        specifier: workspace:*
+        version: link:../../packages/kalshi
       '@repo/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -84,6 +87,9 @@ importers:
       bullmq:
         specifier: ^5.35.7
         version: 5.66.4
+      croner:
+        specifier: ^8.1.2
+        version: 8.1.2
       ioredis:
         specifier: ^5.4.1
         version: 5.8.2

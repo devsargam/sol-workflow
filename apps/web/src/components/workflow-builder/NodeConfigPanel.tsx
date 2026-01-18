@@ -5,11 +5,12 @@ import type { Node } from "@xyflow/react";
 
 interface NodeConfigPanelProps {
   node: Node;
+  nodes: Node[];
   onUpdate: (nodeId: string, data: any) => void;
   onClose: () => void;
 }
 
-export function NodeConfigPanel({ node, onUpdate, onClose }: NodeConfigPanelProps) {
+export function NodeConfigPanel({ node, nodes, onUpdate, onClose }: NodeConfigPanelProps) {
   const normalizeFormData = useCallback(
     (data: any) => {
       const normalized = { ...data };
@@ -58,7 +59,13 @@ export function NodeConfigPanel({ node, onUpdate, onClose }: NodeConfigPanelProp
       case "trigger":
         return <TriggerConfig formData={formData} setFormData={setFormData} />;
       case "filter":
-        return <FilterConfig formData={formData} setFormData={setFormData} />;
+        return (
+          <FilterConfig
+            formData={formData}
+            setFormData={setFormData}
+            nodes={nodes}
+          />
+        );
       case "action":
         return <ActionConfig formData={formData} setFormData={setFormData} />;
       case "notify":
@@ -138,6 +145,7 @@ function TriggerConfig({ formData, setFormData }: any) {
           <option value="transaction_status">Transaction Status</option>
           <option value="program_log">Program Log</option>
           <option value="cron">Scheduled (Cron)</option>
+          <option value="market_price_check">Market Price Check</option>
         </select>
       </div>
 
@@ -423,13 +431,102 @@ function TriggerConfig({ formData, setFormData }: any) {
           </div>
         </>
       )}
+
+      {triggerType === "market_price_check" && (
+        <>
+          <div>
+            <label className="block text-sm font-medium mb-2">Market Ticker</label>
+            <input
+              type="text"
+              value={formData.config?.ticker || ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  config: { ...formData.config, ticker: e.target.value },
+                })
+              }
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              placeholder="e.g., GDP, INFLATION, ..."
+              required
+            />
+            <p className="text-xs text-neutral-500 mt-1">
+              Kalshi market ticker (e.g., GDP, INFLATION, PRESIDENTIAL2024)
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Check Interval</label>
+            <select
+              value={formData.config?.interval || "1m"}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  config: { ...formData.config, interval: e.target.value },
+                })
+              }
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+            >
+              <option value="1m">Every 1 minute</option>
+              <option value="5m">Every 5 minutes</option>
+              <option value="15m">Every 15 minutes</option>
+              <option value="30m">Every 30 minutes</option>
+              <option value="1h">Every hour</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Monitor Side</label>
+            <select
+              value={formData.config?.baseCurrency || "yes"}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  config: { ...formData.config, baseCurrency: e.target.value },
+                })
+              }
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+            >
+              <option value="yes">YES contracts</option>
+              <option value="no">NO contracts</option>
+            </select>
+            <p className="text-xs text-neutral-500 mt-1">
+              Which side of the market to monitor for price changes
+            </p>
+          </div>
+
+          <div className="p-3 bg-blue-50 rounded-lg">
+            <p className="text-xs text-blue-700">
+              <strong>How it works:</strong> This trigger will periodically check the market price
+              and trigger your workflow. Use filters to set conditions like "Buy when YES price
+              drops below 0.55".
+            </p>
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
 // Filter Configuration
-function FilterConfig({ formData, setFormData }: any) {
+function FilterConfig({ formData, setFormData, nodes }: any) {
   const conditions = formData.conditions || [];
+  const hasMarketPriceCheckTrigger = (nodes || []).some(
+    (node: any) =>
+      node.type === "trigger" &&
+      (node.data?.triggerType === "market_price_check" || node.data?.type === "market_price_check")
+  );
+  const valuePlaceholder = hasMarketPriceCheckTrigger ? "0.55" : "Value";
+  const marketPriceFields = [
+    { label: "YES Bid", value: "marketPrice.yesBid" },
+    { label: "YES Ask", value: "marketPrice.yesAsk" },
+    { label: "NO Bid", value: "marketPrice.noBid" },
+    { label: "NO Ask", value: "marketPrice.noAsk" },
+    { label: "Last Price", value: "marketPrice.lastPrice" },
+    { label: "Volume", value: "marketPrice.volume" },
+    { label: "24h Volume", value: "marketPrice.volume24h" },
+    { label: "Open Interest", value: "marketPrice.openInterest" },
+    { label: "Status", value: "marketPrice.status" },
+  ];
 
   const addCondition = () => {
     setFormData({
@@ -463,6 +560,20 @@ function FilterConfig({ formData, setFormData }: any) {
           + Add Condition
         </button>
       </div>
+      {hasMarketPriceCheckTrigger && (
+        <div className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+          Use market fields from the price check trigger:
+          <span className="font-mono"> marketPrice.yesBid</span>,{" "}
+          <span className="font-mono">marketPrice.yesAsk</span>,{" "}
+          <span className="font-mono">marketPrice.noBid</span>,{" "}
+          <span className="font-mono">marketPrice.noAsk</span>,{" "}
+          <span className="font-mono">marketPrice.lastPrice</span>.
+          <span className="block text-blue-700">
+            Example: <span className="font-mono">marketPrice.yesAsk</span> less_than{" "}
+            <span className="font-mono">0.55</span>
+          </span>
+        </div>
+      )}
 
       {conditions.length === 0 ? (
         <div className="p-4 bg-neutral-50 rounded-lg text-sm text-neutral-600 text-center">
@@ -489,13 +600,30 @@ function FilterConfig({ formData, setFormData }: any) {
                   </svg>
                 </button>
               </div>
-              <input
-                type="text"
-                value={condition.field}
-                onChange={(e) => updateCondition(index, "field", e.target.value)}
-                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
-                placeholder="Field name (e.g., amount)"
-              />
+              {hasMarketPriceCheckTrigger ? (
+                <select
+                  value={condition.field || ""}
+                  onChange={(e) => updateCondition(index, "field", e.target.value)}
+                  className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                >
+                  <option value="" disabled>
+                    Select market field
+                  </option>
+                  {marketPriceFields.map((field) => (
+                    <option key={field.value} value={field.value}>
+                      {field.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={condition.field}
+                  onChange={(e) => updateCondition(index, "field", e.target.value)}
+                  className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                  placeholder="Field name (e.g., amount)"
+                />
+              )}
               <select
                 value={condition.operator}
                 onChange={(e) => updateCondition(index, "operator", e.target.value)}
@@ -514,7 +642,7 @@ function FilterConfig({ formData, setFormData }: any) {
                 value={condition.value}
                 onChange={(e) => updateCondition(index, "value", e.target.value)}
                 className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
-                placeholder="Value"
+                placeholder={valuePlaceholder}
               />
             </div>
           ))}

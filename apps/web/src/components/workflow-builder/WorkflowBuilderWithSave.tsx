@@ -463,6 +463,7 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
       {selectedNode && (
         <NodeConfigPanel
           node={selectedNode}
+          nodes={nodes}
           onUpdate={updateNodeData}
           onClose={() => setSelectedNode(null)}
         />

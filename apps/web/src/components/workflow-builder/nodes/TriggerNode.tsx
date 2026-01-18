@@ -22,6 +22,8 @@ export const TriggerNode = memo(({ data, selected }: NodeProps) => {
         return "📝";
       case "cron":
         return <ClockIcon className="w-6 h-6" />;
+      case "market_price_check":
+        return "📈";
       default:
         return <ZapIcon className="w-6 h-6" />;
     }
@@ -41,6 +43,8 @@ export const TriggerNode = memo(({ data, selected }: NodeProps) => {
         return "Program Log";
       case "cron":
         return "Scheduled (Cron)";
+      case "market_price_check":
+        return "Market Price Check";
       default:
         return "Trigger";
     }
@@ -79,6 +83,25 @@ export const TriggerNode = memo(({ data, selected }: NodeProps) => {
             {nodeData.config.timezone && nodeData.config.timezone !== "UTC" && (
               <div className="text-[10px] mt-0.5 text-gray-500">
                 Timezone: {nodeData.config.timezone}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {nodeData.type === "market_price_check" && nodeData.config?.ticker && (
+        <div className="mt-2 pt-2 border-t border-gray-200">
+          <div className="text-xs text-gray-600">
+            <span className="font-medium">Market:</span>
+            <div className="font-mono text-[10px] mt-0.5">{nodeData.config.ticker}</div>
+            {nodeData.config.interval && (
+              <div className="text-[10px] mt-0.5 text-gray-500">
+                Check every: {nodeData.config.interval}
+              </div>
+            )}
+            {nodeData.config.baseCurrency && (
+              <div className="text-[10px] mt-0.5 text-gray-500">
+                Monitor: {nodeData.config.baseCurrency.toUpperCase()}
               </div>
             )}
           </div>

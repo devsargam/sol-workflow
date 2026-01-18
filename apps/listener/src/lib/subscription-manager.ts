@@ -1,5 +1,6 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { Queue } from "bullmq";
+import { Cron } from "croner";
 import {
   TriggerType,
   JOB_NAMES,
@@ -11,6 +12,9 @@ import {
 } from "utils";
 import type { WorkflowGraph } from "@repo/types";
 import { db, triggerSubscriptions, eq } from "@repo/db";
+import { createKalshiClient } from "@repo/kalshi";
+
+type SubscriptionValue = number | Cron;
 
 interface Workflow {
   id: string;
@@ -29,7 +33,7 @@ interface TriggerNode {
 }
 
 export class SubscriptionManager {
-  private subscriptions: Map<string, number> = new Map();
+  private subscriptions: Map<string, SubscriptionValue> = new Map();
   private connection: Connection;
   private queue: Queue;
 
@@ -218,6 +222,9 @@ export class SubscriptionManager {
           break;
         case TriggerType.PROGRAM_LOG:
           await this.subscribeToProgramLogs(workflow, triggerNode.id, config);
+          break;
+        case TriggerType.MARKET_PRICE_CHECK:
+          await this.subscribeToMarketPriceCheck(workflow, triggerNode.id, config);
           break;
         default:
           log.warn(`Unsupported trigger type: ${triggerType}`, {
@@ -501,9 +508,14 @@ export class SubscriptionManager {
   }
 
   async unsubscribe(workflowId: string): Promise<void> {
-    for (const [key, subscriptionId] of this.subscriptions.entries()) {
+    for (const [key, subscription] of this.subscriptions.entries()) {
       if (key.startsWith(`${workflowId}-`)) {
-        await this.connection.removeAccountChangeListener(subscriptionId);
+        if (typeof subscription === "number") {
+          await this.connection.removeAccountChangeListener(subscription);
+        } else if (subscription && typeof subscription.stop === "function") {
+          subscription.stop();
+        }
+
         this.subscriptions.delete(key);
         log.info(`✅ Unsubscribed from ${key}`, {
           service: "listener",
@@ -518,9 +530,14 @@ export class SubscriptionManager {
   }
 
   async unsubscribeAll(): Promise<void> {
-    for (const [key, subscriptionId] of this.subscriptions.entries()) {
+    for (const [key, subscription] of this.subscriptions.entries()) {
       try {
-        await this.connection.removeAccountChangeListener(subscriptionId);
+        if (typeof subscription === "number") {
+          await this.connection.removeAccountChangeListener(subscription);
+        } else if (subscription && typeof subscription.stop === "function") {
+          subscription.stop();
+        }
+
         log.info(`✅ Unsubscribed from ${key}`, {
           service: "listener",
           subscriptionKey: key,
@@ -533,6 +550,176 @@ export class SubscriptionManager {
       }
     }
     this.subscriptions.clear();
+  }
+
+  private async subscribeToMarketPriceCheck(
+    workflow: Workflow,
+    triggerNodeId: string,
+    config: any
+  ): Promise<void> {
+    if (!config.ticker) {
+      log.error(
+        `[SubscriptionManager] Market price check trigger ${triggerNodeId} missing ticker in config`,
+        new Error("Missing ticker in config"),
+        {
+          service: "listener",
+          workflowId: workflow.id,
+          triggerNodeId,
+          config,
+        }
+      );
+      return;
+    }
+
+    const interval = config.interval || "1m";
+    const cronExpression = this.intervalToCron(interval);
+
+    log.info(
+      `[SubscriptionManager] Setting up market price check for ticker: ${config.ticker} with interval: ${interval}`,
+      {
+        service: "listener",
+        workflowId: workflow.id,
+        triggerNodeId,
+        ticker: config.ticker,
+        interval,
+        cronExpression,
+      }
+    );
+
+    try {
+      const kalshiCredentials = workflow.metadata?.kalshiCredentials;
+      if (!kalshiCredentials) {
+        throw new Error("Kalshi credentials not found in workflow metadata");
+      }
+
+      const kalshiClient = createKalshiClient(kalshiCredentials);
+
+      const cronJob = new Cron(cronExpression, async () => {
+        try {
+          log.debug(`Checking market price for ${config.ticker}`, {
+            service: "listener",
+            workflowId: workflow.id,
+            ticker: config.ticker,
+          });
+
+          const marketPrice = await kalshiClient.getMarketPrice(config.ticker);
+
+          log.debug(
+            `Market price for ${config.ticker}: YES bid=${marketPrice.yesBid}¢ ask=${marketPrice.yesAsk}¢ | NO bid=${marketPrice.noBid}¢ ask=${marketPrice.noAsk}¢`,
+            {
+              service: "listener",
+              workflowId: workflow.id,
+              ticker: config.ticker,
+              marketPrice,
+            }
+          );
+
+          const executionId = generateExecutionId(
+            workflow.id,
+            Date.now(),
+            `${triggerNodeId}-${config.ticker}`
+          );
+
+          await this.queue.add(
+            JOB_NAMES.WORKFLOW_EVENT,
+            {
+              workflowId: workflow.id,
+              executionId,
+              triggerNodeId,
+              triggerData: {
+                ticker: config.ticker,
+                interval,
+                baseCurrency: config.baseCurrency || "yes",
+                marketPrice,
+                timestamp: new Date().toISOString(),
+              },
+              graph: workflow.graph,
+              metadata: workflow.metadata,
+            },
+            {
+              jobId: executionId,
+              ...JOB_OPTIONS.DEFAULT,
+            }
+          );
+
+          await this.recordEventTime(workflow.id);
+
+          log.info(
+            `✅ Queued market price check execution ${executionId} for workflow ${workflow.id}`,
+            {
+              service: "listener",
+              workflowId: workflow.id,
+              executionId,
+              triggerNodeId,
+              ticker: config.ticker,
+              yesBid: marketPrice.yesBid,
+              yesAsk: marketPrice.yesAsk,
+            }
+          );
+        } catch (error) {
+          log.error(`Failed to check market price for ${config.ticker}`, error as Error, {
+            service: "listener",
+            workflowId: workflow.id,
+            triggerNodeId,
+            ticker: config.ticker,
+          });
+
+          await this.updateSubscriptionStatus(workflow.id, true, (error as Error).message);
+        }
+      });
+
+      const subscriptionKey = `${workflow.id}-${triggerNodeId}`;
+      this.subscriptions.set(subscriptionKey, cronJob);
+
+      await this.persistSubscription(
+        workflow.id,
+        triggerNodeId,
+        "market_price_check",
+        config.ticker,
+        0
+      );
+
+      log.info(`✅ Subscribed to market price checks for ${config.ticker}`, {
+        service: "listener",
+        workflowId: workflow.id,
+        triggerNodeId,
+        ticker: config.ticker,
+        interval,
+      });
+    } catch (error) {
+      log.error(`Failed to set up market price check subscription`, error as Error, {
+        service: "listener",
+        workflowId: workflow.id,
+        triggerNodeId,
+        ticker: config.ticker,
+        interval,
+      });
+
+      await this.updateSubscriptionStatus(workflow.id, false, (error as Error).message);
+    }
+  }
+
+  private intervalToCron(interval: string): string {
+    const match = interval.match(/^(\d+)([mh])$/);
+    if (!match) {
+      return "*/1 * * * *";
+    }
+
+    const [, numberStr, unit] = match;
+    const num = parseInt(numberStr || "1", 10);
+
+    if (unit === "m") {
+      if (num === 1) return "*/1 * * * *";
+      if (num === 5) return "*/5 * * * *";
+      if (num === 15) return "*/15 * * * *";
+      if (num === 30) return "*/30 * * * *";
+      return "*/1 * * * *";
+    } else if (unit === "h") {
+      if (num === 1) return "0 */1 * * *";
+      return "0 */1 * * *";
+    }
+
+    return "*/1 * * * *";
   }
 
   getStats() {

@@ -61,8 +61,6 @@ async function start() {
     try {
       const workflows = await loadActiveWorkflows();
 
-      // TODO: Handle dynamic subscription updates
-      // For now, just log the count
       log.debug(`📋 Currently ${workflows.length} active workflows`, {
         service: "listener",
         count: workflows.length,
