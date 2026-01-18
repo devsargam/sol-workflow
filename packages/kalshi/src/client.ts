@@ -23,6 +23,19 @@ export interface KalshiOrderResult {
   placedAt: string;
 }
 
+export interface KalshiMarketPrice {
+  ticker: string;
+  yesBid: number;
+  yesAsk: number;
+  noBid: number;
+  noAsk: number;
+  lastPrice?: number;
+  volume: number;
+  volume24h: number;
+  openInterest: number;
+  status: string;
+}
+
 export class KalshiClient {
   private portfolioApi: PortfolioApi;
   private marketsApi: MarketApi;
@@ -51,6 +64,23 @@ export class KalshiClient {
   async getMarket(ticker: string): Promise<any> {
     const res = await this.marketsApi.getMarket(ticker);
     return res.data.market;
+  }
+
+  async getMarketPrice(ticker: string): Promise<KalshiMarketPrice> {
+    const market = await this.getMarket(ticker);
+
+    return {
+      ticker: market.ticker,
+      yesBid: market.yes_bid || 0,
+      yesAsk: market.yes_ask || 0,
+      noBid: market.no_bid || 0,
+      noAsk: market.no_ask || 0,
+      lastPrice: market.last_price,
+      volume: market.volume || 0,
+      volume24h: market.volume_24h || 0,
+      openInterest: market.open_interest || 0,
+      status: market.status,
+    };
   }
 
   async getPositions(): Promise<any> {
