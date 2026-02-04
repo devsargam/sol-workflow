@@ -26,9 +26,9 @@ This file is a shared checklist for expanding API test coverage. It is written s
 - [ ] Add test for disabling workflow removes cron
 
 ## 🧱 Integration Tests (Real DB/Redis)
-- [ ] Add docker-compose test setup for Postgres + Redis
-- [ ] Add migration step before tests
-- [ ] Add integration test for workflow creation -> execution enqueue
+- [x] Add docker-compose test setup for Postgres + Redis
+- [x] Add migration step before tests
+- [x] Add integration tests with seeded data
 
 ## 📈 Reliability
 - [ ] Add API error shape tests (consistent error format)
