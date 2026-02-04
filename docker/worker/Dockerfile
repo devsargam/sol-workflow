@@ -14,7 +14,7 @@ COPY packages ./packages
 
 ENV HUSKY=0
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts
 RUN pnpm --filter worker build
 
 FROM node:20-bullseye-slim AS runner
