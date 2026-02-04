@@ -36,9 +36,6 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN}
       PRIVY_APP_ID: ${PRIVY_APP_ID}
       PRIVY_APP_SECRET: ${PRIVY_APP_SECRET}
-    depends_on:
-      - postgres
-      - redis
     ports:
       - "3001:3001"
     restart: unless-stopped
@@ -57,9 +54,6 @@ services:
       WORKER_CONCURRENCY: ${WORKER_CONCURRENCY}
       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX}
       RATE_LIMIT_DURATION: ${RATE_LIMIT_DURATION}
-    depends_on:
-      - postgres
-      - redis
     restart: unless-stopped
 
   listener:
@@ -73,28 +67,4 @@ services:
       SOLANA_RPC_URL: ${SOLANA_RPC_URL}
       SOLANA_WS_URL: ${SOLANA_WS_URL}
       SOLANA_NETWORK: ${SOLANA_NETWORK}
-    depends_on:
-      - postgres
-      - redis
     restart: unless-stopped
-
-  postgres:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-solworkflow}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
-    volumes:
-      - redis_data:/data
-
-volumes:
-  postgres_data:
-  redis_data:

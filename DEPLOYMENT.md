@@ -8,8 +8,8 @@ Use the Docker Compose stack defined in `docker-compose.coolify.yml`. It runs:
 - api (Bun)
 - worker (Bun)
 - listener (Bun)
-- postgres
-- redis
+  
+PostgreSQL and Redis are expected to be external services in production.
 
 ## Coolify Setup
 
@@ -21,8 +21,8 @@ Use the Docker Compose stack defined in `docker-compose.coolify.yml`. It runs:
 
 ## Required Environment Variables
 
-- DATABASE_URL (use `postgres` hostname inside the stack)
-- REDIS_URL (use `redis` hostname inside the stack)
+- DATABASE_URL (external PostgreSQL URL)
+- REDIS_URL (external Redis URL)
 - SOLANA_RPC_URL
 - SOLANA_WS_URL
 - SOLANA_NETWORK
@@ -37,10 +37,10 @@ Use the Docker Compose stack defined in `docker-compose.coolify.yml`. It runs:
 - RATE_LIMIT_MAX (optional)
 - RATE_LIMIT_DURATION (optional)
 
-## Example Internal URLs
+## Example External URLs
 
-- DATABASE_URL=postgresql://postgres:postgres@postgres:5432/solworkflow
-- REDIS_URL=redis://redis:6379
+- DATABASE_URL=postgresql://user:pass@your-postgres-host:5432/solworkflow
+- REDIS_URL=redis://:pass@your-redis-host:6379
 
 ## Migrations
 
