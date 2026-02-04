@@ -73,41 +73,6 @@ export class SubscriptionManager {
   }
 
   /**
-   * Update subscription status in database
-   */
-  private async updateSubscriptionStatus(
-    workflowId: string,
-    active: boolean,
-    lastError?: string
-  ): Promise<void> {
-    try {
-      const updateData: any = { active: active ? "true" : "false" };
-      if (lastError) {
-        updateData.lastError = lastError;
-        updateData.lastErrorAt = new Date();
-        // Increment error count
-        const [existing] = await db
-          .select()
-          .from(triggerSubscriptions)
-          .where(eq(triggerSubscriptions.workflowId, workflowId))
-          .limit(1);
-        if (existing) {
-          updateData.errorCount = existing.errorCount + 1;
-        }
-      }
-      await db
-        .update(triggerSubscriptions)
-        .set(updateData)
-        .where(eq(triggerSubscriptions.workflowId, workflowId));
-    } catch (error) {
-      log.error(`Failed to update subscription status`, error as Error, {
-        service: "listener",
-        workflowId,
-      });
-    }
-  }
-
-  /**
    * Record last event time for a subscription
    */
   private async recordEventTime(workflowId: string): Promise<void> {
