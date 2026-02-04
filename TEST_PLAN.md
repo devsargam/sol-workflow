@@ -9,7 +9,7 @@ This file is a shared checklist for expanding API test coverage. It is written s
 ## 🔧 Next: Core Route Coverage
 - [x] Add `/workflows` list test (mock db select)
 - [x] Add `/workflows/:id` fetch test (mock db select with one row)
-- [ ] Add `/executions` list test (mock db select)
+- [x] Add `/executions` list test (mock db select)
 - [ ] Add validation error test for create workflow (invalid payload)
 
 ## 🔐 Auth & Security
