@@ -25,7 +25,7 @@ ENV NEXT_PUBLIC_SOLANA_NETWORK=${NEXT_PUBLIC_SOLANA_NETWORK}
 ENV NEXT_PUBLIC_PRIVY_APP_ID=${NEXT_PUBLIC_PRIVY_APP_ID}
 
 RUN pnpm install --frozen-lockfile --ignore-scripts
-RUN pnpm --filter web build
+RUN pnpm --filter web... build
 
 FROM node:20-bullseye-slim AS runner
 
