@@ -12,6 +12,8 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps ./apps
 COPY packages ./packages
 
+ENV HUSKY=0
+
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter api build
 

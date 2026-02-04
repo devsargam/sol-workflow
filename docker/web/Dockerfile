@@ -12,6 +12,8 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps ./apps
 COPY packages ./packages
 
+ENV HUSKY=0
+
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_SOLANA_RPC_URL
 ARG NEXT_PUBLIC_SOLANA_NETWORK
