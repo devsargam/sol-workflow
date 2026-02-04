@@ -12,6 +12,11 @@ This file is a shared checklist for expanding API test coverage. It is written s
 - [x] Add `/executions` list test (mock db select)
 - [ ] Add validation error test for create workflow (invalid payload)
 
+## 🧭 Solana Routes
+- [x] Add `/solana/health` test (mock connection)
+- [x] Add `/solana/balance/:address` validation + success tests
+- [x] Add `/solana/account/:address` validation + success tests
+
 ## 🔐 Auth & Security
 - [ ] Add test for missing/invalid auth (when auth middleware is enabled)
 - [ ] Add CORS origin test for allowed/blocked origins
