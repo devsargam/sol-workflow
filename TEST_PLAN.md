@@ -29,6 +29,7 @@ This file is a shared checklist for expanding API test coverage. It is written s
 - [x] Add docker-compose test setup for Postgres + Redis
 - [x] Add migration step before tests
 - [x] Add integration tests with seeded data
+- [x] Add integration tests for Solana routes
 
 ## 📈 Reliability
 - [ ] Add API error shape tests (consistent error format)
