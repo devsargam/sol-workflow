@@ -7,9 +7,9 @@ import Redis from "ioredis";
 import workflowRoutes from "./routes/workflows";
 import executionRoutes from "./routes/executions";
 import solanaRoutes from "./routes/solana";
-import { CronScheduler } from "./lib/cron-scheduler";
+import { getCronScheduler, initCronScheduler } from "./cron";
 import { db, workflows as workflowsTable } from "@repo/db";
-import { ENV_DEFAULTS, API, QUEUES, log } from "utils";
+import { ENV_DEFAULTS, API, QUEUES } from "utils";
 
 const app = new Hono();
 
@@ -20,52 +20,10 @@ const redis = new Redis(process.env.REDIS_URL || ENV_DEFAULTS.REDIS_URL, {
 
 const workflowQueue = new Queue(QUEUES.WORKFLOW_EVENTS, { connection: redis });
 
-// Initialize CronScheduler
-let cronScheduler: CronScheduler | null = null;
-
-/**
- * Get the CronScheduler instance (used by routes)
- */
-export function getCronScheduler(): CronScheduler | null {
-  return cronScheduler;
+// Initialize cron scheduler on startup unless explicitly disabled
+if (process.env.NODE_ENV !== "test" && process.env.ENABLE_CRON !== "false") {
+  void initCronScheduler(workflowQueue);
 }
-
-/**
- * Initialize cron scheduler and reconcile with database
- */
-async function initializeCronScheduler() {
-  try {
-    cronScheduler = new CronScheduler(workflowQueue);
-
-    // Load all workflows and reconcile cron jobs
-    const allWorkflows = await db.select().from(workflowsTable);
-
-    const workflowsForReconciliation = allWorkflows.map((w) => ({
-      id: w.id,
-      graph: w.graph as any,
-      metadata: w.metadata,
-      enabled: w.enabled,
-    }));
-
-    const result = await cronScheduler.reconcileAll(workflowsForReconciliation);
-
-    log.info(
-      `Cron scheduler initialized: ${result.added} jobs added, ${result.removed} jobs removed`,
-      {
-        service: "api",
-        added: result.added,
-        removed: result.removed,
-      }
-    );
-  } catch (error) {
-    log.error("Failed to initialize cron scheduler", error as Error, {
-      service: "api",
-    });
-  }
-}
-
-// Initialize cron scheduler on startup
-initializeCronScheduler();
 
 app.use("*", logger());
 app.use("*", prettyJSON());
@@ -136,6 +94,7 @@ app.get("/health", async (c) => {
   }
 
   // Check cron scheduler
+  const cronScheduler = getCronScheduler();
   if (cronScheduler) {
     try {
       const cronStats = await cronScheduler.getStats();
