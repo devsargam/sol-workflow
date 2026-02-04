@@ -127,6 +127,22 @@ const validGraph = {
   edges: [],
 };
 
+const triggerOnlyGraph = {
+  nodes: [
+    {
+      id: "trigger-1",
+      type: "trigger",
+      position: { x: 0, y: 0 },
+      data: {
+        nodeType: "trigger",
+        triggerType: "cron",
+        config: { schedule: "* * * * *" },
+      },
+    },
+  ],
+  edges: [],
+};
+
 const fetchJson = async (path: string, init?: RequestInit) => {
   const api = (await import("../index")).default;
   const res = await api.fetch(new Request(`http://localhost${path}`, init));
@@ -194,6 +210,30 @@ describe("Workflows API", () => {
     expect(body.workflow.id).toBe("w-new");
   });
 
+  it("POST /workflows returns 400 for invalid payload", async () => {
+    const { res, body } = await fetchJson("/workflows", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+
+    expect(res.status).toBe(400);
+
+    const issues = body.issues ?? body.error?.issues ?? body.error?.details?.issues;
+    expect(Array.isArray(issues)).toBe(true);
+  });
+
+  it("POST /workflows returns 400 for non-executable graph", async () => {
+    const { res, body } = await fetchJson("/workflows", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "Invalid", graph: triggerOnlyGraph }),
+    });
+
+    expect(res.status).toBe(400);
+    expect(body.error).toBe("Workflow graph is not executable");
+  });
+
   it("PATCH /workflows/:id updates a workflow", async () => {
     selectResult = [{ id: "w1", name: "Old", userId: "user-1", enabled: false }];
     updateResult = [{ id: "w1", name: "Updated", userId: "user-1", enabled: false }];
@@ -206,6 +246,19 @@ describe("Workflows API", () => {
 
     expect(res.status).toBe(200);
     expect(body.workflow.name).toBe("Updated");
+  });
+
+  it("PATCH /workflows/:id returns 400 for invalid graph", async () => {
+    selectResult = [{ id: "w1", name: "Old", userId: "user-1", enabled: false }];
+
+    const { res, body } = await fetchJson("/workflows/w1", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ graph: triggerOnlyGraph }),
+    });
+
+    expect(res.status).toBe(400);
+    expect(body.error).toBe("Workflow graph is not executable");
   });
 
   it("DELETE /workflows/:id deletes a workflow", async () => {
