@@ -8,7 +8,7 @@ RUN apt-get update \
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY apps ./apps
 COPY packages ./packages
 
