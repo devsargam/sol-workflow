@@ -1,9 +1,8 @@
 import Redis from "ioredis";
-import { Connection } from "@solana/web3.js";
 import { db, executions as executionsTable, eq } from "@repo/db";
 import { WorkflowEngine } from "../lib/workflow-engine";
 import type { WorkflowGraph } from "@repo/types";
-import { ExecutionStatus, REDIS, DATABASE, ENV_DEFAULTS, getExecutionRedisKey } from "utils";
+import { ExecutionStatus, REDIS, DATABASE, getExecutionRedisKey } from "utils";
 
 interface WorkflowEventData {
   workflowId: string;
@@ -53,9 +52,7 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
   }
 
   // Step 3: Execute the workflow graph using the engine
-  const connection = new Connection(process.env.SOLANA_RPC_URL || ENV_DEFAULTS.SOLANA_RPC_URL);
-
-  const engine = new WorkflowEngine(connection);
+  const engine = new WorkflowEngine();
 
   const context = {
     workflowId,

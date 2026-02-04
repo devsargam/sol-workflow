@@ -1,16 +1,6 @@
-import {
-  Connection,
-  PublicKey,
-  Transaction,
-  Keypair,
-  SystemProgram,
-  sendAndConfirmTransaction,
-} from "@solana/web3.js";
 import type {
   WorkflowGraph,
   WorkflowNode,
-  WorkflowEdge,
-  TriggerNodeData,
   FilterNodeData,
   ActionNodeData,
   NotifyNodeData,
@@ -37,17 +27,15 @@ interface NodeExecutor {
 }
 
 export class WorkflowEngine {
-  private connection: Connection;
   private nodeExecutors: Map<string, NodeExecutor>;
 
-  constructor(connection: Connection) {
-    this.connection = connection;
+  constructor() {
     this.nodeExecutors = new Map();
 
     // Register node executors
     this.registerNodeExecutor(NodeType.TRIGGER, new TriggerNodeExecutor());
     this.registerNodeExecutor(NodeType.FILTER, new FilterNodeExecutor());
-    this.registerNodeExecutor(NodeType.ACTION, new ActionNodeExecutor(connection));
+    this.registerNodeExecutor(NodeType.ACTION, new ActionNodeExecutor());
     this.registerNodeExecutor(NodeType.NOTIFY, new NotifyNodeExecutor());
   }
 
@@ -234,7 +222,7 @@ class FilterNodeExecutor implements NodeExecutor {
   }
 
   private evaluateCondition(
-    condition: { field: string; operator: string; value: any },
+    condition: { field: string; operator: string; value?: any },
     triggerData: any,
     variables: Map<string, any>
   ): boolean {
@@ -287,8 +275,6 @@ class FilterNodeExecutor implements NodeExecutor {
  * Action node executor - executes on-chain actions
  */
 class ActionNodeExecutor implements NodeExecutor {
-  constructor(private connection: Connection) {}
-
   async execute(node: WorkflowNode, context: ExecutionContext) {
     const data = node.data as ActionNodeData & { nodeType: NodeType.ACTION };
 
@@ -299,13 +285,13 @@ class ActionNodeExecutor implements NodeExecutor {
 
       switch (data.actionType) {
         case "send_sol":
-          txSignature = await this.sendSol(data.config, context);
+          txSignature = await this.sendSol(data.config);
           break;
         case "send_spl_token":
-          txSignature = await this.sendSplToken(data.config, context);
+          txSignature = await this.sendSplToken(data.config);
           break;
         case "call_program":
-          txSignature = await this.callProgram(data.config, context);
+          txSignature = await this.callProgram(data.config);
           break;
         case "do_nothing":
           console.log(`Do Nothing action executed for node ${node.id}`);
@@ -332,7 +318,7 @@ class ActionNodeExecutor implements NodeExecutor {
     }
   }
 
-  private async sendSol(config: any, context: ExecutionContext): Promise<string> {
+  private async sendSol(config: any): Promise<string> {
     // TODO: Implement actual SOL transfer
     // This is a placeholder implementation
     console.log("Sending SOL:", config);
@@ -341,7 +327,7 @@ class ActionNodeExecutor implements NodeExecutor {
     return `mock_sol_tx_${Date.now()}`;
   }
 
-  private async sendSplToken(config: any, context: ExecutionContext): Promise<string> {
+  private async sendSplToken(config: any): Promise<string> {
     // TODO: Implement actual SPL token transfer
     console.log("Sending SPL token:", config);
 
@@ -349,7 +335,7 @@ class ActionNodeExecutor implements NodeExecutor {
     return `mock_token_tx_${Date.now()}`;
   }
 
-  private async callProgram(config: any, context: ExecutionContext): Promise<string> {
+  private async callProgram(config: any): Promise<string> {
     // TODO: Implement actual program call
     console.log("Calling program:", config);
 
