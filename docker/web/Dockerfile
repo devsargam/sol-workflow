@@ -25,12 +25,7 @@ ENV NEXT_PUBLIC_SOLANA_NETWORK=${NEXT_PUBLIC_SOLANA_NETWORK}
 ENV NEXT_PUBLIC_PRIVY_APP_ID=${NEXT_PUBLIC_PRIVY_APP_ID}
 
 RUN pnpm install --frozen-lockfile --ignore-scripts
-# Provide build-time fallbacks so Next build doesn't fail when Coolify build args are empty.
-RUN NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL:-https://api.solworkflow.com}" \
-    NEXT_PUBLIC_SOLANA_RPC_URL="${NEXT_PUBLIC_SOLANA_RPC_URL:-https://api.devnet.solana.com}" \
-    NEXT_PUBLIC_SOLANA_NETWORK="${NEXT_PUBLIC_SOLANA_NETWORK:-devnet}" \
-    NEXT_PUBLIC_PRIVY_APP_ID="${NEXT_PUBLIC_PRIVY_APP_ID:-missing_privy_app_id}" \
-    pnpm --filter web... build
+RUN pnpm --filter web... build
 
 FROM node:20-bullseye-slim AS runner
 
