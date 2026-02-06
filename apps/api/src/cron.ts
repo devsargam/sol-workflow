@@ -1,5 +1,5 @@
 import type { Queue } from "bullmq";
-import { CronScheduler } from "./lib/cron-scheduler";
+import { CronScheduler } from "./lib/cron-scheduler.js";
 import { db, workflows as workflowsTable } from "@repo/db";
 import { log } from "utils";
 

@@ -7,7 +7,7 @@ import Redis from "ioredis";
 import workflowRoutes from "./routes/workflows.js";
 import executionRoutes from "./routes/executions.js";
 import solanaRoutes from "./routes/solana.js";
-import { getCronScheduler, initCronScheduler } from "./cron";
+import { getCronScheduler, initCronScheduler } from "./cron.js";
 import { db, workflows as workflowsTable } from "@repo/db";
 import { ENV_DEFAULTS, API, QUEUES } from "utils";
 
