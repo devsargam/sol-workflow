@@ -745,20 +745,20 @@ function NotifyConfig({ formData, setFormData }: any) {
   const notifications = isMultipleMode
     ? formData.notifications
     : formData.notifyType || formData.type
-    ? [
-        {
-          notifyType: formData.notifyType || formData.type || "discord",
-          webhookUrl: formData.webhookUrl,
-          webhookSecret: formData.webhookSecret,
-          telegramBotToken: formData.telegramBotToken,
-          telegramChatId: formData.telegramChatId,
-          telegramParseMode: formData.telegramParseMode,
-          telegramDisableWebPreview: formData.telegramDisableWebPreview,
-          template: formData.template || "default",
-          customMessage: formData.customMessage,
-        },
-      ]
-    : [];
+      ? [
+          {
+            notifyType: formData.notifyType || formData.type || "discord",
+            webhookUrl: formData.webhookUrl,
+            webhookSecret: formData.webhookSecret,
+            telegramBotToken: formData.telegramBotToken,
+            telegramChatId: formData.telegramChatId,
+            telegramParseMode: formData.telegramParseMode,
+            telegramDisableWebPreview: formData.telegramDisableWebPreview,
+            template: formData.template || "default",
+            customMessage: formData.customMessage,
+          },
+        ]
+      : [];
 
   const updateNotifications = (newNotifications: any[]) => {
     if (newNotifications.length === 0) {

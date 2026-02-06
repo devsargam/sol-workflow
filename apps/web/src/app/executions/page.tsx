@@ -140,8 +140,8 @@ export default function ExecutionsPage() {
                               execution.status === ExecutionStatus.SUCCESS
                                 ? "bg-white text-neutral-900"
                                 : execution.status === ExecutionStatus.FAILED
-                                ? "bg-black text-white"
-                                : "bg-white text-neutral-900"
+                                  ? "bg-black text-white"
+                                  : "bg-white text-neutral-900"
                             }`}
                           >
                             {statusConfig.icon} {execution.status}

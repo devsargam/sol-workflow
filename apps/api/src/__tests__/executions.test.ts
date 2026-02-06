@@ -173,11 +173,7 @@ describe("Executions API", () => {
   it("GET /executions/stats/:workflowId returns stats", async () => {
     selectQueue = [
       [{ id: "w1" }],
-      [
-        { status: "success" },
-        { status: "failed" },
-        { status: "success" },
-      ],
+      [{ status: "success" }, { status: "failed" }, { status: "success" }],
     ];
 
     const { res, body } = await fetchJson("/executions/stats/w1");

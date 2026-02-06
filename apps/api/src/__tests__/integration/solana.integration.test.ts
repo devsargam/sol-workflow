@@ -43,9 +43,7 @@ describe("Solana API (integration)", () => {
   });
 
   it("GET /solana/balance/:address returns balance", async () => {
-    const { res, body } = await fetchJson(
-      "/solana/balance/11111111111111111111111111111111"
-    );
+    const { res, body } = await fetchJson("/solana/balance/11111111111111111111111111111111");
 
     expect(res.status).toBe(200);
     expect(body.lamports).toBe(123);
@@ -60,9 +58,7 @@ describe("Solana API (integration)", () => {
   });
 
   it("GET /solana/account/:address returns account info", async () => {
-    const { res, body } = await fetchJson(
-      "/solana/account/11111111111111111111111111111111"
-    );
+    const { res, body } = await fetchJson("/solana/account/11111111111111111111111111111111");
 
     expect(res.status).toBe(200);
     expect(body.owner).toBe("OwnerPubKey");

@@ -8,7 +8,7 @@ Use the Docker Compose stack defined in `docker-compose.coolify.yml`. It runs:
 - api (Bun)
 - worker (Bun)
 - listener (Bun)
-  
+
 PostgreSQL and Redis are expected to be external services in production.
 
 ## Coolify Setup
