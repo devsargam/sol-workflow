@@ -1,13 +1,19 @@
 "use client";
 import { PrivyProvider } from "@privy-io/react-auth";
+import { useEffect, useState } from "react";
 import { QueryProvider } from "./query-provider";
 
 export function Provider({ children }: { children: React.ReactNode }) {
   const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const hasValidAppId = Boolean(appId && appId !== "missing_privy_app_id");
-  if (!hasValidAppId) {
-    // Avoid failing static prerender/build when build-time envs are missing.
+  if (!mounted || !hasValidAppId) {
+    // Avoid failing static prerender/build and avoid initializing Privy on the server.
     // Auth features will be unavailable until a valid app id is provided at runtime.
     return <QueryProvider>{children}</QueryProvider>;
   }
