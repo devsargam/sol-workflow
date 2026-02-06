@@ -106,7 +106,7 @@ export class SubscriptionManager {
 
   async subscribe(workflow: Workflow): Promise<void> {
     const triggerNodes = workflow.graph.nodes.filter(
-      (n) => n.type === NodeType.TRIGGER
+      (n: TriggerNode) => n.type === NodeType.TRIGGER
     ) as TriggerNode[];
 
     log.debug(
@@ -123,7 +123,7 @@ export class SubscriptionManager {
       log.warn(`No trigger nodes found in workflow ${workflow.id}`, {
         service: "listener",
         workflowId: workflow.id,
-        availableNodeTypes: workflow.graph.nodes.map((n) => n.type).join(", "),
+        availableNodeTypes: workflow.graph.nodes.map((n: TriggerNode) => n.type).join(", "),
       });
       return;
     }

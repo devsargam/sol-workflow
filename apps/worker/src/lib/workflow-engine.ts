@@ -56,7 +56,7 @@ export class WorkflowEngine {
     const adjacencyList = this.buildAdjacencyList(graph);
 
     // Find all trigger nodes (entry points)
-    const triggerNodes = graph.nodes.filter((n) => n.type === NodeType.TRIGGER);
+    const triggerNodes = graph.nodes.filter((n: WorkflowNode) => n.type === NodeType.TRIGGER);
 
     if (triggerNodes.length === 0) {
       return {
@@ -127,7 +127,7 @@ export class WorkflowEngine {
     // Execute downstream nodes
     const downstreamNodeIds = adjacencyList.get(node.id) || [];
     for (const downstreamNodeId of downstreamNodeIds) {
-      const downstreamNode = graph.nodes.find((n) => n.id === downstreamNodeId);
+      const downstreamNode = graph.nodes.find((n: WorkflowNode) => n.id === downstreamNodeId);
       if (!downstreamNode) {
         errors.push(`Downstream node ${downstreamNodeId} not found`);
         continue;
@@ -207,11 +207,12 @@ class FilterNodeExecutor implements NodeExecutor {
       return { success: true, output: true };
     }
 
-    const results = conditions.map((condition) =>
+    const results = conditions.map((condition: any) =>
       this.evaluateCondition(condition, context.triggerData, context.variables)
     );
 
-    const passed = logic === "and" ? results.every((r) => r) : results.some((r) => r);
+    const passed =
+      logic === "and" ? results.every((r: boolean) => r) : results.some((r: boolean) => r);
 
     console.log(`Filter node ${node.id}: Result = ${passed}`);
 
@@ -355,7 +356,7 @@ class NotifyNodeExecutor implements NodeExecutor {
       if (data.notifications && data.notifications.length > 0) {
         console.log(`Notify node ${node.id}: Sending ${data.notifications.length} notification(s)`);
 
-        const notificationPromises = data.notifications.map((notification, index) =>
+        const notificationPromises = data.notifications.map((notification: any, index: number) =>
           this.sendSingleNotification(notification, context, `${node.id}-${index}`)
         );
 
