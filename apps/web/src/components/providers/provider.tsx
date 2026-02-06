@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { QueryProvider } from "./query-provider";
 
 export function Provider({ children }: { children: React.ReactNode }) {
-  const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
+  const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID || "";
+  // @todo-fix it
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
