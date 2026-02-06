@@ -15,17 +15,16 @@ COPY packages ./packages
 ENV HUSKY=0
 
 RUN pnpm install --frozen-lockfile --ignore-scripts
-RUN pnpm --filter listener... build
+RUN pnpm --filter listener build
 
 FROM node:20-bullseye-slim AS runner
 
-WORKDIR /app/apps/listener
+WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY --from=build /app/apps/listener/dist ./dist
-COPY --from=build /app/apps/listener/node_modules ./node_modules
-COPY --from=build /app/node_modules/.pnpm /app/node_modules/.pnpm
-COPY --from=build /app/packages /app/packages
+# Only need the bundled output - all dependencies are included
+COPY --from=build /app/apps/listener/dist/index.js ./index.js
+COPY --from=build /app/apps/listener/package.json ./package.json
 
-CMD ["node", "dist/index.js"]
+CMD ["node", "index.js"]
