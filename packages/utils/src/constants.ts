@@ -49,8 +49,10 @@ export enum ExecutionStatus {
 // API and Server Constants
 // ============================================================================
 
+const API_DEFAULT_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
 export const API = {
-  DEFAULT_URL: "http://localhost:3001",
+  DEFAULT_URL: API_DEFAULT_URL,
   DEFAULT_PORT: 3001,
   CORS: {
     DEFAULT_ORIGIN: "http://localhost:3000",
