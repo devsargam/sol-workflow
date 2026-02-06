@@ -29,22 +29,23 @@ RUN pnpm --filter web... build
 
 FROM node:20-bullseye-slim AS runner
 
-WORKDIR /app
+WORKDIR /app/apps/web
 
 ENV NODE_ENV=production
 ENV PORT=3000
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
-COPY --from=build /app/apps/web/.next ./apps/web/.next
-COPY --from=build /app/apps/web/public ./apps/web/public
-COPY --from=build /app/apps/web/package.json ./apps/web/package.json
-COPY --from=build /app/package.json ./package.json
-COPY --from=build /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
-COPY --from=build /app/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=build /app/packages ./packages
-COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/apps/web/.next ./.next
+COPY --from=build /app/apps/web/public ./public
+COPY --from=build /app/apps/web/package.json ./package.json
+COPY --from=build /app/apps/web/node_modules ./node_modules
+COPY --from=build /app/node_modules/.pnpm /app/node_modules/.pnpm
+COPY --from=build /app/packages /app/packages
+COPY --from=build /app/pnpm-workspace.yaml /app/pnpm-workspace.yaml
+COPY --from=build /app/pnpm-lock.yaml /app/pnpm-lock.yaml
+COPY --from=build /app/package.json /app/package.json
 
 EXPOSE 3000
 
-CMD ["pnpm", "--filter", "web", "start"]
+CMD ["pnpm", "start"]
