@@ -1,7 +1,7 @@
 import { Connection } from "@solana/web3.js";
 import { Queue } from "bullmq";
 import Redis from "ioredis";
-import { SubscriptionManager } from "./lib/subscription-manager.js";
+import { SubscriptionManager } from "./lib/subscription-manager";
 import { db, workflows as workflowsTable, eq } from "@repo/db";
 import { ENV_DEFAULTS, QUEUES, SOLANA, INTERVALS, log } from "utils";
 

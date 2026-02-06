@@ -9,7 +9,7 @@ import {
 } from "@repo/types";
 import { Hono } from "hono";
 import { z } from "zod";
-import { getCronScheduler } from "../cron.js";
+import { getCronScheduler } from "../cron";
 import { authMiddleware, AuthenticatedContext } from "../middleware/auth";
 import { createAuditLog, extractClientInfo } from "../lib/audit-logger";
 
