@@ -5,8 +5,11 @@ import { QueryProvider } from "./query-provider";
 export function Provider({ children }: { children: React.ReactNode }) {
   const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
 
-  if (!appId) {
-    throw new Error("NEXT_PUBLIC_PRIVY_APP_ID is not set in environment variables");
+  const hasValidAppId = Boolean(appId && appId !== "missing_privy_app_id");
+  if (!hasValidAppId) {
+    // Avoid failing static prerender/build when build-time envs are missing.
+    // Auth features will be unavailable until a valid app id is provided at runtime.
+    return <QueryProvider>{children}</QueryProvider>;
   }
 
   return (
