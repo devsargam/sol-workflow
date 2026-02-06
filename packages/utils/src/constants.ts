@@ -19,8 +19,10 @@ export const JOB_NAMES = {
 // Redis Constants
 // ============================================================================
 
+const REDIS_DEFAULT_URL = process.env.REDIS_URL || "redis://localhost:6379";
+
 export const REDIS = {
-  DEFAULT_URL: "redis://localhost:6379",
+  DEFAULT_URL: REDIS_DEFAULT_URL,
   KEYS: {
     EXECUTION_PREFIX: "exec:",
   },
