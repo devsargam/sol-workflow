@@ -19,12 +19,13 @@ RUN pnpm --filter worker... build
 
 FROM node:20-bullseye-slim AS runner
 
-WORKDIR /app
+WORKDIR /app/apps/worker
 
 ENV NODE_ENV=production
 
 COPY --from=build /app/apps/worker/dist ./dist
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/packages ./packages
+COPY --from=build /app/apps/worker/node_modules ./node_modules
+COPY --from=build /app/node_modules/.pnpm /app/node_modules/.pnpm
+COPY --from=build /app/packages /app/packages
 
 CMD ["node", "dist/index.js"]
