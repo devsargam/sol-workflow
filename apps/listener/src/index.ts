@@ -3,16 +3,15 @@ import { Queue } from "bullmq";
 import Redis from "ioredis";
 import { SubscriptionManager } from "./lib/subscription-manager";
 import { db, workflows as workflowsTable, eq } from "@repo/db";
-import { ENV_DEFAULTS, QUEUES, SOLANA, INTERVALS, log } from "utils";
+import { ENV_DEFAULTS, QUEUES, SOLANA, INTERVALS, log, getRedisOptions } from "utils";
 
 const connection = new Connection(process.env.SOLANA_RPC_URL || ENV_DEFAULTS.SOLANA_RPC_URL, {
   wsEndpoint: process.env.SOLANA_WS_URL || ENV_DEFAULTS.SOLANA_WS_URL,
   commitment: SOLANA.COMMITMENT,
 });
 
-const redis = new Redis(process.env.REDIS_URL || ENV_DEFAULTS.REDIS_URL, {
-  maxRetriesPerRequest: null,
-});
+const { url: redisUrl, options: redisOptions } = getRedisOptions();
+const redis = new Redis(redisUrl, redisOptions);
 
 const workflowQueue = new Queue(QUEUES.WORKFLOW_EVENTS, { connection: redis });
 

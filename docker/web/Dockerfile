@@ -1,47 +1,50 @@
-FROM node:20-bullseye-slim AS build
+FROM node:20-alpine AS base
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
+RUN corepack enable
 
 WORKDIR /app
 
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
+FROM base AS deps
 
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.base.json ./
+COPY apps/web/package.json apps/web/package.json
+COPY packages/types/package.json packages/types/package.json
+COPY packages/solana/package.json packages/solana/package.json
+COPY packages/utils/package.json packages/utils/package.json
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
-COPY apps ./apps
-COPY packages ./packages
+RUN pnpm install --frozen-lockfile
 
-ENV HUSKY=0
+FROM deps AS builder
 
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_SOLANA_RPC_URL
 ARG NEXT_PUBLIC_SOLANA_NETWORK
 ARG NEXT_PUBLIC_PRIVY_APP_ID
 
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-ENV NEXT_PUBLIC_SOLANA_RPC_URL=${NEXT_PUBLIC_SOLANA_RPC_URL}
-ENV NEXT_PUBLIC_SOLANA_NETWORK=${NEXT_PUBLIC_SOLANA_NETWORK}
-ENV NEXT_PUBLIC_PRIVY_APP_ID=${NEXT_PUBLIC_PRIVY_APP_ID}
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_SOLANA_RPC_URL=$NEXT_PUBLIC_SOLANA_RPC_URL
+ENV NEXT_PUBLIC_SOLANA_NETWORK=$NEXT_PUBLIC_SOLANA_NETWORK
+ENV NEXT_PUBLIC_PRIVY_APP_ID=$NEXT_PUBLIC_PRIVY_APP_ID
 
-RUN pnpm install --frozen-lockfile --ignore-scripts --prod=false
-RUN pnpm --filter web... build
+COPY . .
 
-FROM node:20-bullseye-slim AS runner
+RUN pnpm --filter web build
+
+FROM node:20-alpine AS runner
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 
-# Copy the standalone build (includes all dependencies bundled)
-COPY --from=build /app/apps/web/.next/standalone ./
-# Copy static assets
-COPY --from=build /app/apps/web/.next/static ./apps/web/.next/static
-# Copy public folder
-COPY --from=build /app/apps/web/public ./apps/web/public
+COPY --from=builder /app/apps/web/.next/standalone ./
+COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder /app/apps/web/public ./apps/web/public
 
 EXPOSE 3000
 
-# Use the standalone server
 CMD ["node", "apps/web/server.js"]

@@ -17,6 +17,12 @@ services:
       NEXT_PUBLIC_PRIVY_APP_ID: ${NEXT_PUBLIC_PRIVY_APP_ID}
     depends_on:
       - api
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000 >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     ports:
       - "3000:3000"
     restart: unless-stopped
@@ -36,6 +42,13 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN}
       PRIVY_APP_ID: ${PRIVY_APP_ID}
       PRIVY_APP_SECRET: ${PRIVY_APP_SECRET}
+      ENABLE_CRON: ${ENABLE_CRON:-true}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3001/ready >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     ports:
       - "3001:3001"
     restart: unless-stopped
@@ -54,6 +67,8 @@ services:
       WORKER_CONCURRENCY: ${WORKER_CONCURRENCY}
       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX}
       RATE_LIMIT_DURATION: ${RATE_LIMIT_DURATION}
+    depends_on:
+      - api
     restart: unless-stopped
 
   listener:
@@ -67,4 +82,6 @@ services:
       SOLANA_RPC_URL: ${SOLANA_RPC_URL}
       SOLANA_WS_URL: ${SOLANA_WS_URL}
       SOLANA_NETWORK: ${SOLANA_NETWORK}
+    depends_on:
+      - api
     restart: unless-stopped

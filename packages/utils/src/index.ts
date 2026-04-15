@@ -4,6 +4,7 @@
 
 // Export all constants
 export * from "./constants";
+export * from "./env";
 export * from "./logger";
 
 // Re-export specific commonly used items for convenience
@@ -27,3 +28,5 @@ export {
   isCompletedStatus,
   isErrorStatus,
 } from "./constants";
+
+export { getRequiredEnv, getRedisUrl, getRedisOptions } from "./env";

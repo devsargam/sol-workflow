@@ -1,33 +1,38 @@
-FROM node:20-bullseye-slim AS build
+FROM node:20-alpine AS base
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
+RUN corepack enable
 
 WORKDIR /app
 
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
+FROM base AS deps
 
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.base.json ./
+COPY apps/api/package.json apps/api/package.json
+COPY packages/db/package.json packages/db/package.json
+COPY packages/solana/package.json packages/solana/package.json
+COPY packages/types/package.json packages/types/package.json
+COPY packages/utils/package.json packages/utils/package.json
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
-COPY apps ./apps
-COPY packages ./packages
+RUN pnpm install --frozen-lockfile
 
-ENV HUSKY=0
+FROM deps AS builder
 
-RUN pnpm install --frozen-lockfile --ignore-scripts --prod=false
+COPY . .
+
 RUN pnpm --filter api build
 
-FROM node:20-bullseye-slim AS runner
+FROM node:20-alpine AS runner
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3001
 
-# Only need the bundled output - all dependencies are included
-COPY --from=build /app/apps/api/dist/index.js ./index.js
-COPY --from=build /app/apps/api/package.json ./package.json
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
 
 EXPOSE 3001
 
-CMD ["node", "index.js"]
+CMD ["node", "apps/api/dist/index.js"]

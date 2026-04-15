@@ -15,14 +15,7 @@ export const JOB_NAMES = {
   CRON_TRIGGER: "cron-trigger",
 } as const;
 
-// ============================================================================
-// Redis Constants
-// ============================================================================
-
-const REDIS_DEFAULT_URL = process.env.REDIS_URL || "redis://localhost:6379";
-
 export const REDIS = {
-  DEFAULT_URL: REDIS_DEFAULT_URL,
   KEYS: {
     EXECUTION_PREFIX: "exec:",
   },
@@ -80,9 +73,6 @@ export const ENV_DEFAULTS = {
   SOLANA_RPC_URL: "https://api.devnet.solana.com",
   SOLANA_WS_URL: "wss://api.devnet.solana.com",
   SOLANA_NETWORK: "devnet",
-
-  // Redis
-  REDIS_URL: REDIS.DEFAULT_URL,
 
   // API
   PORT: API.DEFAULT_PORT,

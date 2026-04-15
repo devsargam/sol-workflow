@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url";
+import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -9,14 +11,13 @@ import executionRoutes from "./routes/executions";
 import solanaRoutes from "./routes/solana";
 import { getCronScheduler, initCronScheduler } from "./cron";
 import { db, workflows as workflowsTable } from "@repo/db";
-import { ENV_DEFAULTS, API, QUEUES } from "utils";
+import { ENV_DEFAULTS, API, QUEUES, getRedisOptions } from "utils";
 
 const app = new Hono();
 
 // Initialize Redis and BullMQ Queue for cron scheduling
-const redis = new Redis(process.env.REDIS_URL || ENV_DEFAULTS.REDIS_URL, {
-  maxRetriesPerRequest: null,
-});
+const { url: redisUrl, options: redisOptions } = getRedisOptions();
+const redis = new Redis(redisUrl, redisOptions);
 
 const workflowQueue = new Queue(QUEUES.WORKFLOW_EVENTS, { connection: redis });
 
@@ -141,9 +142,17 @@ app.get("/live", (c) => {
 
 const port = Number(process.env.PORT) || ENV_DEFAULTS.PORT;
 
-console.log(`🚀 API server running on http://localhost:${port}`);
-
-export default {
+const server = {
   port,
   fetch: app.fetch,
 };
+
+const isMainModule =
+  process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1];
+
+if (isMainModule) {
+  serve(server);
+  console.log(`🚀 API server running on http://localhost:${port}`);
+}
+
+export default server;

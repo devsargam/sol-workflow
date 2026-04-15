@@ -1,11 +1,10 @@
 import { Worker, Job } from "bullmq";
 import Redis from "ioredis";
 import { processWorkflowEvent } from "./processors/workflow-processor";
-import { ENV_DEFAULTS, QUEUES, JOB_NAMES, generateExecutionId } from "utils";
+import { ENV_DEFAULTS, QUEUES, JOB_NAMES, generateExecutionId, getRedisOptions } from "utils";
 
-const connection = new Redis(process.env.REDIS_URL || ENV_DEFAULTS.REDIS_URL, {
-  maxRetriesPerRequest: null,
-});
+const { url: redisUrl, options: redisOptions } = getRedisOptions();
+const connection = new Redis(redisUrl, redisOptions);
 
 // Workflow event processor
 const workflowWorker = new Worker(

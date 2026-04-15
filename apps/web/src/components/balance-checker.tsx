@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { ENV_DEFAULTS } from "utils";
 
 interface BalanceData {
   address: string;
@@ -10,8 +11,10 @@ interface BalanceData {
   formatted: string;
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || ENV_DEFAULTS.NEXT_PUBLIC_API_URL;
+
 async function fetchBalance(address: string): Promise<BalanceData> {
-  const res = await fetch(`http://localhost:3001/solana/balance/${address}`);
+  const res = await fetch(`${API_URL}/solana/balance/${address}`);
   if (!res.ok) throw new Error("Failed to fetch balance");
   return res.json();
 }

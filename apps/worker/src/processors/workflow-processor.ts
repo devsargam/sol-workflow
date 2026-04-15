@@ -2,7 +2,7 @@ import Redis from "ioredis";
 import { db, executions as executionsTable, eq } from "@repo/db";
 import { WorkflowEngine } from "../lib/workflow-engine";
 import type { WorkflowGraph } from "@repo/types";
-import { ExecutionStatus, REDIS, DATABASE, getExecutionRedisKey } from "utils";
+import { ExecutionStatus, REDIS, DATABASE, getExecutionRedisKey, getRedisOptions } from "utils";
 
 interface WorkflowEventData {
   workflowId: string;
@@ -16,7 +16,8 @@ interface WorkflowEventData {
   };
 }
 
-const redis = new Redis(process.env.REDIS_URL || "redis://localhost:6379");
+const { url: redisUrl, options: redisOptions } = getRedisOptions();
+const redis = new Redis(redisUrl, redisOptions);
 
 /**
  * Process workflow events using the graph-based engine

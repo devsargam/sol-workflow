@@ -1,9 +1,9 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { getRequiredEnv } from "utils";
 import * as schema from "./schema";
 
-const connectionString =
-  process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/solworkflow";
+const connectionString = getRequiredEnv("DATABASE_URL");
 
 // Disable prefetch for Bun compatibility
 const client = postgres(connectionString, { prepare: false });
