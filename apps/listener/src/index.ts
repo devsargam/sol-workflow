@@ -11,6 +11,7 @@ const connection = new Connection(process.env.SOLANA_RPC_URL || ENV_DEFAULTS.SOL
 });
 
 const { url: redisUrl, options: redisOptions } = getRedisOptions();
+console.log(`Connecting to Redis at ${redisUrl} with options:`, redisOptions);
 const redis = new Redis(redisUrl, redisOptions);
 
 const workflowQueue = new Queue(QUEUES.WORKFLOW_EVENTS, { connection: redis });
