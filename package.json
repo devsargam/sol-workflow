@@ -20,8 +20,7 @@
     "test:api:integration": "vitest --run --config apps/api/vitest.integration.config.mts",
     "test:api:integration:docker": "./scripts/test-api-integration.sh",
     "type-check": "turbo type-check",
-    "clean": "turbo clean && rm -rf node_modules .turbo",
-    "prepare": "husky || true"
+    "clean": "turbo clean && rm -rf node_modules .turbo"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
