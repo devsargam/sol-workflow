@@ -17,6 +17,13 @@ services:
       NEXT_PUBLIC_PRIVY_APP_ID: ${NEXT_PUBLIC_PRIVY_APP_ID}
     depends_on:
       - api
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.solworkflow-web.rule=Host(`dolphinflow.xyz`)
+      - traefik.http.routers.solworkflow-web.entrypoints=http,https
+      - traefik.http.routers.solworkflow-web.tls=true
+      - traefik.http.routers.solworkflow-web.tls.certresolver=letsencrypt
+      - traefik.http.services.solworkflow-web.loadbalancer.server.port=3000
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000 >/dev/null || exit 1"]
       interval: 30s
@@ -43,6 +50,13 @@ services:
       PRIVY_APP_ID: ${PRIVY_APP_ID}
       PRIVY_APP_SECRET: ${PRIVY_APP_SECRET}
       ENABLE_CRON: ${ENABLE_CRON:-true}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.solworkflow-api.rule=Host(`api.dolphinflow.xyz`)
+      - traefik.http.routers.solworkflow-api.entrypoints=http,https
+      - traefik.http.routers.solworkflow-api.tls=true
+      - traefik.http.routers.solworkflow-api.tls.certresolver=letsencrypt
+      - traefik.http.services.solworkflow-api.loadbalancer.server.port=3001
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3001/ready >/dev/null || exit 1"]
       interval: 30s
