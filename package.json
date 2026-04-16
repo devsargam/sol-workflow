@@ -21,7 +21,7 @@
     "test:api:integration:docker": "./scripts/test-api-integration.sh",
     "type-check": "turbo type-check",
     "clean": "turbo clean && rm -rf node_modules .turbo",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

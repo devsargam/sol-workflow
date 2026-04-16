@@ -2,6 +2,7 @@ FROM node:20-alpine AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+ENV HUSKY=0
 
 RUN corepack enable
 
@@ -21,7 +22,7 @@ COPY packages/telegram/package.json packages/telegram/package.json
 COPY packages/types/package.json packages/types/package.json
 COPY packages/utils/package.json packages/utils/package.json
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --filter listener... --frozen-lockfile
 
 FROM deps AS builder
 

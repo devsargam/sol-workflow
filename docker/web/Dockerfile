@@ -1,7 +1,8 @@
-FROM node:20-alpine AS base
+FROM node:20-slim AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+ENV HUSKY=0
 
 RUN corepack enable
 
@@ -21,7 +22,7 @@ COPY packages/solana/package.json packages/solana/package.json
 COPY packages/telegram/package.json packages/telegram/package.json
 COPY packages/utils/package.json packages/utils/package.json
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --filter web... --frozen-lockfile
 
 FROM deps AS builder
 
@@ -39,7 +40,7 @@ COPY . .
 
 RUN pnpm --filter web build
 
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 
 WORKDIR /app
 
