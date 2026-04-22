@@ -1,36 +1,41 @@
 "use client";
 
-import { MegaphoneIcon, RocketIcon, SearchIcon, ZapIcon } from "lucide-react";
+import {
+  BanknoteIcon,
+  MegaphoneIcon,
+  SlidersHorizontalIcon,
+  ZapIcon,
+} from "lucide-react";
 import React from "react";
 
-const nodeTypes = [
+const NODE_TYPES = [
   {
     type: "trigger",
     label: "Trigger",
-    description: "Start your workflow",
-    icon: <ZapIcon className="text-2xl" />,
-    color: "bg-blue-100 text-blue-600 border-blue-200",
+    description: "React to on-chain events",
+    Icon: ZapIcon,
+    accent: "#9945FF",
   },
   {
     type: "filter",
     label: "Filter",
-    description: "Add conditions",
-    icon: <SearchIcon className="text-2xl" />,
-    color: "bg-orange-100 text-orange-600 border-orange-200",
+    description: "Apply conditions",
+    Icon: SlidersHorizontalIcon,
+    accent: "#F97316",
   },
   {
     type: "action",
     label: "Action",
     description: "Execute on-chain",
-    icon: <RocketIcon className="text-2xl" />,
-    color: "bg-purple-100 text-purple-600 border-purple-200",
+    Icon: BanknoteIcon,
+    accent: "#06B6D4",
   },
   {
     type: "notify",
     label: "Notify",
     description: "Send notifications",
-    icon: <MegaphoneIcon className="text-2xl" />,
-    color: "bg-green-100 text-green-600 border-green-200",
+    Icon: MegaphoneIcon,
+    accent: "#10B981",
   },
 ];
 
@@ -41,39 +46,52 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-64 bg-white border-r border-neutral-200 p-4">
-      <div className="mb-2">
-        <h3 className="text-sm font-semibold text-neutral-900">Workflow Nodes</h3>
-        <p className="text-xs text-neutral-600">Drag and drop nodes to build your workflow</p>
+    <aside
+      className="w-56 flex flex-col border-r py-4 px-3 gap-1"
+      style={{
+        background: "var(--sidebar-bg)",
+        borderColor: "var(--sidebar-border)",
+      }}
+    >
+      <div className="px-1 mb-3">
+        <h3
+          className="text-xs font-semibold uppercase tracking-wide"
+          style={{ color: "var(--text-muted)" }}
+        >
+          Nodes
+        </h3>
       </div>
 
-      <div className="space-y-2">
-        {nodeTypes.map((node) => (
+      {NODE_TYPES.map(({ type, label, description, Icon, accent }) => (
+        <div
+          key={type}
+          className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-grab active:cursor-grabbing transition-colors duration-100 hover:bg-[var(--surface-2)]"
+          style={{ borderColor: "var(--node-border)" }}
+          draggable
+          onDragStart={(e) => onDragStart(e, type)}
+        >
           <div
-            key={node.type}
-            className="flex gap-x-4 p-3 border-2 border-black rounded-sm items-center"
-            draggable
-            onDragStart={(e) => onDragStart(e, node.type)}
+            className="h-7 w-7 rounded-md flex items-center justify-center flex-shrink-0"
+            style={{ background: accent }}
           >
-            <span className="text-2xl">{node.icon}</span>
-            <div className="flex items-start gap-3">
-              <div className="flex-1">
-                <h4 className="font-medium text-sm">{node.label}</h4>
-                <p className="text-xs opacity-80 mt-0.5">{node.description}</p>
-              </div>
+            <Icon className="h-[14px] w-[14px] text-white" />
+          </div>
+          <div className="min-w-0">
+            <div
+              className="text-sm font-medium leading-none"
+              style={{ color: "var(--text-primary)" }}
+            >
+              {label}
+            </div>
+            <div
+              className="text-[11px] mt-0.5 truncate"
+              style={{ color: "var(--text-muted)" }}
+            >
+              {description}
             </div>
           </div>
-        ))}
-      </div>
-
-      {/*<div className="mt-8 p-4 bg-neutral-50 rounded-lg">
-        <h4 className="text-xs font-semibold text-neutral-700 mb-2">Tips:</h4>
-        <ul className="text-xs text-neutral-600 space-y-1">
-          <li>• Connect nodes by dragging from handles</li>
-          <li>• Click on a node to configure it</li>
-          <li>• Use the minimap for navigation</li>
-        </ul>
-      </div>*/}
+        </div>
+      ))}
     </aside>
   );
 }

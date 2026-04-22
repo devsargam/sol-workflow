@@ -2,70 +2,85 @@
 
 import { cn } from "@/lib/utils";
 import { Handle, NodeProps, Position } from "@xyflow/react";
+import { SlidersHorizontalIcon } from "lucide-react";
 import { memo } from "react";
-import { getFilterIcon } from "../icons";
 import type { FilterNodeData } from "../types";
+import { errorHandleStyle, rowHandleStyle } from "./node-layout";
+import { OutputRow } from "./TriggerNode";
+
+const ACCENT = "#F97316";
 
 export const FilterNode = memo(({ data, selected }: NodeProps) => {
   const nodeData = data as FilterNodeData;
-  const conditionsCount = nodeData.conditions?.length || 0;
+  const conditions = nodeData.conditions ?? [];
+
+  const ifValue =
+    conditions[0]
+      ? `${conditions[0].field} ${conditions[0].operator} ${conditions[0].value}`
+      : "—";
 
   return (
     <div
       className={cn(
-        "px-4 py-3 rounded-lg border-2 bg-white min-w-[180px] transition-all border-black",
-        selected && "shadow-lg"
+        "w-[250px] rounded-lg border bg-[var(--surface-2)] select-none",
+        "border-[var(--node-border)]",
+        selected && "border-[var(--brand)] shadow-[0_0_0_1px_var(--brand)]"
       )}
     >
+      {/* Input handle */}
       <Handle
         type="target"
         position={Position.Left}
-        style={{
-          background: "#000000",
-          width: 10,
-          height: 10,
-        }}
+        id="input"
+        className="sol-handle-left"
       />
 
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-xl">{getFilterIcon()}</span>
-        <div className="flex-1">
-          <div className="text-base font-semibold text-black">
-            Filter
-            {conditionsCount > 0 && (
-              <span className="text-sm font-normal text-gray-600 ml-2">
-                {conditionsCount} condition{conditionsCount > 1 ? "s" : ""}
-              </span>
-            )}
-          </div>
+      {/* Header */}
+      <div className="flex items-center gap-2.5 px-3 py-2">
+        <div
+          className="h-7 w-7 rounded-md flex items-center justify-center flex-shrink-0"
+          style={{ background: ACCENT }}
+        >
+          <SlidersHorizontalIcon className="h-[14px] w-[14px] text-white" />
         </div>
+        <span className="text-sm font-medium text-[var(--text-primary)] truncate leading-none">
+          Condition
+        </span>
+        {conditions.length > 0 && (
+          <span className="ml-auto text-xs text-[var(--text-muted)] flex-shrink-0">
+            {conditions.length} rule{conditions.length > 1 ? "s" : ""}
+          </span>
+        )}
       </div>
 
-      {conditionsCount > 0 && (
-        <div className="mt-2 pt-2 border-t border-gray-200">
-          <div className="space-y-1">
-            {nodeData.conditions?.slice(0, 2).map((condition: any, index: number) => (
-              <div key={index} className="text-xs text-gray-600">
-                <span className="font-medium">{condition.field}</span>{" "}
-                <span className="text-gray-900">{condition.operator}</span>{" "}
-                <span className="font-mono">{condition.value}</span>
-              </div>
-            ))}
-            {conditionsCount > 2 && (
-              <div className="text-xs text-gray-500">+{conditionsCount - 2} more...</div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* If row */}
+      <OutputRow label="if" value={ifValue} />
+      {/* Else row */}
+      <OutputRow label="else" />
+      {/* Error row */}
+      <OutputRow label="error" />
 
+      {/* Per-row source handles */}
       <Handle
         type="source"
         position={Position.Right}
-        style={{
-          background: "#000000",
-          width: 10,
-          height: 10,
-        }}
+        id="if"
+        className="sol-handle-right"
+        style={rowHandleStyle(0)}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="else"
+        className="sol-handle-right"
+        style={rowHandleStyle(1)}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="error"
+        className="sol-handle-right sol-handle-error"
+        style={errorHandleStyle}
       />
     </div>
   );

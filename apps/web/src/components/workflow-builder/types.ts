@@ -1,6 +1,7 @@
 export interface TriggerNodeData {
   label?: string;
   type?: string;
+  triggerType?: string;
   config?: {
     address?: string;
     tokenAccount?: string;
@@ -21,6 +22,7 @@ export interface TriggerNodeData {
 
 export interface FilterNodeData {
   label?: string;
+  logic?: "and" | "or";
   conditions?: Array<{
     field: string;
     operator: string;
@@ -31,6 +33,7 @@ export interface FilterNodeData {
 export interface ActionNodeData {
   label?: string;
   type?: string;
+  actionType?: string;
   config?: {
     toAddress?: string;
     amount?: number;

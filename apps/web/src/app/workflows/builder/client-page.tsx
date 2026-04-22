@@ -6,7 +6,29 @@ import { validateWorkflowGraphForBuilder } from "@repo/types";
 import { log } from "utils";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Header } from "@/components/layout/header";
+
+const WORKFLOW_NAMES = [
+  "swift-sentinel",
+  "chain-watcher",
+  "sol-guardian",
+  "nft-monitor",
+  "token-relay",
+  "program-scout",
+  "vault-tracker",
+  "epoch-signal",
+  "stake-monitor",
+  "block-observer",
+  "wallet-guard",
+  "ledger-watch",
+  "dao-relay",
+  "market-pulse",
+  "price-radar",
+  "defi-beacon",
+  "mint-scanner",
+  "balance-alert",
+  "tx-monitor",
+  "sol-patrol",
+];
 
 export default function WorkflowBuilderClientPage() {
   const router = useRouter();
@@ -18,7 +40,11 @@ export default function WorkflowBuilderClientPage() {
   const { data: existingWorkflow, isLoading: isLoadingWorkflow } = useWorkflow(editId || "");
 
   const builderRef = useRef<any>(null);
-  const [workflowName, setWorkflowName] = useState("");
+  const [workflowName, setWorkflowName] = useState(() =>
+    editId
+      ? ""
+      : WORKFLOW_NAMES[Math.floor(Math.random() * WORKFLOW_NAMES.length)]!
+  );
   const [workflowDescription, setWorkflowDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
@@ -76,7 +102,7 @@ export default function WorkflowBuilderClientPage() {
         },
         metadata: {
           version: "1.0.0",
-          maxSolPerTx: 1000000, // 0.001 SOL
+          maxSolPerTx: 1000000,
           maxExecutionsPerHour: 10,
         },
       };
@@ -108,153 +134,33 @@ export default function WorkflowBuilderClientPage() {
 
   if (editId && isLoadingWorkflow) {
     return (
-      <div className="h-screen flex items-center justify-center bg-neutral-50">
+      <div className="h-screen flex items-center justify-center" style={{ background: "var(--canvas-bg)" }}>
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-neutral-300 border-t-black rounded-full animate-spin" />
-          <p className="text-sm text-neutral-600">Loading workflow...</p>
+          <div className="w-8 h-8 border-2 border-[var(--node-border)] border-t-[var(--brand)] rounded-full animate-spin" />
+          <p className="text-sm text-[var(--text-muted)]">Loading workflow…</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col bg-neutral-50">
-      <Header />
-      <header className="bg-white border-b border-neutral-200">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between gap-6">
-            {/* Left Section */}
-            <div className="flex items-center gap-4 flex-1 min-w-0">
-              <button
-                onClick={() => router.push("/workflows")}
-                className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
-                aria-label="Back to workflows"
-              >
-                <svg
-                  className="w-5 h-5 text-neutral-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-              </button>
-
-              <div className="flex items-center gap-3 flex-1 min-w-0 max-w-3xl">
-                <input
-                  type="text"
-                  value={workflowName}
-                  onChange={(e) => setWorkflowName(e.target.value)}
-                  className="flex-1 px-3 py-2 text-base font-medium text-neutral-900 bg-neutral-50 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder:text-neutral-400"
-                  placeholder="Untitled workflow"
-                />
-
-                <input
-                  type="text"
-                  value={workflowDescription}
-                  onChange={(e) => setWorkflowDescription(e.target.value)}
-                  className="flex-1 px-3 py-2 text-sm text-neutral-700 bg-neutral-50 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder:text-neutral-400"
-                  placeholder="Description (optional)"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => router.push("/workflows")}
-                className="px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="px-4 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-              >
-                {isSaving ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>{editId ? "Update Workflow" : "Create Workflow"}</>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Clean Error Display */}
-      {showErrors && errors.length > 0 && (
-        <div className="bg-red-50 border-b border-red-200">
-          <div className="px-6 py-3 flex items-start gap-3">
-            <div className="flex-shrink-0 mt-0.5">
-              <svg
-                className="w-5 h-5 text-red-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-red-900 mb-1">
-                Please fix the following errors:
-              </p>
-              <ul className="space-y-1">
-                {errors.map((error, index) => (
-                  <li key={index} className="text-sm text-red-800 flex items-start gap-2">
-                    <span className="text-red-400 mt-0.5">•</span>
-                    <span>{error}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <button
-              onClick={() => {
-                setErrors([]);
-                setShowErrors(false);
-              }}
-              className="flex-shrink-0 p-1 hover:bg-red-100 rounded transition-colors"
-              aria-label="Dismiss"
-            >
-              <svg
-                className="w-4 h-4 text-red-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Workflow Builder */}
-      <main className="flex-1 overflow-hidden">
-        <WorkflowBuilderContent ref={builderRef} />
-      </main>
+    <div className="h-screen overflow-hidden">
+      <WorkflowBuilderContent
+        ref={builderRef}
+        workflowName={workflowName}
+        onNameChange={setWorkflowName}
+        workflowDescription={workflowDescription}
+        onDescriptionChange={setWorkflowDescription}
+        onSave={handleSave}
+        isSaving={isSaving}
+        editId={editId}
+        onBack={() => router.push("/workflows")}
+        errors={showErrors ? errors : []}
+        onDismissErrors={() => {
+          setErrors([]);
+          setShowErrors(false);
+        }}
+      />
     </div>
   );
 }

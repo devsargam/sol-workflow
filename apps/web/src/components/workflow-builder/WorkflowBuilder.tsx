@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -8,7 +8,6 @@ import {
   Controls,
   MiniMap,
   Background,
-  Panel,
   useNodesState,
   useEdgesState,
   type Node,
@@ -22,10 +21,8 @@ import { TriggerNode } from "./nodes/TriggerNode";
 import { FilterNode } from "./nodes/FilterNode";
 import { ActionNode } from "./nodes/ActionNode";
 import { NotifyNode } from "./nodes/NotifyNode";
-import { Sidebar } from "./Sidebar";
-import { NodeConfigPanel } from "./NodeConfigPanel";
+import { RightPanel } from "./RightPanel";
 
-// Define custom node types
 const nodeTypes = {
   trigger: TriggerNode,
   filter: FilterNode,
@@ -33,168 +30,105 @@ const nodeTypes = {
   notify: NotifyNode,
 };
 
-// Initial nodes for a new workflow
+const DEFAULT_EDGE_STYLE = { stroke: "var(--edge-color)", strokeWidth: 1.5 };
+
 const initialNodes: Node[] = [
   {
     id: "trigger-1",
     type: "trigger",
-    position: { x: 100, y: 200 },
-    data: {
-      label: "Trigger",
-      type: "balance_change",
-      config: {},
-    },
+    position: { x: 80, y: 260 },
+    data: { label: "Trigger", type: "balance_change", config: {} },
   },
   {
     id: "filter-1",
     type: "filter",
-    position: { x: 350, y: 200 },
-    data: {
-      label: "Filter",
-      conditions: [],
-    },
+    position: { x: 460, y: 260 },
+    data: { label: "Condition", conditions: [] },
   },
   {
     id: "action-1",
     type: "action",
-    position: { x: 600, y: 200 },
-    data: {
-      label: "Action",
-      type: "send_sol",
-      config: {},
-    },
+    position: { x: 840, y: 260 },
+    data: { label: "Action", type: "send_sol", config: {} },
   },
   {
     id: "notify-1",
     type: "notify",
-    position: { x: 850, y: 200 },
-    data: {
-      label: "Notify",
-      type: "discord",
-      webhookUrl: "",
-      template: "default",
-    },
+    position: { x: 1220, y: 260 },
+    data: { label: "Notify", notifyType: "discord", template: "default" },
   },
 ];
 
-// Initial edges connecting the nodes
 const initialEdges: Edge[] = [
   {
     id: "e1-2",
     source: "trigger-1",
+    sourceHandle: "output",
     target: "filter-1",
-    animated: true,
-    style: { stroke: "#3b82f6", strokeWidth: 2 },
+    targetHandle: "input",
+    type: "smoothstep",
+    style: DEFAULT_EDGE_STYLE,
   },
   {
     id: "e2-3",
     source: "filter-1",
+    sourceHandle: "if",
     target: "action-1",
-    animated: true,
-    style: { stroke: "#3b82f6", strokeWidth: 2 },
+    targetHandle: "input",
+    type: "smoothstep",
+    style: DEFAULT_EDGE_STYLE,
   },
   {
     id: "e3-4",
     source: "action-1",
+    sourceHandle: "success",
     target: "notify-1",
-    animated: true,
-    style: { stroke: "#3b82f6", strokeWidth: 2 },
+    targetHandle: "input",
+    type: "smoothstep",
+    style: DEFAULT_EDGE_STYLE,
   },
 ];
 
 export function WorkflowBuilderContent() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
-  // Handle new connections
+  const selectedNode = nodes.find((n) => n.id === selectedNodeId) ?? null;
+
   const onConnect: OnConnect = useCallback(
     (connection: Connection) => {
       setEdges((eds) =>
-        addEdge(
-          {
-            ...connection,
-            animated: true,
-            style: { stroke: "#3b82f6", strokeWidth: 2 },
-          },
-          eds
-        )
+        addEdge({ ...connection, type: "smoothstep", style: DEFAULT_EDGE_STYLE }, eds)
       );
     },
     [setEdges]
   );
 
-  // Handle node click
-  const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
-    setSelectedNode(node);
-  }, []);
-
-  // Handle pane click (deselect)
-  const onPaneClick = useCallback(() => {
-    setSelectedNode(null);
-  }, []);
-
-  // Update node data
-  const updateNodeData = useCallback(
-    (nodeId: string, data: any) => {
-      setNodes((nds) =>
-        nds.map((node) => {
-          if (node.id === nodeId) {
-            return {
-              ...node,
-              data: {
-                ...node.data,
-                ...data,
-              },
-            };
-          }
-          return node;
-        })
-      );
-    },
-    [setNodes]
-  );
-
-  // Handle drag over
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
   }, []);
 
-  // Handle drop
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
-
       const type = event.dataTransfer.getData("application/reactflow");
-
-      // Check if the dropped element is valid
-      if (typeof type === "undefined" || !type) {
-        return;
-      }
-
+      if (!type) return;
       const position = reactFlowInstance?.screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
       }) ?? { x: 0, y: 0 };
-
-      const newNode: Node = {
-        id: `${type}-${Date.now()}`,
-        type,
-        position,
-        data: { label: `${type}` },
-      };
-
-      setNodes((nds) => nds.concat(newNode));
+      setNodes((nds) =>
+        nds.concat({ id: `${type}-${Date.now()}`, type, position, data: { label: type } })
+      );
     },
     [reactFlowInstance, setNodes]
   );
 
   return (
-    <div className="h-full w-full flex">
-      <Sidebar />
-
+    <div className="h-full w-full flex" style={{ background: "var(--canvas-bg)" }}>
       <div className="flex-1 relative">
         <ReactFlow
           nodes={nodes}
@@ -202,38 +136,23 @@ export function WorkflowBuilderContent() {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          onNodeClick={onNodeClick}
-          onPaneClick={onPaneClick}
           onInit={setReactFlowInstance}
           onDrop={onDrop}
           onDragOver={onDragOver}
+          onNodeClick={(_, node) => setSelectedNodeId(node.id)}
+          onPaneClick={() => setSelectedNodeId(null)}
           nodeTypes={nodeTypes}
           fitView
+          fitViewOptions={{ padding: 0.25 }}
           attributionPosition="bottom-left"
         >
-          <Background variant={BackgroundVariant.Cross} gap={12} size={1} />
-          <Controls />
-          <MiniMap />
-
-          <Panel
-            position="top-left"
-            className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 m-4"
-          >
-            <h2 className="text-xl font-semibold mb-2">Workflow Builder</h2>
-            <p className="text-sm text-neutral-600">
-              Drag nodes from the sidebar to build your workflow
-            </p>
-          </Panel>
+          <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="var(--node-border)" />
+          <Controls showInteractive={false} />
+          <MiniMap nodeColor="var(--surface-4)" maskColor="rgba(250,250,250,0.6)" />
         </ReactFlow>
       </div>
 
-      {selectedNode && (
-        <NodeConfigPanel
-          node={selectedNode}
-          onUpdate={updateNodeData}
-          onClose={() => setSelectedNode(null)}
-        />
-      )}
+      <RightPanel selectedNode={selectedNode} />
     </div>
   );
 }

@@ -2,100 +2,103 @@
 
 import { cn } from "@/lib/utils";
 import { Handle, NodeProps, Position } from "@xyflow/react";
-import { CircleDollarSignIcon, ClockIcon, ZapIcon } from "lucide-react";
+import {
+  BanknoteIcon,
+  CircleDollarSignIcon,
+  ClockIcon,
+  CodeIcon,
+  FileTextIcon,
+  ImageIcon,
+  ZapIcon,
+} from "lucide-react";
 import { memo } from "react";
 import type { TriggerNodeData } from "../types";
+import { rowHandleStyle } from "./node-layout";
+
+const TRIGGER_CONFIG: Record<
+  string,
+  { label: string; Icon: React.ComponentType<{ className?: string }> }
+> = {
+  balance_change: { label: "Balance Change", Icon: CircleDollarSignIcon },
+  token_receipt: { label: "Token Receipt", Icon: BanknoteIcon },
+  nft_receipt: { label: "NFT Receipt", Icon: ImageIcon },
+  transaction_status: { label: "Transaction Status", Icon: FileTextIcon },
+  program_log: { label: "Program Log", Icon: CodeIcon },
+  cron: { label: "Scheduled", Icon: ClockIcon },
+};
+
+const ACCENT = "#9945FF";
 
 export const TriggerNode = memo(({ data, selected }: NodeProps) => {
   const nodeData = data as TriggerNodeData;
-  const getTriggerIcon = (type: string) => {
-    switch (type) {
-      case "balance_change":
-        return <CircleDollarSignIcon className="w-6 h-6" />;
-      case "token_receipt":
-        return "🪙";
-      case "nft_receipt":
-        return "🖼️";
-      case "transaction_status":
-        return "📊";
-      case "program_log":
-        return "📝";
-      case "cron":
-        return <ClockIcon className="w-6 h-6" />;
-      default:
-        return <ZapIcon className="w-6 h-6" />;
-    }
+  const { label, Icon } = TRIGGER_CONFIG[nodeData.type || ""] ?? {
+    label: "Trigger",
+    Icon: ZapIcon,
   };
 
-  const getTriggerLabel = (type: string) => {
-    switch (type) {
-      case "balance_change":
-        return "Balance Change";
-      case "token_receipt":
-        return "Token Receipt";
-      case "nft_receipt":
-        return "NFT Receipt";
-      case "transaction_status":
-        return "Transaction Status";
-      case "program_log":
-        return "Program Log";
-      case "cron":
-        return "Scheduled (Cron)";
-      default:
-        return "Trigger";
-    }
-  };
+  const address = nodeData.config?.address;
+  const schedule = nodeData.config?.schedule;
+
+  const outputValue =
+    address
+      ? `${address.slice(0, 6)}...${address.slice(-4)}`
+      : schedule || nodeData.type || "—";
 
   return (
     <div
       className={cn(
-        "px-4 py-3 rounded-lg border-2 bg-white min-w-[180px] transition-all border-black",
-        selected && "shadow-lg"
+        "w-[250px] rounded-lg border bg-[var(--surface-2)] select-none",
+        "border-[var(--node-border)]",
+        selected && "border-[var(--brand)] shadow-[0_0_0_1px_var(--brand)]"
       )}
     >
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-xl">{getTriggerIcon(nodeData.type || "")}</span>
-        <div className="flex-1">
-          <div className="text-base font-semibold text-black">
-            {getTriggerLabel(nodeData.type || "")}
-          </div>
+      {/* Header */}
+      <div className="flex items-center gap-2.5 px-3 py-2">
+        <div
+          className="h-7 w-7 rounded-md flex items-center justify-center flex-shrink-0"
+          style={{ background: ACCENT }}
+        >
+          <Icon className="h-[14px] w-[14px] text-white" />
         </div>
+        <span className="text-sm font-medium text-[var(--text-primary)] truncate leading-none">
+          {label}
+        </span>
       </div>
 
-      {nodeData.config?.address && (
-        <div className="mt-2 pt-2 border-t border-gray-200">
-          <div className="text-xs text-gray-600">
-            <span className="font-medium">Address:</span>
-            <div className="font-mono text-[10px] mt-0.5 truncate">{nodeData.config.address}</div>
-          </div>
-        </div>
-      )}
+      {/* Output row */}
+      <OutputRow label="Output" value={outputValue} />
 
-      {nodeData.type === "cron" && nodeData.config?.schedule && (
-        <div className="mt-2 pt-2 border-t border-gray-200">
-          <div className="text-xs text-gray-600">
-            <span className="font-medium">Schedule:</span>
-            <div className="font-mono text-[10px] mt-0.5">{nodeData.config.schedule}</div>
-            {nodeData.config.timezone && nodeData.config.timezone !== "UTC" && (
-              <div className="text-[10px] mt-0.5 text-gray-500">
-                Timezone: {nodeData.config.timezone}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
+      {/* Single source handle aligned to the output row */}
       <Handle
         type="source"
         position={Position.Right}
-        style={{
-          background: "#000000",
-          width: 10,
-          height: 10,
-        }}
+        id="output"
+        className="sol-handle-right"
+        style={rowHandleStyle(0)}
       />
     </div>
   );
 });
 
 TriggerNode.displayName = "TriggerNode";
+
+// ─── Shared OutputRow ─────────────────────────────────────────
+
+export function OutputRow({
+  label,
+  value,
+}: {
+  label: string;
+  value?: string;
+}) {
+  return (
+    <div className="flex items-center h-[29px] px-3 border-t border-[var(--node-border)] gap-2">
+      <span className="text-sm text-[var(--text-secondary)] flex-1 capitalize truncate">
+        {label}
+      </span>
+      <span className="text-sm text-[var(--text-muted)] truncate max-w-[100px]">
+        {value || "—"}
+      </span>
+    </div>
+  );
+}

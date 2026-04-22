@@ -15,6 +15,8 @@ interface ExecutionContext {
   executionId: string;
   triggerData: any;
   variables: Map<string, any>; // For passing data between nodes
+  stepOutputs: Record<string, any>;
+  workflowVariables: Record<string, any>;
   executionPath: string[]; // Track which nodes were executed
   hasErrors: boolean; // Track if any errors occurred during execution
 }
@@ -68,11 +70,7 @@ export class WorkflowEngine {
 
     // Execute from each trigger node (usually just one)
     for (const triggerNode of triggerNodes) {
-      const result = await this.executeNode(triggerNode, graph, adjacencyList, context, errors);
-      if (!result) {
-        // Execution was stopped (e.g., by filter)
-        break;
-      }
+      await this.executeNode(triggerNode, graph, adjacencyList, context, errors);
     }
 
     return {
@@ -88,44 +86,67 @@ export class WorkflowEngine {
   private async executeNode(
     node: WorkflowNode,
     graph: WorkflowGraph,
-    adjacencyList: Map<string, string[]>,
+    adjacencyList: Map<string, Map<string, string[]>>,
     context: ExecutionContext,
     errors: string[]
   ): Promise<boolean> {
     console.log(`Executing node: ${node.id} (${node.type})`);
 
-    // Track execution
     context.executionPath.push(node.id);
 
-    // Get the executor for this node type
     const executor = this.nodeExecutors.get(node.type);
     if (!executor) {
       errors.push(`No executor registered for node type: ${node.type}`);
       return false;
     }
 
-    // Execute the node
     const result = await executor.execute(node, context);
 
-    if (!result.success) {
-      errors.push(`Node ${node.id} failed: ${result.error || "Unknown error"}`);
-      context.hasErrors = true;
-      return false;
+    const scopedOutput = this.buildScopedOutput(node, result);
+    if (scopedOutput !== undefined) {
+      context.variables.set(node.id, scopedOutput);
+      context.stepOutputs[node.id] = scopedOutput;
+
+      if (node.type === NodeType.TRIGGER) {
+        context.variables.set("trigger", scopedOutput);
+      }
     }
 
-    // Store output in context for downstream nodes
-    if (result.output !== undefined) {
-      context.variables.set(node.id, result.output);
+    // Determine which output handle to follow based on node type and result
+    let outHandle: string;
+
+    if (node.type === NodeType.FILTER) {
+      if (!result.success) {
+        outHandle = "error";
+        context.hasErrors = true;
+        errors.push(`Filter node ${node.id} errored: ${result.error || "Unknown error"}`);
+      } else if (result.output === true) {
+        outHandle = "if";
+      } else {
+        outHandle = "else";
+      }
+    } else if (node.type === NodeType.ACTION) {
+      if (!result.success) {
+        outHandle = "error";
+        context.hasErrors = true;
+        errors.push(`Action node ${node.id} failed: ${result.error || "Unknown error"}`);
+      } else {
+        outHandle = "success";
+      }
+    } else if (node.type === NodeType.TRIGGER) {
+      if (!result.success) {
+        errors.push(`Trigger node ${node.id} failed: ${result.error || "Unknown error"}`);
+        return false;
+      }
+      outHandle = "output";
+    } else if (node.type === NodeType.NOTIFY) {
+      outHandle = result.success ? "sent" : "error";
+    } else {
+      outHandle = "_default";
     }
 
-    // Special handling for filter nodes
-    if (node.type === NodeType.FILTER && result.output === false) {
-      console.log(`Filter node ${node.id} evaluated to false, stopping execution`);
-      return false; // Stop execution if filter fails
-    }
+    const downstreamNodeIds = this.getDownstreamIds(adjacencyList, node.id, outHandle);
 
-    // Execute downstream nodes
-    const downstreamNodeIds = adjacencyList.get(node.id) || [];
     for (const downstreamNodeId of downstreamNodeIds) {
       const downstreamNode = graph.nodes.find((n: WorkflowNode) => n.id === downstreamNodeId);
       if (!downstreamNode) {
@@ -133,35 +154,42 @@ export class WorkflowEngine {
         continue;
       }
 
-      const continueExecution = await this.executeNode(
-        downstreamNode,
-        graph,
-        adjacencyList,
-        context,
-        errors
-      );
-
-      if (!continueExecution) {
-        return false;
-      }
+      await this.executeNode(downstreamNode, graph, adjacencyList, context, errors);
     }
 
     return true;
   }
 
   /**
-   * Build adjacency list from edges
+   * Build adjacency list keyed by source node + handle.
+   * Map layout: sourceNodeId → handleId → targetNodeIds[]
+   * Edges without a sourceHandle are stored under "_default".
    */
-  private buildAdjacencyList(graph: WorkflowGraph): Map<string, string[]> {
-    const adjacencyList = new Map<string, string[]>();
+  private buildAdjacencyList(graph: WorkflowGraph): Map<string, Map<string, string[]>> {
+    const adjacencyList = new Map<string, Map<string, string[]>>();
 
     for (const edge of graph.edges) {
-      const downstream = adjacencyList.get(edge.source) || [];
-      downstream.push(edge.target);
-      adjacencyList.set(edge.source, downstream);
+      if (!adjacencyList.has(edge.source)) {
+        adjacencyList.set(edge.source, new Map());
+      }
+      const handleMap = adjacencyList.get(edge.source)!;
+      const handle = (edge as any).sourceHandle || "_default";
+      const targets = handleMap.get(handle) || [];
+      targets.push(edge.target);
+      handleMap.set(handle, targets);
     }
 
     return adjacencyList;
+  }
+
+  private getDownstreamIds(
+    adjacencyList: Map<string, Map<string, string[]>>,
+    nodeId: string,
+    handle: string
+  ): string[] {
+    const handleMap = adjacencyList.get(nodeId);
+    if (!handleMap) return [];
+    return handleMap.get(handle) || handleMap.get("_default") || [];
   }
 
   /**
@@ -169,6 +197,53 @@ export class WorkflowEngine {
    */
   registerNodeExecutor(nodeType: string, executor: NodeExecutor) {
     this.nodeExecutors.set(nodeType, executor);
+  }
+
+  private buildScopedOutput(
+    node: WorkflowNode,
+    result: { success: boolean; output?: any; error?: string }
+  ): any {
+    switch (node.type) {
+      case NodeType.TRIGGER:
+        return result.output ?? null;
+      case NodeType.FILTER: {
+        const data = node.data as FilterNodeData & { nodeType: NodeType.FILTER };
+        return {
+          output: result.output,
+          passed: result.output === true,
+          logic: data.logic || "and",
+          conditions: data.conditions || [],
+        };
+      }
+      case NodeType.ACTION: {
+        const data = node.data as ActionNodeData & { nodeType: NodeType.ACTION };
+        const txSignature =
+          typeof result.output === "string" ? result.output : result.output?.txSignature;
+
+        return {
+          output: result.output ?? null,
+          success: result.success,
+          error: result.error,
+          actionType: data.actionType,
+          txSignature: txSignature ?? null,
+          config: data.config || {},
+        };
+      }
+      case NodeType.NOTIFY: {
+        const data = node.data as NotifyNodeData & { nodeType: NodeType.NOTIFY };
+        const notificationCount = data.notifications?.length ?? (data.notifyType ? 1 : 0);
+
+        return {
+          output: result.output ?? null,
+          success: result.success,
+          error: result.error,
+          notifyType: data.notifyType ?? null,
+          notificationCount,
+        };
+      }
+      default:
+        return result.output;
+    }
   }
 }
 
@@ -207,9 +282,7 @@ class FilterNodeExecutor implements NodeExecutor {
       return { success: true, output: true };
     }
 
-    const results = conditions.map((condition: any) =>
-      this.evaluateCondition(condition, context.triggerData, context.variables)
-    );
+    const results = conditions.map((condition: any) => this.evaluateCondition(condition, context));
 
     const passed =
       logic === "and" ? results.every((r: boolean) => r) : results.some((r: boolean) => r);
@@ -224,22 +297,31 @@ class FilterNodeExecutor implements NodeExecutor {
 
   private evaluateCondition(
     condition: { field: string; operator: string; value?: any },
-    triggerData: any,
-    variables: Map<string, any>
+    context: ExecutionContext
   ): boolean {
     // Get the field value from trigger data or variables
-    const fieldValue = this.getFieldValue(condition.field, triggerData, variables);
+    const fieldValue = this.getFieldValue(condition.field, context);
     const compareValue = condition.value;
 
     switch (condition.operator) {
       case "equals":
+      case "==":
         return fieldValue == compareValue;
       case "not_equals":
+      case "!=":
         return fieldValue != compareValue;
       case "greater_than":
+      case ">":
         return Number(fieldValue) > Number(compareValue);
+      case "greater_than_or_equal":
+      case ">=":
+        return Number(fieldValue) >= Number(compareValue);
       case "less_than":
+      case "<":
         return Number(fieldValue) < Number(compareValue);
+      case "less_than_or_equal":
+      case "<=":
+        return Number(fieldValue) <= Number(compareValue);
       case "contains":
         return String(fieldValue).includes(String(compareValue));
       case "starts_with":
@@ -252,23 +334,92 @@ class FilterNodeExecutor implements NodeExecutor {
     }
   }
 
-  private getFieldValue(field: string, triggerData: any, variables: Map<string, any>): any {
-    // Support nested field access with dot notation
-    const parts = field.split(".");
-    let value = triggerData;
+  private getFieldValue(field: string, context: ExecutionContext): any {
+    const normalizedField = this.normalizeReference(field);
+    if (!normalizedField) return undefined;
+
+    if (normalizedField.startsWith("$")) {
+      return this.resolveVariableReference(normalizedField.slice(1), context);
+    }
+
+    const parts = normalizedField.split(".").filter(Boolean);
+    if (parts.length === 0) return undefined;
+    const rootPart = parts[0];
+    if (!rootPart) return undefined;
+
+    if (rootPart === "trigger") {
+      return this.resolvePath(context.triggerData, parts.slice(1));
+    }
+
+    if (rootPart === "workflow") {
+      return this.resolvePath(context.workflowVariables, parts.slice(1));
+    }
+
+    if (rootPart === "steps") {
+      const [, stepId, ...rest] = parts;
+      if (!stepId) return context.stepOutputs;
+      return this.resolvePath(context.stepOutputs[stepId], rest);
+    }
+
+    if (rootPart in context.stepOutputs) {
+      return this.resolvePath(context.stepOutputs[rootPart], parts.slice(1));
+    }
+
+    const fromTriggerData = this.resolvePath(context.triggerData, parts);
+    if (fromTriggerData !== undefined) {
+      return fromTriggerData;
+    }
+
+    return this.resolveVariableReference(normalizedField, context);
+  }
+
+  private normalizeReference(field: string): string {
+    const trimmed = field.trim();
+
+    if (trimmed.startsWith("<") && trimmed.endsWith(">")) {
+      return trimmed.slice(1, -1).trim();
+    }
+
+    return trimmed;
+  }
+
+  private resolveVariableReference(reference: string, context: ExecutionContext): any {
+    const parts = reference.split(".").filter(Boolean);
+    if (parts.length === 0) return undefined;
+
+    const [rootKey, ...rest] = parts;
+    if (!rootKey) return undefined;
+
+    if (rootKey === "trigger") {
+      return this.resolvePath(context.triggerData, rest);
+    }
+
+    if (rootKey === "workflow") {
+      return this.resolvePath(context.workflowVariables, rest);
+    }
+
+    if (rootKey === "steps") {
+      const [stepId, ...stepRest] = rest;
+      if (!stepId) return context.stepOutputs;
+      return this.resolvePath(context.stepOutputs[stepId], stepRest);
+    }
+
+    const rootValue = context.variables.get(rootKey);
+    return this.resolvePath(rootValue, rest);
+  }
+
+  private resolvePath(value: any, parts: string[]): any {
+    let currentValue = value;
 
     for (const part of parts) {
-      if (part.startsWith("$")) {
-        // Variable reference
-        value = variables.get(part.slice(1));
-      } else if (value && typeof value === "object") {
-        value = value[part];
+      if (currentValue && typeof currentValue === "object") {
+        currentValue = currentValue[part];
       } else {
         return undefined;
       }
     }
 
-    return value;
+    return currentValue;
   }
 }
 

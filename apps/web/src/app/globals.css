@@ -4,13 +4,13 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Smooth scrolling */
 html {
   scroll-behavior: smooth;
 }
 
 @layer base {
   :root {
+    /* shadcn/ui tokens */
     --background: 0 0% 98%;
     --foreground: 0 0% 10%;
     --card: 0 0% 100%;
@@ -31,6 +31,35 @@ html {
     --input: 0 0% 90%;
     --ring: 0 0% 10%;
     --radius: 0.5rem;
+
+    /* Canvas & surface system */
+    --canvas-bg: #fafafa;
+    --surface-1: #f5f5f5;
+    --surface-2: #ffffff;
+    --surface-3: #f8f8f8;
+    --surface-4: #f3f3f3;
+
+    /* Node borders */
+    --node-border: #e5e5e5;
+    --node-border-strong: #d4d4d4;
+
+    /* Text */
+    --text-primary: #171717;
+    --text-secondary: #525252;
+    --text-muted: #a3a3a3;
+    --text-inverse: #ffffff;
+
+    /* Workflow elements */
+    --edge-color: #d4d4d4;
+    --handle-color: #d4d4d4;
+
+    /* Sidebar */
+    --sidebar-bg: #f5f5f5;
+    --sidebar-border: #e5e5e5;
+
+    /* Brand — Solana */
+    --brand: #9945ff;
+    --brand-alpha: rgba(153, 69, 255, 0.08);
   }
 }
 
@@ -47,4 +76,98 @@ html {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+/* ─── Node handles ──────────────────────────────────────────── */
+/* Right handles: top/transform set via style prop per-row */
+.sol-handle-right {
+  width: 7px !important;
+  height: 20px !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  border-radius: 0 2px 2px 0 !important;
+  border: none !important;
+  background: var(--handle-color) !important;
+  right: -8px !important;
+  cursor: crosshair !important;
+  transition: width 150ms ease, right 150ms ease, border-radius 150ms ease !important;
+}
+.sol-handle-right:hover {
+  width: 10px !important;
+  right: -11px !important;
+  border-radius: 0 9999px 9999px 0 !important;
+}
+
+/* Left handles: always vertically centered */
+.sol-handle-left {
+  width: 7px !important;
+  height: 20px !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  border-radius: 2px 0 0 2px !important;
+  border: none !important;
+  background: var(--handle-color) !important;
+  left: -8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  cursor: crosshair !important;
+  transition: width 150ms ease, left 150ms ease, border-radius 150ms ease !important;
+}
+.sol-handle-left:hover {
+  width: 10px !important;
+  left: -11px !important;
+  border-radius: 9999px 0 0 9999px !important;
+}
+
+/* Error handle color modifier */
+.sol-handle-error {
+  background: #ef4444 !important;
+}
+
+/* ─── React Flow canvas overrides ──────────────────────────── */
+.react-flow__selection {
+  background: var(--brand-alpha) !important;
+  border: 1px solid var(--brand) !important;
+  border-radius: 6px !important;
+}
+
+.react-flow__controls {
+  background: var(--surface-2) !important;
+  border: 1px solid var(--node-border) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+  overflow: hidden !important;
+}
+
+.react-flow__controls-button {
+  background: var(--surface-2) !important;
+  border: none !important;
+  border-bottom: 1px solid var(--node-border) !important;
+  color: var(--text-secondary) !important;
+  width: 28px !important;
+  height: 28px !important;
+}
+
+.react-flow__controls-button:last-child {
+  border-bottom: none !important;
+}
+
+.react-flow__controls-button:hover {
+  background: var(--surface-3) !important;
+}
+
+.react-flow__minimap {
+  background: var(--surface-2) !important;
+  border: 1px solid var(--node-border) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+}
+
+.react-flow__edge-path {
+  stroke: var(--edge-color);
+  stroke-width: 1.5;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: var(--brand) !important;
 }

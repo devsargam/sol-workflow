@@ -258,11 +258,16 @@ export function generateExecutionId(
   timestamp: number | string,
   identifier: string
 ): string {
-  // Using dynamic import pattern for crypto to work in both Node and browser
-  const crypto = require("crypto");
-  const hash = crypto.createHash("sha256");
-  hash.update(`${workflowId}:${timestamp}:${identifier}`);
-  return hash.digest("hex");
+  const input = `${workflowId}:${timestamp}:${identifier}`;
+  let hash = 0;
+  for (let i = 0; i < input.length; i++) {
+    const char = input.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash;
+  }
+  const base = Math.abs(hash).toString(16).padStart(8, "0");
+  const ts = Date.now().toString(16);
+  return `${base}${ts}${Math.random().toString(16).slice(2, 10)}`.padEnd(64, "0");
 }
 
 /**

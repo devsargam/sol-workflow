@@ -54,13 +54,21 @@ export async function processWorkflowEvent(data: WorkflowEventData) {
 
   // Step 3: Execute the workflow graph using the engine
   const engine = new WorkflowEngine();
+  const stepOutputs: Record<string, any> = {};
+  const workflowVariables: Record<string, any> = {};
 
   const context = {
     workflowId,
     executionId,
     triggerNodeId,
     triggerData,
-    variables: new Map<string, any>(),
+    variables: new Map<string, any>([
+      ["trigger", triggerData],
+      ["steps", stepOutputs],
+      ["workflow", workflowVariables],
+    ]),
+    stepOutputs,
+    workflowVariables,
     executionPath: [],
     hasErrors: false,
   };
