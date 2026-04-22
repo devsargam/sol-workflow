@@ -2,6 +2,7 @@
 
 import {
   addEdge,
+  applyEdgeChanges,
   Background,
   BackgroundVariant,
   Controls,
@@ -12,17 +13,18 @@ import {
   useNodesState,
   type Connection,
   type Edge,
+  type EdgeChange,
   type Node,
   type OnConnect,
+  type OnEdgesChange,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
-import { NodeConfigPanel } from "./NodeConfigPanel";
+import { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from "react";
 import { ActionNode } from "./nodes/ActionNode";
 import { FilterNode } from "./nodes/FilterNode";
 import { NotifyNode } from "./nodes/NotifyNode";
 import { TriggerNode } from "./nodes/TriggerNode";
-import { Sidebar } from "./Sidebar";
+import { RightPanel } from "./RightPanel";
 
 const nodeTypes = {
   trigger: TriggerNode,
@@ -35,67 +37,87 @@ const getInitialNodes = (): Node[] => [
   {
     id: "trigger-1",
     type: "trigger",
-    position: { x: 100, y: 200 },
-    data: {
-      label: "Trigger",
-      triggerType: "balance_change",
-      config: {},
-    },
+    position: { x: 80, y: 260 },
+    data: { label: "Trigger", triggerType: "balance_change", config: {} },
   },
   {
     id: "filter-1",
     type: "filter",
-    position: { x: 350, y: 200 },
-    data: {
-      label: "Filter",
-      conditions: [],
-      logic: "and",
-    },
+    position: { x: 460, y: 260 },
+    data: { label: "Condition", conditions: [], logic: "and" },
   },
   {
     id: "action-1",
     type: "action",
-    position: { x: 600, y: 200 },
-    data: {
-      label: "Action",
-      actionType: "send_sol",
-      config: {},
-    },
+    position: { x: 840, y: 260 },
+    data: { label: "Action", actionType: "send_sol", config: {} },
   },
   {
     id: "notify-1",
     type: "notify",
-    position: { x: 850, y: 200 },
-    data: {
-      label: "Notify",
-      notifyType: "discord",
-      webhookUrl: "",
-      template: "default",
-    },
+    position: { x: 1220, y: 260 },
+    data: { label: "Notify", notifyType: "discord", webhookUrl: "", template: "default" },
   },
 ];
+
+const DEFAULT_EDGE_STYLE = {
+  stroke: "var(--edge-color)",
+  strokeWidth: 1.5,
+};
+
+function getEdgeSignature(edge: Pick<Edge, "source" | "sourceHandle" | "target" | "targetHandle">) {
+  return [
+    edge.source,
+    edge.sourceHandle ?? "",
+    edge.target,
+    edge.targetHandle ?? "",
+  ].join("__");
+}
+
+function dedupeEdges(edges: Edge[]): Edge[] {
+  const seenIds = new Set<string>();
+  const seenConnections = new Set<string>();
+
+  return edges.filter((edge) => {
+    const connectionKey = getEdgeSignature(edge);
+
+    if (seenIds.has(edge.id) || seenConnections.has(connectionKey)) {
+      return false;
+    }
+
+    seenIds.add(edge.id);
+    seenConnections.add(connectionKey);
+    return true;
+  });
+}
 
 const getInitialEdges = (): Edge[] => [
   {
     id: "e1-2",
     source: "trigger-1",
+    sourceHandle: "output",
     target: "filter-1",
-    animated: true,
-    style: { stroke: "#000000", strokeWidth: 2 },
+    targetHandle: "input",
+    type: "smoothstep",
+    style: DEFAULT_EDGE_STYLE,
   },
   {
     id: "e2-3",
     source: "filter-1",
+    sourceHandle: "if",
     target: "action-1",
-    animated: true,
-    style: { stroke: "#000000", strokeWidth: 2 },
+    targetHandle: "input",
+    type: "smoothstep",
+    style: DEFAULT_EDGE_STYLE,
   },
   {
     id: "e3-4",
     source: "action-1",
+    sourceHandle: "success",
     target: "notify-1",
-    animated: true,
-    style: { stroke: "#000000", strokeWidth: 2 },
+    targetHandle: "input",
+    type: "smoothstep",
+    style: DEFAULT_EDGE_STYLE,
   },
 ];
 
@@ -104,11 +126,43 @@ interface WorkflowBuilderRef {
   loadWorkflow: (workflow: any) => void;
 }
 
-const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) => {
+interface WorkflowBuilderProps {
+  workflowName?: string;
+  onNameChange?: (name: string) => void;
+  workflowDescription?: string;
+  onDescriptionChange?: (desc: string) => void;
+  onSave?: () => void;
+  isSaving?: boolean;
+  editId?: string | null;
+  onBack?: () => void;
+  errors?: string[];
+  onDismissErrors?: () => void;
+}
+
+const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, WorkflowBuilderProps>(
+  (
+    {
+      workflowName,
+      onNameChange,
+      workflowDescription,
+      onDescriptionChange,
+      onSave,
+      isSaving,
+      editId,
+      onBack,
+      errors,
+      onDismissErrors,
+    },
+    ref
+  ) => {
   const [nodes, setNodes, onNodesChange] = useNodesState(getInitialNodes());
-  const [edges, setEdges, onEdgesChange] = useEdgesState(getInitialEdges());
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [edges, setEdges] = useEdgesState(getInitialEdges());
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const renderedEdges = useMemo(() => dedupeEdges(edges), [edges]);
+
+  // Always derive from latest nodes so the panel re-renders when data changes
+  const selectedNode = nodes.find((n) => n.id === selectedNodeId) ?? null;
 
   useImperativeHandle(ref, () => ({
     getWorkflowData: () => {
@@ -207,7 +261,9 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
         edges: edges.map((e) => ({
           id: e.id,
           source: e.source,
+          sourceHandle: e.sourceHandle ?? undefined,
           target: e.target,
+          targetHandle: e.targetHandle ?? undefined,
           animated: e.animated,
           style: e.style,
           type: e.type,
@@ -283,10 +339,10 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
         });
 
         setNodes(normalizedNodes);
-        setEdges(workflow.edges);
+        setEdges(dedupeEdges(workflow.edges));
       } else if (workflow._visual) {
         setNodes(workflow._visual.nodes || getInitialNodes());
-        setEdges(workflow._visual.edges || getInitialEdges());
+        setEdges(dedupeEdges(workflow._visual.edges || getInitialEdges()));
       } else {
         const newNodes: Node[] = [];
         const newEdges: Edge[] = [];
@@ -351,61 +407,35 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
                 id: `e${i}-${i + 1}`,
                 source: sourceNode.id,
                 target: targetNode.id,
-                animated: true,
-                style: { stroke: "#000000", strokeWidth: 2 },
+                type: "smoothstep",
+                style: DEFAULT_EDGE_STYLE,
               });
             }
           }
         }
 
         setNodes(newNodes);
-        setEdges(newEdges);
+        setEdges(dedupeEdges(newEdges));
       }
     },
   }));
 
-  const onConnect: OnConnect = useCallback(
-    (connection: Connection) => {
-      setEdges((eds) =>
-        addEdge(
-          {
-            ...connection,
-            animated: true,
-            style: { stroke: "#3b82f6", strokeWidth: 2 },
-          },
-          eds
-        )
-      );
+  const onEdgesChange: OnEdgesChange = useCallback(
+    (changes: EdgeChange<Edge>[]) => {
+      setEdges((currentEdges) => dedupeEdges(applyEdgeChanges(changes, currentEdges)));
     },
     [setEdges]
   );
 
-  const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
-    setSelectedNode(node);
-  }, []);
-
-  const onPaneClick = useCallback(() => {
-    setSelectedNode(null);
-  }, []);
-
-  const updateNodeData = useCallback(
-    (nodeId: string, data: any) => {
-      setNodes((nds) =>
-        nds.map((node) => {
-          if (node.id === nodeId) {
-            return {
-              ...node,
-              data: {
-                ...node.data,
-                ...data,
-              },
-            };
-          }
-          return node;
-        })
+  const onConnect: OnConnect = useCallback(
+    (connection: Connection) => {
+      setEdges((currentEdges) =>
+        dedupeEdges(
+          addEdge({ ...connection, type: "smoothstep", style: DEFAULT_EDGE_STYLE }, currentEdges)
+        )
       );
     },
-    [setNodes]
+    [setEdges]
   );
 
   const onDragOver = useCallback((event: React.DragEvent) => {
@@ -416,70 +446,71 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, {}>((_, ref) 
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
-
       const type = event.dataTransfer.getData("application/reactflow");
-
-      if (typeof type === "undefined" || !type) {
-        return;
-      }
+      if (!type) return;
 
       const position = reactFlowInstance?.screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
       }) ?? { x: 0, y: 0 };
 
-      const newNode: Node = {
-        id: `${type}-${Date.now()}`,
-        type,
-        position,
-        data: { label: `${type}` },
-      };
-
-      setNodes((nds) => nds.concat(newNode));
+      setNodes((nds) =>
+        nds.concat({
+          id: `${type}-${Date.now()}`,
+          type,
+          position,
+          data: { label: type },
+        })
+      );
     },
     [reactFlowInstance, setNodes]
   );
 
   return (
-    <div className="h-full w-full flex">
-      <Sidebar />
-
+    <div className="h-full w-full flex" style={{ background: "var(--canvas-bg)" }}>
       <div className="flex-1 relative">
         <ReactFlow
           nodes={nodes}
-          edges={edges}
+          edges={renderedEdges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          onNodeClick={onNodeClick}
-          onPaneClick={onPaneClick}
           onInit={setReactFlowInstance}
           onDrop={onDrop}
           onDragOver={onDragOver}
+          onNodeClick={(_, node) => setSelectedNodeId(node.id)}
+          onPaneClick={() => setSelectedNodeId(null)}
           nodeTypes={nodeTypes}
           fitView
+          fitViewOptions={{ padding: 0.25 }}
           attributionPosition="bottom-left"
         >
-          <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-          <Controls />
-          <MiniMap />
+          <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="var(--node-border)" />
+          <Controls showInteractive={false} />
+          <MiniMap nodeColor="var(--surface-4)" maskColor="rgba(250,250,250,0.6)" />
         </ReactFlow>
       </div>
 
-      {selectedNode && (
-        <NodeConfigPanel
-          node={selectedNode}
-          onUpdate={updateNodeData}
-          onClose={() => setSelectedNode(null)}
-        />
-      )}
+      <RightPanel
+        selectedNode={selectedNode}
+        workflowName={workflowName}
+        onNameChange={onNameChange}
+        workflowDescription={workflowDescription}
+        onDescriptionChange={onDescriptionChange}
+        onSave={onSave}
+        isSaving={isSaving}
+        editId={editId}
+        onBack={onBack}
+        errors={errors}
+        onDismissErrors={onDismissErrors}
+      />
     </div>
   );
 });
 
 WorkflowBuilderContentInner.displayName = "WorkflowBuilderContentInner";
 
-export const WorkflowBuilderContent = forwardRef<WorkflowBuilderRef, {}>((props, ref) => {
+export const WorkflowBuilderContent = forwardRef<WorkflowBuilderRef, WorkflowBuilderProps>((props, ref) => {
   return (
     <ReactFlowProvider>
       <WorkflowBuilderContentInner ref={ref} {...props} />

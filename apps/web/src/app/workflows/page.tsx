@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
+import { useRouter } from "next/navigation";
 import { usePrivy } from "@privy-io/react-auth";
 import { Header } from "@/components/layout/header";
 import { DeleteModal } from "@/components/ui/delete-modal";
@@ -82,6 +83,7 @@ function getNotifyInfo(graph: any) {
 }
 
 export default function WorkflowsPage() {
+  const router = useRouter();
   const { authenticated, ready } = usePrivy();
   const { data, isLoading, error } = useWorkflows();
   const deleteWorkflowMutation = useDeleteWorkflow();
@@ -109,178 +111,293 @@ export default function WorkflowsPage() {
     setWorkflowToDelete(null);
   };
 
+  const workflows = data?.workflows ?? [];
+  const activeWorkflowCount = workflows.filter((workflow: any) => workflow.enabled).length;
+
   return (
     <>
       <Header />
-      <div className="max-w-5xl mx-auto px-6 py-12">
-        <div className="flex justify-between items-start mb-12">
-          <div className="max-w-2xl">
-            <h1 className="text-4xl font-bold tracking-tight mb-2">Workflows</h1>
-            <p className="text-neutral-600 text-lg">
-              Monitor Solana wallets and automate on-chain actions
-            </p>
-          </div>
-          <button
-            onClick={() => (window.location.href = "/workflows/builder")}
-            className="px-4 py-2.5 bg-black text-white rounded-lg hover:bg-neutral-800 transition-colors text-sm font-medium flex items-center gap-2"
+      <div
+        className="relative min-h-[calc(100vh-72px)] overflow-hidden"
+        style={{
+          backgroundColor: "var(--canvas-bg)",
+          backgroundImage: `
+            radial-gradient(circle at top left, var(--brand-alpha), transparent 28%),
+            radial-gradient(circle at top right, rgba(23, 23, 23, 0.04), transparent 22%)
+          `,
+        }}
+      >
+        <div
+          className="pointer-events-none absolute inset-0 opacity-50"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle, var(--node-border) 1px, transparent 1px)",
+            backgroundSize: "22px 22px",
+            maskImage: "linear-gradient(to bottom, rgba(0, 0, 0, 0.28), transparent 80%)",
+          }}
+        />
+
+        <div className="relative mx-auto max-w-6xl px-6 py-8 md:py-10">
+          <section
+            className="mb-8 rounded-[28px] border p-8 md:p-10"
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 248, 248, 0.98) 100%)",
+              borderColor: "var(--node-border)",
+              boxShadow: "0 24px 80px rgba(23, 23, 23, 0.06)",
+            }}
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            Create Workflow
-          </button>
-        </div>
-
-        {isLoading && (
-          <div className="rounded-xl border border-neutral-200 bg-white p-12 text-center">
-            <div className="inline-flex items-center gap-2 text-neutral-600">
-              <div className="w-4 h-4 border-2 border-neutral-300 border-t-black rounded-full animate-spin" />
-              <span>Loading workflows...</span>
-            </div>
-          </div>
-        )}
-
-        {error && (
-          <>
-            {ready && !authenticated ? (
-              <AuthError
-                message="Please log in to view your workflows."
-                onRetry={() => window.location.reload()}
-              />
-            ) : (
-              <div className="rounded-xl border border-red-200 bg-red-50 p-6">
-                <p className="text-red-600">Error loading workflows: {(error as Error).message}</p>
-              </div>
-            )}
-          </>
-        )}
-
-        {data?.workflows && data.workflows.length === 0 && (
-          <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-12 text-center">
-            <div className="max-w-sm mx-auto">
-              <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-8 h-8 text-neutral-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+            <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-2xl">
+                <div
+                  className="mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em]"
+                  style={{
+                    background: "var(--surface-1)",
+                    borderColor: "var(--node-border)",
+                    color: "var(--text-secondary)",
+                  }}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                </svg>
+                  Workflow Canvas
+                </div>
+                <h1
+                  className="text-4xl font-semibold tracking-[-0.04em] md:text-5xl"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  Workflows
+                </h1>
+                <p
+                  className="mt-3 max-w-xl text-base md:text-lg"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  Monitor Solana wallets, route on-chain activity, and manage every automation
+                  from the same visual system as the builder.
+                </p>
               </div>
-              <h3 className="text-lg font-semibold mb-2">No workflows yet</h3>
-              <p className="text-neutral-600 mb-4">
-                Create your first workflow with our visual builder
-              </p>
-              <button
-                onClick={() => (window.location.href = "/workflows/builder")}
-                className="px-4 py-2 bg-black text-white rounded-lg hover:bg-neutral-800 transition-colors text-sm font-medium flex items-center gap-2 mx-auto"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Open Visual Builder
-              </button>
+
+              <div className="flex flex-col gap-4 lg:items-end">
+                <div className="flex flex-wrap gap-3">
+                  <MetricCard label="Total" value={String(workflows.length)} />
+                  <MetricCard label="Active" value={String(activeWorkflowCount)} />
+                </div>
+                <button
+                  onClick={() => router.push("/workflows/builder")}
+                  className="inline-flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-white transition-transform hover:-translate-y-0.5"
+                  style={{
+                    background: "var(--brand)",
+                    boxShadow: "0 12px 30px rgba(153, 69, 255, 0.25)",
+                  }}
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  Create Workflow
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          </section>
 
-        {data?.workflows && data.workflows.length > 0 && (
-          <div className="space-y-4">
-            {data.workflows.map((workflow: any) => (
-              <div
-                key={workflow.id}
-                className="rounded-xl border border-neutral-200 bg-white p-6 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold mb-1">{workflow.name}</h3>
-                    {workflow.description && (
-                      <p className="text-sm text-neutral-600">{workflow.description}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() =>
-                        (window.location.href = `/workflows/builder?edit=${workflow.id}`)
-                      }
-                      className="p-2 hover:bg-neutral-100 rounded-lg transition-colors group"
-                      title="Edit workflow"
-                    >
-                      <svg
-                        className="w-4 h-4 text-neutral-600 group-hover:text-neutral-900"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick({ id: workflow.id, name: workflow.name })}
-                      className="p-2 hover:bg-red-100 rounded-lg transition-colors group"
-                      title="Delete workflow"
-                    >
-                      <svg
-                        className="w-4 h-4 text-neutral-600 group-hover:text-red-700"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => toggleWorkflow.mutate(workflow.id)}
-                      disabled={toggleWorkflow.isPending}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                        workflow.enabled
-                          ? "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
-                          : "bg-neutral-100 text-neutral-600 border border-neutral-200 hover:bg-neutral-200"
-                      }`}
-                    >
-                      {workflow.enabled ? "● Active" : "○ Disabled"}
-                    </button>
-                  </div>
-                </div>
-
-                <WorkflowDetails graph={workflow.graph} />
-
-                <div className="pt-4 border-t border-neutral-100 text-xs text-neutral-500">
-                  Created {new Date(workflow.createdAt).toLocaleDateString()}
-                </div>
+          {isLoading && (
+            <StatePanel>
+              <div className="flex flex-col items-center gap-3">
+                <div
+                  className="h-8 w-8 animate-spin rounded-full border-2"
+                  style={{
+                    borderColor: "var(--node-border)",
+                    borderTopColor: "var(--brand)",
+                  }}
+                />
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                  Loading workflows...
+                </p>
               </div>
-            ))}
-          </div>
-        )}
+            </StatePanel>
+          )}
+
+          {error && (
+            <>
+              {ready && !authenticated ? (
+                <AuthError
+                  message="Please log in to view your workflows."
+                  onRetry={() => window.location.reload()}
+                />
+              ) : (
+                <div
+                  className="rounded-[24px] border p-6"
+                  style={{
+                    background: "rgba(254, 242, 242, 0.95)",
+                    borderColor: "rgba(239, 68, 68, 0.18)",
+                    color: "#b91c1c",
+                  }}
+                >
+                  <p>Error loading workflows: {(error as Error).message}</p>
+                </div>
+              )}
+            </>
+          )}
+
+          {!isLoading && !error && workflows.length === 0 && (
+            <StatePanel>
+              <div className="mx-auto max-w-sm text-center">
+                <div
+                  className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border"
+                  style={{
+                    background: "var(--surface-1)",
+                    borderColor: "var(--node-border)",
+                    color: "var(--brand)",
+                  }}
+                >
+                  <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold" style={{ color: "var(--text-primary)" }}>
+                  No workflows yet
+                </h3>
+                <p className="mt-2 text-sm" style={{ color: "var(--text-secondary)" }}>
+                  Start with the visual builder and your automations will show up here in the
+                  same canvas-inspired layout.
+                </p>
+                <button
+                  onClick={() => router.push("/workflows/builder")}
+                  className="mx-auto mt-6 inline-flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-white transition-transform hover:-translate-y-0.5"
+                  style={{
+                    background: "var(--brand)",
+                    boxShadow: "0 12px 30px rgba(153, 69, 255, 0.22)",
+                  }}
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  Open Visual Builder
+                </button>
+              </div>
+            </StatePanel>
+          )}
+
+          {!isLoading && !error && workflows.length > 0 && (
+            <div className="space-y-4">
+              {workflows.map((workflow: any) => (
+                <article
+                  key={workflow.id}
+                  className="rounded-[24px] border p-6 md:p-7"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.94)",
+                    borderColor: "var(--node-border)",
+                    boxShadow: "0 16px 48px rgba(23, 23, 23, 0.05)",
+                  }}
+                >
+                  <div className="flex flex-col gap-6">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-3 flex flex-wrap items-center gap-3">
+                          <h3
+                            className="text-xl font-semibold tracking-[-0.02em]"
+                            style={{ color: "var(--text-primary)" }}
+                          >
+                            {workflow.name}
+                          </h3>
+                          <span
+                            className="inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium"
+                            style={{
+                              background: workflow.enabled
+                                ? "var(--brand-alpha)"
+                                : "var(--surface-1)",
+                              borderColor: workflow.enabled
+                                ? "rgba(153, 69, 255, 0.16)"
+                                : "var(--node-border)",
+                              color: workflow.enabled ? "var(--brand)" : "var(--text-secondary)",
+                            }}
+                          >
+                            {workflow.enabled ? "Live" : "Paused"}
+                          </span>
+                        </div>
+                        {workflow.description && (
+                          <p
+                            className="max-w-2xl text-sm md:text-base"
+                            style={{ color: "var(--text-secondary)" }}
+                          >
+                            {workflow.description}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <IconButton
+                          title="Edit workflow"
+                          onClick={() => router.push(`/workflows/builder?edit=${workflow.id}`)}
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
+                          </svg>
+                        </IconButton>
+                        <IconButton
+                          title="Delete workflow"
+                          onClick={() => handleDeleteClick({ id: workflow.id, name: workflow.name })}
+                          danger
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </IconButton>
+                        <button
+                          onClick={() => toggleWorkflow.mutate(workflow.id)}
+                          disabled={toggleWorkflow.isPending}
+                          className="rounded-xl border px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                          style={{
+                            background: workflow.enabled ? "var(--brand-alpha)" : "var(--surface-1)",
+                            borderColor: workflow.enabled
+                              ? "rgba(153, 69, 255, 0.16)"
+                              : "var(--node-border)",
+                            color: workflow.enabled ? "var(--brand)" : "var(--text-secondary)",
+                          }}
+                        >
+                          {workflow.enabled ? "● Active" : "○ Disabled"}
+                        </button>
+                      </div>
+                    </div>
+
+                    <WorkflowDetails graph={workflow.graph} />
+
+                    <div
+                      className="flex flex-col gap-2 border-t pt-4 text-xs md:flex-row md:items-center md:justify-between"
+                      style={{ borderColor: "var(--node-border)", color: "var(--text-muted)" }}
+                    >
+                      <span>Created {formatDate(workflow.createdAt)}</span>
+                      <span>Visual automation graph ready for editing</span>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
       <DeleteModal
         isOpen={!!workflowToDelete}
         onClose={handleDeleteCancel}
@@ -297,39 +414,80 @@ export default function WorkflowsPage() {
   );
 }
 
-// Component to display workflow trigger and action details
 function WorkflowDetails({ graph }: { graph: any }) {
   const triggerInfo = getTriggerInfo(graph);
   const actionInfo = getActionInfo(graph);
   const notifyInfo = getNotifyInfo(graph);
 
   return (
-    <div className="grid grid-cols-2 gap-6 mb-6">
-      <div>
-        <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">Trigger</p>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+    <div className="grid gap-4 md:grid-cols-2">
+      <div
+        className="rounded-2xl border p-4"
+        style={{
+          background: "var(--surface-2)",
+          borderColor: "var(--node-border)",
+        }}
+      >
+        <p
+          className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em]"
+          style={{ color: "var(--text-muted)" }}
+        >
+          Trigger
+        </p>
+        <div className="flex items-center gap-3">
+          <div
+            className="flex h-10 w-10 items-center justify-center rounded-xl border"
+            style={{
+              background: "var(--surface-1)",
+              borderColor: "var(--node-border)",
+            }}
+          >
             <TriggerIcon type={triggerInfo.icon} />
           </div>
           <div>
-            <p className="text-sm font-medium">{triggerInfo.type}</p>
+            <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+              {triggerInfo.type}
+            </p>
             {triggerInfo.address && (
-              <p className="text-xs font-mono text-neutral-500 truncate max-w-[200px]">
+              <p
+                className="max-w-[220px] truncate font-mono text-xs"
+                style={{ color: "var(--text-muted)" }}
+              >
                 {triggerInfo.address}
               </p>
             )}
           </div>
         </div>
       </div>
-      <div>
-        <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">Action</p>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+
+      <div
+        className="rounded-2xl border p-4"
+        style={{
+          background: "var(--surface-2)",
+          borderColor: "var(--node-border)",
+        }}
+      >
+        <p
+          className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em]"
+          style={{ color: "var(--text-muted)" }}
+        >
+          Action
+        </p>
+        <div className="flex items-center gap-3">
+          <div
+            className="flex h-10 w-10 items-center justify-center rounded-xl border"
+            style={{
+              background: "var(--brand-alpha)",
+              borderColor: "rgba(153, 69, 255, 0.14)",
+            }}
+          >
             <ActionIcon type={actionInfo.icon} />
           </div>
           <div>
-            <p className="text-sm font-medium">{actionInfo.type}</p>
-            <p className="text-xs text-neutral-500">
+            <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+              {actionInfo.type}
+            </p>
+            <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
               {actionInfo.description ||
                 (notifyInfo ? `+ ${notifyInfo.type} notification` : "Automated")}
             </p>
@@ -345,7 +503,7 @@ function TriggerIcon({ type }: { type: string }) {
     case "balance_change":
       return (
         <svg
-          className="w-4 h-4 text-blue-600"
+          className="h-4 w-4 text-sky-600"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -362,7 +520,7 @@ function TriggerIcon({ type }: { type: string }) {
     case "nft_receipt":
       return (
         <svg
-          className="w-4 h-4 text-blue-600"
+          className="h-4 w-4 text-sky-600"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -378,7 +536,7 @@ function TriggerIcon({ type }: { type: string }) {
     case "program_log":
       return (
         <svg
-          className="w-4 h-4 text-blue-600"
+          className="h-4 w-4 text-sky-600"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -394,7 +552,7 @@ function TriggerIcon({ type }: { type: string }) {
     case "cron":
       return (
         <svg
-          className="w-4 h-4 text-blue-600"
+          className="h-4 w-4 text-sky-600"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -410,7 +568,7 @@ function TriggerIcon({ type }: { type: string }) {
     default:
       return (
         <svg
-          className="w-4 h-4 text-blue-600"
+          className="h-4 w-4 text-sky-600"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -437,7 +595,8 @@ function ActionIcon({ type }: { type: string }) {
     case "send_sol":
       return (
         <svg
-          className="w-4 h-4 text-purple-600"
+          className="h-4 w-4"
+          style={{ color: "var(--brand)" }}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -453,7 +612,8 @@ function ActionIcon({ type }: { type: string }) {
     case "send_spl_token":
       return (
         <svg
-          className="w-4 h-4 text-purple-600"
+          className="h-4 w-4"
+          style={{ color: "var(--brand)" }}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -469,7 +629,8 @@ function ActionIcon({ type }: { type: string }) {
     case "call_program":
       return (
         <svg
-          className="w-4 h-4 text-purple-600"
+          className="h-4 w-4"
+          style={{ color: "var(--brand)" }}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -485,7 +646,8 @@ function ActionIcon({ type }: { type: string }) {
     default:
       return (
         <svg
-          className="w-4 h-4 text-purple-600"
+          className="h-4 w-4"
+          style={{ color: "var(--brand)" }}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -499,4 +661,79 @@ function ActionIcon({ type }: { type: string }) {
         </svg>
       );
   }
+}
+
+function StatePanel({ children }: { children: ReactNode }) {
+  return (
+    <div
+      className="rounded-[24px] border p-12 text-center"
+      style={{
+        background: "rgba(255, 255, 255, 0.92)",
+        borderColor: "var(--node-border)",
+        boxShadow: "0 20px 60px rgba(23, 23, 23, 0.05)",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function MetricCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      className="min-w-[108px] rounded-2xl border px-4 py-3"
+      style={{
+        background: "rgba(255, 255, 255, 0.82)",
+        borderColor: "var(--node-border)",
+      }}
+    >
+      <p
+        className="text-[11px] font-semibold uppercase tracking-[0.2em]"
+        style={{ color: "var(--text-muted)" }}
+      >
+        {label}
+      </p>
+      <p
+        className="mt-1 text-2xl font-semibold tracking-[-0.04em]"
+        style={{ color: "var(--text-primary)" }}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function IconButton({
+  children,
+  danger = false,
+  onClick,
+  title,
+}: {
+  children: ReactNode;
+  danger?: boolean;
+  onClick: () => void;
+  title: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      className="rounded-xl border p-2.5 transition-colors"
+      style={{
+        background: danger ? "rgba(254, 242, 242, 0.88)" : "var(--surface-1)",
+        borderColor: danger ? "rgba(239, 68, 68, 0.14)" : "var(--node-border)",
+        color: danger ? "#b91c1c" : "var(--text-secondary)",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function formatDate(value: string) {
+  return new Date(value).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
