@@ -1,42 +1,16 @@
 import { randomUUID } from "node:crypto";
-import Redis from "ioredis";
 import { sign, verify } from "hono/jwt";
-import { getRedisOptions } from "utils";
+import { log } from "utils";
 
-const AUTH_CHALLENGE_PREFIX = "auth:challenge:";
 const AUTH_CHALLENGE_TTL_SECONDS = 60 * 5;
 const AUTH_TOKEN_TTL_SECONDS = 60 * 60 * 24 * 7;
 const FALLBACK_AUTH_SECRET = "local-dev-auth-secret-change-me";
+const AUTH_CHALLENGE_TYPE = "wallet-auth-challenge";
 
 type StoredChallenge = {
   walletAddress: string;
   message: string;
 };
-
-const inMemoryChallenges = new Map<
-  string,
-  {
-    challenge: StoredChallenge;
-    expiresAt: number;
-  }
->();
-
-let redis: Redis | null = null;
-
-function getChallengeRedis() {
-  const redisUrl = process.env.REDIS_URL?.trim();
-
-  if (!redisUrl) {
-    return null;
-  }
-
-  if (!redis) {
-    const { url, options } = getRedisOptions();
-    redis = new Redis(url, options);
-  }
-
-  return redis;
-}
 
 export function getAuthSecret() {
   return process.env.AUTH_SECRET?.trim() || FALLBACK_AUTH_SECRET;
@@ -54,26 +28,19 @@ export function buildWalletAuthMessage(walletAddress: string, nonce: string) {
 }
 
 export async function createWalletChallenge(walletAddress: string) {
-  const nonce = randomUUID();
+  const now = Math.floor(Date.now() / 1000);
+  const nonce = await sign(
+    {
+      type: AUTH_CHALLENGE_TYPE,
+      sub: walletAddress,
+      walletAddress,
+      nonceId: randomUUID(),
+      iat: now,
+      exp: now + AUTH_CHALLENGE_TTL_SECONDS,
+    },
+    getAuthSecret()
+  );
   const message = buildWalletAuthMessage(walletAddress, nonce);
-  const challenge = {
-    walletAddress,
-    message,
-  } satisfies StoredChallenge;
-  const challengeRedis = getChallengeRedis();
-
-  if (challengeRedis) {
-    await challengeRedis.setex(
-      `${AUTH_CHALLENGE_PREFIX}${nonce}`,
-      AUTH_CHALLENGE_TTL_SECONDS,
-      JSON.stringify(challenge)
-    );
-  } else {
-    inMemoryChallenges.set(nonce, {
-      challenge,
-      expiresAt: Date.now() + AUTH_CHALLENGE_TTL_SECONDS * 1000,
-    });
-  }
 
   return {
     nonce,
@@ -83,33 +50,35 @@ export async function createWalletChallenge(walletAddress: string) {
 }
 
 export async function consumeWalletChallenge(nonce: string) {
-  const challengeRedis = getChallengeRedis();
-  const key = `${AUTH_CHALLENGE_PREFIX}${nonce}`;
+  try {
+    const payload = await verify(nonce, getAuthSecret());
 
-  if (!challengeRedis) {
-    const storedChallenge = inMemoryChallenges.get(nonce);
-
-    if (!storedChallenge) {
+    if ((payload as Record<string, unknown>)?.type !== AUTH_CHALLENGE_TYPE) {
       return null;
     }
 
-    inMemoryChallenges.delete(nonce);
+    const walletAddress =
+      typeof (payload as Record<string, unknown>)?.walletAddress === "string"
+        ? ((payload as Record<string, unknown>).walletAddress as string)
+        : typeof (payload as Record<string, unknown>)?.sub === "string"
+          ? ((payload as Record<string, unknown>).sub as string)
+          : null;
 
-    if (storedChallenge.expiresAt <= Date.now()) {
+    if (!walletAddress) {
       return null;
     }
 
-    return storedChallenge.challenge;
-  }
-
-  const rawChallenge = await challengeRedis.get(key);
-
-  if (!rawChallenge) {
+    return {
+      walletAddress,
+      message: buildWalletAuthMessage(walletAddress, nonce),
+    } satisfies StoredChallenge;
+  } catch (error) {
+    log.warn("Wallet challenge verification failed", {
+      service: "api",
+      error: error instanceof Error ? error.message : String(error),
+    });
     return null;
   }
-
-  await challengeRedis.del(key);
-  return JSON.parse(rawChallenge) as StoredChallenge;
 }
 
 export async function createAuthToken(walletAddress: string) {

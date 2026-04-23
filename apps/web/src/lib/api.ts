@@ -66,11 +66,15 @@ export async function requestWalletChallenge(
     body: JSON.stringify({ walletAddress }),
   });
 
+  const json = await res.json().catch(() => null);
+
   if (!res.ok) {
-    throw new Error("Failed to create wallet challenge");
+    const errorMessage =
+      typeof (json as any)?.error === "string" ? (json as any).error : "Failed to create wallet challenge";
+    throw new Error(errorMessage);
   }
 
-  return res.json();
+  return json as { nonce: string; message: string; expiresIn: number };
 }
 
 export async function verifyWalletChallenge(data: {

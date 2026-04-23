@@ -9,6 +9,7 @@ import {
   createWalletChallenge,
 } from "../lib/auth";
 import { db, users } from "@repo/db";
+import { log } from "utils";
 
 const auth = new Hono();
 
@@ -24,9 +25,14 @@ const verifySchema = z.object({
 });
 
 auth.post("/challenge", zValidator("json", challengeSchema), async (c) => {
-  const { walletAddress } = c.req.valid("json");
-  const challenge = await createWalletChallenge(walletAddress);
-  return c.json(challenge, 201);
+  try {
+    const { walletAddress } = c.req.valid("json");
+    const challenge = await createWalletChallenge(walletAddress);
+    return c.json(challenge, 201);
+  } catch (error) {
+    log.error("Failed to create wallet challenge", error as Error, { service: "api" });
+    return c.json({ error: "Unable to create wallet challenge" }, 500);
+  }
 });
 
 auth.post("/verify", zValidator("json", verifySchema), async (c) => {

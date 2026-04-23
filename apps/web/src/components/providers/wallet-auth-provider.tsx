@@ -95,6 +95,8 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
 
       setStoredWalletSession(nextSession);
       setSession(nextSession);
+    } catch (error) {
+      console.error("Wallet authentication failed", error);
     } finally {
       setAuthenticating(false);
     }
@@ -114,7 +116,11 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    await authenticate();
+    try {
+      await authenticate();
+    } catch {
+      // authenticate already logs the failure and resets loading state.
+    }
   }, [authenticate, setShowModal, wallet.connected]);
 
   const logout = useCallback(async () => {
