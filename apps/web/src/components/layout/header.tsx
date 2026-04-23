@@ -38,7 +38,7 @@ export function Header() {
             className="text-xl font-semibold tracking-[-0.03em]"
             style={{ color: "var(--text-primary)" }}
           >
-            dolphinflow
+            Dolphinflow
           </span>
         </Link>
 

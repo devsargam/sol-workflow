@@ -32,7 +32,7 @@ export function DarkNav({ links = [], sticky = false }: DarkNavProps) {
             className="h-5 w-5 rounded-full object-cover"
             priority
           />
-          <span className="text-sm font-semibold tracking-tight">dolphinflow</span>
+          <span className="text-sm font-semibold tracking-tight">Dolphinflow</span>
         </Link>
 
         {/* Optional centre links */}
