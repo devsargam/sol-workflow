@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { Provider } from "@/components/providers/provider";
 
@@ -27,12 +28,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${inter.variable} ${jetbrainsMono.variable} antialiased min-h-screen bg-neutral-50`}
-      >
-        <Provider>
-          <main>{children}</main>
-        </Provider>
+      <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased min-h-screen`}>
+        <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
+          <Provider>
+            <main>{children}</main>
+          </Provider>
+        </ThemeProvider>
       </body>
     </html>
   );

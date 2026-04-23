@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CirclesFourIcon } from "@phosphor-icons/react";
 import { useWalletAuth } from "@/components/providers/wallet-auth-provider";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 function WorkflowIcon({ className }: { className?: string }) {
   return <CirclesFourIcon className={className} weight="regular" />;
@@ -75,7 +76,10 @@ export function Header() {
           </Link>
         </nav>
 
-        <div className="flex items-center gap-4">{mounted ? <HeaderAuth /> : null}</div>
+        <div className="flex items-center gap-3">
+          <ThemeToggle className="flex h-9 w-9 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors hover:bg-accent" />
+          {mounted ? <HeaderAuth /> : null}
+        </div>
       </div>
     </header>
   );

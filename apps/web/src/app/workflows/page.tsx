@@ -110,7 +110,7 @@ export default function WorkflowsPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-[#0a0a0a] text-white">
+      <div className="min-h-screen bg-background text-foreground">
         <DarkNav sticky />
 
         <main>
@@ -118,13 +118,13 @@ export default function WorkflowsPage() {
             {ready && !authenticated && (
               <StatePanel>
                 <div className="mx-auto max-w-xl text-center">
-                  <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.04] text-[#9945FF]">
+                  <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-accent text-[#9945FF]">
                     <WalletIcon size={28} weight="regular" />
                   </div>
-                  <h3 className="text-xl font-bold tracking-[-0.03em] text-white">
+                  <h3 className="text-xl font-bold tracking-[-0.03em] text-foreground">
                     Connect your wallet
                   </h3>
-                  <p className="mt-2 text-sm text-white/50">
+                  <p className="mt-2 text-sm text-muted-foreground">
                     Sign in with your wallet to view and manage your automations.
                   </p>
                   <button
@@ -138,7 +138,7 @@ export default function WorkflowsPage() {
             )}
 
             {error && ready && authenticated && (
-              <div className="rounded-2xl border border-red-500/20 bg-red-500/[0.08] p-5 text-red-400">
+              <div className="rounded-2xl border border-destructive/20 bg-destructive/[0.08] p-5 text-destructive">
                 Error loading workflows: {(error as Error).message}
               </div>
             )}
@@ -155,12 +155,12 @@ export default function WorkflowsPage() {
             {!isLoading && ready && authenticated && !error && (
               <div className="space-y-6">
                 <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                  <h1 className="text-3xl font-bold tracking-[-0.03em] text-white md:text-4xl">
+                  <h1 className="text-3xl font-bold tracking-[-0.03em] text-foreground md:text-4xl">
                     Workflows
                   </h1>
                   <button
                     onClick={() => router.push("/workflows/builder")}
-                    className="inline-flex items-center gap-2 self-start rounded-xl bg-white px-5 py-2.5 text-sm font-medium text-black transition-colors hover:bg-white/90"
+                    className="inline-flex items-center gap-2 self-start rounded-xl bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
                   >
                     <PlusIcon size={16} weight="bold" />
                     New workflow
@@ -181,15 +181,15 @@ export default function WorkflowsPage() {
                 {workflows.length === 0 && (
                   <button
                     onClick={() => router.push("/workflows/builder")}
-                    className="flex w-full flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/[0.02] px-6 py-14 text-center transition-colors hover:bg-white/[0.04]"
+                    className="flex w-full flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-foreground/[0.02] px-6 py-14 text-center transition-colors hover:bg-foreground/[0.04]"
                   >
-                    <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.04] text-white/35">
+                    <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-accent text-muted-foreground">
                       <PlusIcon size={24} weight="regular" />
                     </div>
-                    <h3 className="text-2xl font-bold tracking-[-0.03em] text-white">
+                    <h3 className="text-2xl font-bold tracking-[-0.03em] text-foreground">
                       No workflows yet
                     </h3>
-                    <p className="mt-2 text-sm text-white/50">
+                    <p className="mt-2 text-sm text-muted-foreground">
                       Build your first automation in the visual editor.
                     </p>
                   </button>
@@ -234,23 +234,23 @@ function WorkflowCard({
   // const notifyInfo = getNotifyInfo(workflow.graph);
 
   return (
-    <article className="rounded-2xl border border-white/[0.08] bg-white/[0.04] p-5 sm:p-6">
+    <article className="rounded-2xl border border-border bg-card p-5 sm:p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         {/* Left: icon + name/description */}
         <div className="flex min-w-0 flex-1 items-center gap-4">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.04]">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-accent">
             <WorkflowIcon />
           </div>
 
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3">
-              <h2 className="text-base font-bold tracking-[-0.03em] text-white">
+              <h2 className="text-base font-bold tracking-[-0.03em] text-foreground">
                 {workflow.name}
               </h2>
               <StatusPill enabled={workflow.enabled} />
             </div>
             {workflow.description && (
-              <p className="mt-1 text-sm text-white/50">{workflow.description}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{workflow.description}</p>
             )}
           </div>
         </div>
@@ -339,7 +339,7 @@ function StatusPill({ enabled }: { enabled: boolean }) {
 
 function StatePanel({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] p-12 text-center">
+    <div className="rounded-2xl border border-border bg-card p-12 text-center">
       {children}
     </div>
   );
@@ -363,8 +363,8 @@ function SquareButton({
       className={[
         "flex h-8 w-8 items-center justify-center rounded-lg border transition-colors",
         danger
-          ? "border-red-500/20 bg-white/[0.05] text-red-400 hover:bg-red-500/[0.08]"
-          : "border-white/[0.08] bg-white/[0.05] text-white/50 hover:bg-white/[0.1]",
+          ? "border-destructive/20 bg-accent text-destructive hover:bg-destructive/[0.08]"
+          : "border-border bg-accent text-muted-foreground hover:bg-muted",
       ].join(" ")}
     >
       {children}

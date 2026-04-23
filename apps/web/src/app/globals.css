@@ -60,6 +60,76 @@ html {
     /* Brand — Solana */
     --brand: #9945ff;
     --brand-alpha: rgba(153, 69, 255, 0.08);
+
+    /* Hero SVG */
+    --hero-grid: rgba(0, 0, 0, 0.05);
+    --hero-node-bg: rgba(0, 0, 0, 0.04);
+    --hero-node-border: rgba(0, 0, 0, 0.12);
+    --hero-node-text: rgba(0, 0, 0, 0.5);
+    --hero-marker: rgba(0, 0, 0, 0.1);
+    --hero-cross: rgba(0, 0, 0, 0.18);
+    --hero-gf-color: black;
+  }
+
+  .dark {
+    /* shadcn/ui tokens */
+    --background: 0 0% 4%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 4%;
+    --secondary: 0 0% 11%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 11%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 0 0% 11%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: 0 0% 83%;
+
+    /* Canvas & surface system */
+    --canvas-bg: #111111;
+    --surface-1: #161616;
+    --surface-2: #1a1a1a;
+    --surface-3: #1f1f1f;
+    --surface-4: #242424;
+
+    /* Node borders */
+    --node-border: #2a2a2a;
+    --node-border-strong: #333333;
+
+    /* Text */
+    --text-primary: #f5f5f5;
+    --text-secondary: #a3a3a3;
+    --text-muted: #525252;
+    --text-inverse: #0a0a0a;
+
+    /* Workflow elements */
+    --edge-color: #3a3a3a;
+    --handle-color: #3a3a3a;
+
+    /* Sidebar */
+    --sidebar-bg: #111111;
+    --sidebar-border: #2a2a2a;
+
+    /* Brand — Solana */
+    --brand: #9945ff;
+    --brand-alpha: rgba(153, 69, 255, 0.12);
+
+    /* Hero SVG */
+    --hero-grid: rgba(255, 255, 255, 0.038);
+    --hero-node-bg: rgba(255, 255, 255, 0.045);
+    --hero-node-border: rgba(255, 255, 255, 0.15);
+    --hero-node-text: rgba(255, 255, 255, 0.55);
+    --hero-marker: rgba(255, 255, 255, 0.11);
+    --hero-cross: rgba(255, 255, 255, 0.18);
+    --hero-gf-color: white;
   }
 }
 
@@ -68,7 +138,7 @@ html {
     @apply border-border;
   }
   body {
-    @apply bg-neutral-50 text-foreground font-sans;
+    @apply bg-background text-foreground font-sans;
   }
 }
 
