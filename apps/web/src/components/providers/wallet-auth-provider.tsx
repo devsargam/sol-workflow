@@ -59,6 +59,7 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
   const [session, setSession] = useState<WalletSession | null>(null);
   const [authenticating, setAuthenticating] = useState(false);
+  const [loginRequested, setLoginRequested] = useState(false);
 
   const walletAddress = wallet.publicKey?.toBase58() || null;
   const authenticated = Boolean(wallet.connected && walletAddress && session?.walletAddress === walletAddress);
@@ -103,14 +104,27 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
   }, [authenticating, wallet, walletAddress]);
 
   useEffect(() => {
-    if (!mounted || !wallet.connected || !walletAddress || authenticated || authenticating) {
+    if (!mounted || !loginRequested || !wallet.connected || !walletAddress || authenticated || authenticating) {
       return;
     }
 
-    void authenticate();
-  }, [authenticate, authenticated, authenticating, mounted, wallet.connected, walletAddress]);
+    let cancelled = false;
+
+    void (async () => {
+      await authenticate();
+      if (!cancelled) {
+        setLoginRequested(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authenticate, authenticated, authenticating, loginRequested, mounted, wallet.connected, walletAddress]);
 
   const login = useCallback(async () => {
+    setLoginRequested(true);
+
     if (!wallet.connected) {
       setShowModal(true);
       return;
@@ -120,10 +134,13 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
       await authenticate();
     } catch {
       // authenticate already logs the failure and resets loading state.
+    } finally {
+      setLoginRequested(false);
     }
   }, [authenticate, setShowModal, wallet.connected]);
 
   const logout = useCallback(async () => {
+    setLoginRequested(false);
     clearStoredWalletSession();
     setSession(null);
 
