@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CirclesFourIcon } from "@phosphor-icons/react";
-import { useWalletAuth } from "@/components/providers/wallet-auth-provider";
+import { DarkNav } from "@/components/layout/dark-nav";
 
 /* ─── SVG layout constants ────────────────────────────────────── */
 
@@ -236,70 +235,6 @@ function HeroSVG() {
   );
 }
 
-/* ─── Minimal landing nav ─────────────────────────────────────── */
-
-function LandingNav() {
-  const { ready, authenticated, login, logout, walletAddress } = useWalletAuth();
-
-  return (
-    <nav className="relative z-10 mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-5 sm:px-8 sm:py-6">
-      <Link href="/" className="flex items-center gap-2 text-white">
-        <CirclesFourIcon className="size-[18px]" weight="regular"/>
-        <span className="text-sm font-semibold tracking-tight">SOL Workflow</span>
-      </Link>
-
-      {/* Nav links — hidden on mobile */}
-      <div className="hidden items-center gap-8 md:flex">
-        <Link href="/workflows"
-          className="text-sm text-white/45 transition-colors hover:text-white">
-          Workflows
-        </Link>
-      </div>
-
-      {/* Auth — zero-shift pattern */}
-      <div className="relative flex items-center">
-        <div
-          className="flex items-center gap-3 sm:gap-5 transition-opacity duration-300"
-          style={{
-            opacity: ready && !authenticated ? 1 : 0,
-            pointerEvents: ready && !authenticated ? "auto" : "none",
-          }}
-          aria-hidden={!(ready && !authenticated)}
-        >
-          <button onClick={login}
-            className="hidden text-sm text-white/45 transition-colors hover:text-white sm:block">
-            Log in
-          </button>
-          <button onClick={login}
-            className="rounded-full bg-white px-3 py-1.5 text-xs font-medium text-black transition-colors hover:bg-white/90 sm:px-4 sm:text-sm">
-            <span className="sm:hidden">Connect</span>
-            <span className="hidden sm:inline">Connect wallet</span>
-          </button>
-        </div>
-
-        <div
-          className="absolute right-0 flex items-center gap-3 transition-opacity duration-300"
-          style={{
-            opacity: ready && authenticated ? 1 : 0,
-            pointerEvents: ready && authenticated ? "auto" : "none",
-          }}
-          aria-hidden={!(ready && authenticated)}
-        >
-          {walletAddress && (
-            <span className="hidden font-mono text-xs text-white/30 sm:inline">
-              {walletAddress.slice(0, 4)}...{walletAddress.slice(-4)}
-            </span>
-          )}
-          <button onClick={logout}
-            className="text-sm text-white/45 transition-colors hover:text-white">
-            Log out
-          </button>
-        </div>
-      </div>
-    </nav>
-  );
-}
-
 /* ─── Page ────────────────────────────────────────────────────── */
 
 export default function HomePage() {
@@ -307,7 +242,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <section className="relative flex min-h-screen flex-col overflow-hidden">
         <HeroSVG />
-        <LandingNav />
+        <DarkNav links={[{ label: "Workflows", href: "/workflows" }]} />
 
         <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pb-16 text-center sm:pb-28">
           <h1 className="max-w-3xl text-4xl font-bold leading-[1.06] tracking-[-0.03em] text-white sm:text-5xl md:text-6xl lg:text-7xl">

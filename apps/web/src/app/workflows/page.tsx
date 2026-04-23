@@ -9,7 +9,7 @@ import {
   TrashIcon,
   WalletIcon,
 } from "@phosphor-icons/react";
-import { Header } from "@/components/layout/header";
+import { DarkNav } from "@/components/layout/dark-nav";
 import { DeleteModal } from "@/components/ui/delete-modal";
 import { useDeleteWorkflow, useToggleWorkflow, useWorkflows } from "@/lib/hooks/use-workflows";
 import { useWalletAuth } from "@/components/providers/wallet-auth-provider";
@@ -85,19 +85,6 @@ import { useWalletAuth } from "@/components/providers/wallet-auth-provider";
 //   };
 // }
 
-function WorkflowPageTitle() {
-  return (
-    <div>
-      <h1
-        className="mt-3 text-3xl font-semibold tracking-[-0.04em] md:text-4xl"
-        style={{ color: "var(--text-primary)" }}
-      >
-        All workflows
-      </h1>
-    </div>
-  );
-}
-
 export default function WorkflowsPage() {
   const router = useRouter();
   const { authenticated, ready, login } = useWalletAuth();
@@ -123,135 +110,95 @@ export default function WorkflowsPage() {
 
   return (
     <>
-      <Header />
-      <main style={{ backgroundColor: "var(--canvas-bg)" }}>
-        <div className="mx-auto max-w-6xl px-6 py-10 md:py-14">
-          {ready && !authenticated && (
-            <StatePanel>
-              <div className="mx-auto max-w-xl text-center">
-                <div
-                  className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border"
-                  style={{
-                    background: "var(--surface-1)",
-                    borderColor: "var(--node-border)",
-                    color: "var(--brand)",
-                  }}
-                >
-                  <WalletIcon size={28} weight="regular" />
-                </div>
-                <h3 className="text-xl font-semibold" style={{ color: "var(--text-primary)" }}>
-                  Connect your wallet to load your workflows
-                </h3>
-                <p className="mt-2 text-sm" style={{ color: "var(--text-secondary)" }}>
-                  Wallet auth is still the account layer, but this page stays focused on your
-                  workflow library.
-                </p>
-                <button
-                  onClick={login}
-                  className="mx-auto mt-6 inline-flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-white"
-                  style={{ background: "var(--brand)" }}
-                >
-                  Connect Wallet
-                </button>
-              </div>
-            </StatePanel>
-          )}
+      <div className="min-h-screen bg-[#0a0a0a] text-white">
+        <DarkNav sticky />
 
-          {error && ready && authenticated && (
-            <div
-              className="rounded-[20px] border p-5"
-              style={{
-                background: "#fef2f2",
-                borderColor: "#fecaca",
-                color: "#b91c1c",
-              }}
-            >
-              Error loading workflows: {(error as Error).message}
-            </div>
-          )}
-
-          {isLoading && ready && authenticated && (
-            <StatePanel>
-              <div className="flex flex-col items-center gap-3">
-                <div
-                  className="h-8 w-8 animate-spin rounded-full border-2"
-                  style={{
-                    borderColor: "var(--node-border)",
-                    borderTopColor: "var(--brand)",
-                  }}
-                />
-                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                  Loading workflows...
-                </p>
-              </div>
-            </StatePanel>
-          )}
-
-          {!isLoading && ready && authenticated && !error && (
-            <div className="space-y-6">
-              <section className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-                <WorkflowPageTitle />
-                <button
-                  onClick={() => router.push("/workflows/builder")}
-                  className="inline-flex items-center gap-2 self-start rounded-xl border px-5 py-3 text-sm font-medium"
-                  style={{
-                    background: "white",
-                    borderColor: "var(--node-border)",
-                    color: "var(--text-primary)",
-                  }}
-                >
-                  <PlusIcon size={16} weight="bold" />
-                  New workflow
-                </button>
-              </section>
-
-              {workflows.map((workflow: any) => (
-                <WorkflowCard
-                  key={workflow.id}
-                  workflow={workflow}
-                  onEdit={() => router.push(`/workflows/builder?edit=${workflow.id}`)}
-                  onDelete={() => setWorkflowToDelete({ id: workflow.id, name: workflow.name })}
-                  onToggle={() => toggleWorkflow.mutate(workflow.id)}
-                  togglePending={toggleWorkflow.isPending}
-                />
-              ))}
-
-              {workflows.length === 0 && (
-                <button
-                  onClick={() => router.push("/workflows/builder")}
-                  className="flex w-full flex-col items-center justify-center rounded-[24px] border border-dashed px-6 py-12 text-center"
-                  style={{
-                    background: "rgba(255, 255, 255, 0.55)",
-                    borderColor: "rgba(23, 23, 23, 0.14)",
-                  }}
-                >
-                  <div
-                    className="mb-5 flex h-12 w-12 items-center justify-center rounded-full border"
-                    style={{
-                      background: "white",
-                      borderColor: "rgba(23, 23, 23, 0.12)",
-                      color: "var(--text-secondary)",
-                    }}
-                  >
-                    <PlusIcon size={24} weight="regular" />
+        <main>
+          <div className="mx-auto max-w-6xl px-4 py-10 sm:px-8 md:py-14">
+            {ready && !authenticated && (
+              <StatePanel>
+                <div className="mx-auto max-w-xl text-center">
+                  <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.04] text-[#9945FF]">
+                    <WalletIcon size={28} weight="regular" />
                   </div>
-                  <h3
-                    className="text-2xl font-semibold tracking-[-0.03em]"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    {workflows.length > 0
-                      ? "Create another workflow"
-                      : "Create your first workflow"}
+                  <h3 className="text-xl font-bold tracking-[-0.03em] text-white">
+                    Connect your wallet
                   </h3>
-                  <p className="mt-2 text-base" style={{ color: "var(--text-secondary)" }}>
-                    Start from scratch in the visual builder.
+                  <p className="mt-2 text-sm text-white/50">
+                    Sign in with your wallet to view and manage your automations.
                   </p>
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      </main>
+                  <button
+                    onClick={login}
+                    className="mx-auto mt-6 inline-flex items-center gap-2 rounded-xl bg-[#9945FF] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#9945FF]/90"
+                  >
+                    Connect Wallet
+                  </button>
+                </div>
+              </StatePanel>
+            )}
+
+            {error && ready && authenticated && (
+              <div className="rounded-2xl border border-red-500/20 bg-red-500/[0.08] p-5 text-red-400">
+                Error loading workflows: {(error as Error).message}
+              </div>
+            )}
+
+            {isLoading && ready && authenticated && (
+              <StatePanel>
+                <div className="flex flex-col items-center gap-3">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-[#9945FF]" />
+                  <p className="text-sm text-white/35">Loading workflows...</p>
+                </div>
+              </StatePanel>
+            )}
+
+            {!isLoading && ready && authenticated && !error && (
+              <div className="space-y-6">
+                <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                  <h1 className="text-3xl font-bold tracking-[-0.03em] text-white md:text-4xl">
+                    Workflows
+                  </h1>
+                  <button
+                    onClick={() => router.push("/workflows/builder")}
+                    className="inline-flex items-center gap-2 self-start rounded-xl bg-white px-5 py-2.5 text-sm font-medium text-black transition-colors hover:bg-white/90"
+                  >
+                    <PlusIcon size={16} weight="bold" />
+                    New workflow
+                  </button>
+                </section>
+
+                {workflows.map((workflow: any) => (
+                  <WorkflowCard
+                    key={workflow.id}
+                    workflow={workflow}
+                    onEdit={() => router.push(`/workflows/builder?edit=${workflow.id}`)}
+                    onDelete={() => setWorkflowToDelete({ id: workflow.id, name: workflow.name })}
+                    onToggle={() => toggleWorkflow.mutate(workflow.id)}
+                    togglePending={toggleWorkflow.isPending}
+                  />
+                ))}
+
+                {workflows.length === 0 && (
+                  <button
+                    onClick={() => router.push("/workflows/builder")}
+                    className="flex w-full flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/[0.02] px-6 py-14 text-center transition-colors hover:bg-white/[0.04]"
+                  >
+                    <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.04] text-white/35">
+                      <PlusIcon size={24} weight="regular" />
+                    </div>
+                    <h3 className="text-2xl font-bold tracking-[-0.03em] text-white">
+                      No workflows yet
+                    </h3>
+                    <p className="mt-2 text-sm text-white/50">
+                      Build your first automation in the visual editor.
+                    </p>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
 
       <DeleteModal
         isOpen={!!workflowToDelete}
@@ -287,64 +234,47 @@ function WorkflowCard({
   // const notifyInfo = getNotifyInfo(workflow.graph);
 
   return (
-    <article
-      className="rounded-[24px] border p-6"
-      style={{
-        background: "rgba(255, 255, 255, 0.92)",
-        borderColor: "var(--node-border)",
-      }}
-    >
-      <div className="space-y-6">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex items-center min-w-0 flex-1 gap-4">
-            <div
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border"
-              style={{
-                background: "var(--surface-1)",
-                borderColor: "var(--node-border)",
-              }}
-            >
-              <WorkflowIcon />
-            </div>
-
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-3">
-                <h2
-                  className="text-lg font-semibold tracking-[-0.03em]"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  {workflow.name}
-                </h2>
-                <StatusPill enabled={workflow.enabled} />
-              </div>
-              {workflow.description && (
-                <p className="mt-2 text-base" style={{ color: "var(--text-secondary)" }}>
-                  {workflow.description}
-                </p>
-              )}
-            </div>
+    <article className="rounded-2xl border border-white/[0.08] bg-white/[0.04] p-5 sm:p-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        {/* Left: icon + name/description */}
+        <div className="flex min-w-0 flex-1 items-center gap-4">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.04]">
+            <WorkflowIcon />
           </div>
 
-          <div className="flex items-center gap-3">
-            <SquareButton title="Edit workflow" onClick={onEdit}>
-              <PencilSimpleIcon size={20} weight="regular" />
-            </SquareButton>
-            <SquareButton title="Delete workflow" onClick={onDelete} danger>
-              <TrashIcon size={20} weight="regular" />
-            </SquareButton>
-            <button
-              onClick={onToggle}
-              disabled={togglePending}
-              className="rounded-md border px-4 py-1 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60"
-              style={{
-                background: workflow.enabled ? "var(--brand-alpha)" : "white",
-                borderColor: workflow.enabled ? "rgba(153, 69, 255, 0.18)" : "var(--node-border)",
-                color: workflow.enabled ? "var(--brand)" : "var(--text-secondary)",
-              }}
-            >
-              {workflow.enabled ? "Live" : "Paused"}
-            </button>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="text-base font-bold tracking-[-0.03em] text-white">
+                {workflow.name}
+              </h2>
+              <StatusPill enabled={workflow.enabled} />
+            </div>
+            {workflow.description && (
+              <p className="mt-1 text-sm text-white/50">{workflow.description}</p>
+            )}
           </div>
+        </div>
+
+        {/* Right: action buttons */}
+        <div className="flex items-center gap-2 lg:gap-3">
+          <SquareButton title="Edit workflow" onClick={onEdit}>
+            <PencilSimpleIcon size={16} weight="regular" />
+          </SquareButton>
+          <SquareButton title="Delete workflow" onClick={onDelete} danger>
+            <TrashIcon size={16} weight="regular" />
+          </SquareButton>
+          <button
+            onClick={onToggle}
+            disabled={togglePending}
+            className={[
+              "rounded-md border px-3 py-1 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60",
+              workflow.enabled
+                ? "border-[#9945FF]/20 bg-[#9945FF]/10 text-[#9945FF]"
+                : "border-white/[0.08] bg-white/[0.05] text-white/40",
+            ].join(" ")}
+          >
+            {workflow.enabled ? "Live" : "Paused"}
+          </button>
         </div>
       </div>
     </article>
@@ -352,22 +282,24 @@ function WorkflowCard({
 }
 
 function WorkflowIcon() {
-  return <CirclesFourIcon size={28} weight="regular" style={{ color: "var(--brand)" }} />;
+  return <CirclesFourIcon size={18} weight="regular" className="text-[#9945FF]" />;
 }
 
 function StatusPill({ enabled }: { enabled: boolean }) {
   return (
     <span
-      className="inline-flex items-center gap-2 rounded-full border px-2 py-1 text-xs"
-      style={{
-        background: enabled ? "rgba(34, 197, 94, 0.08)" : "var(--surface-1)",
-        borderColor: enabled ? "rgba(34, 197, 94, 0.16)" : "var(--node-border)",
-        color: enabled ? "#15803d" : "var(--text-secondary)",
-      }}
+      className={[
+        "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs",
+        enabled
+          ? "border-[#14F195]/20 bg-[#14F195]/10 text-[#14F195]"
+          : "border-white/[0.08] bg-white/[0.05] text-white/40",
+      ].join(" ")}
     >
       <span
-        className="h-1 w-1 rounded-full text-xs"
-        style={{ background: enabled ? "#22c55e" : "rgba(23, 23, 23, 0.24)" }}
+        className={[
+          "h-1 w-1 rounded-full",
+          enabled ? "bg-[#14F195]" : "bg-white/20",
+        ].join(" ")}
       />
       {enabled ? "Live" : "Paused"}
     </span>
@@ -407,13 +339,7 @@ function StatusPill({ enabled }: { enabled: boolean }) {
 
 function StatePanel({ children }: { children: ReactNode }) {
   return (
-    <div
-      className="rounded-[24px] border p-12 text-center"
-      style={{
-        background: "rgba(255, 255, 255, 0.92)",
-        borderColor: "var(--node-border)",
-      }}
-    >
+    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] p-12 text-center">
       {children}
     </div>
   );
@@ -434,12 +360,12 @@ function SquareButton({
     <button
       onClick={onClick}
       title={title}
-      className="flex h-8 w-8 items-center justify-center rounded-md border"
-      style={{
-        background: "white",
-        borderColor: danger ? "rgba(239, 68, 68, 0.18)" : "var(--node-border)",
-        color: danger ? "#b91c1c" : "var(--text-secondary)",
-      }}
+      className={[
+        "flex h-8 w-8 items-center justify-center rounded-lg border transition-colors",
+        danger
+          ? "border-red-500/20 bg-white/[0.05] text-red-400 hover:bg-red-500/[0.08]"
+          : "border-white/[0.08] bg-white/[0.05] text-white/50 hover:bg-white/[0.1]",
+      ].join(" ")}
     >
       {children}
     </button>
