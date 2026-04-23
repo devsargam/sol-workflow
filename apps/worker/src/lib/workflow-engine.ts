@@ -746,7 +746,7 @@ class NotifyNodeExecutor implements NodeExecutor {
     // Build headers with optional secret
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      "User-Agent": "SOL-Workflow/1.0",
+      "User-Agent": "dolphinflow/1.0",
     };
 
     // Add secret header if provided

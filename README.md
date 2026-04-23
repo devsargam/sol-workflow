@@ -1,4 +1,4 @@
-# Sol Workflow
+# dolphinflow
 
 Solana-native automation platform for DAO operators and NFT community managers.
 

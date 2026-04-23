@@ -21,7 +21,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
   return (
     <UnifiedWalletProvider
       wallets={[]}
-      localStorageKey="sol-workflow:wallet-kit"
+      localStorageKey="dolphinflow:wallet-kit"
       config={{
         autoConnect: true,
         env: (process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet") as
@@ -29,7 +29,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
           | "testnet"
           | "mainnet-beta",
         metadata: {
-          name: "SOL Workflow",
+          name: "dolphinflow",
           description: "Wallet-powered Solana workflow automation",
           url: typeof window === "undefined" ? "http://localhost:3000" : window.location.origin,
           iconUrls: ["https://solana.com/src/img/branding/solanaLogoMark.svg"],

@@ -17,7 +17,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sol Workflow - Solana Automation Platform",
+  title: "dolphinflow - Solana Automation Platform",
   description: "Create workflows that react to on-chain events and trigger on-chain actions",
 };
 

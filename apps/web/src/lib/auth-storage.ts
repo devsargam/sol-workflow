@@ -1,6 +1,6 @@
 "use client";
 
-const STORAGE_KEY = "sol-workflow:wallet-session";
+const STORAGE_KEY = "dolphinflow:wallet-session";
 
 export type WalletSession = {
   token: string;

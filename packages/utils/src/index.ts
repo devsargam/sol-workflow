@@ -1,5 +1,5 @@
 /**
- * Utils package - Shared utilities and constants for Sol-Workflow
+ * Utils package - Shared utilities and constants for dolphinflow
  */
 
 // Export all constants

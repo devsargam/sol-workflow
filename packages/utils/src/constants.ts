@@ -1,5 +1,5 @@
 /**
- * Shared constants used throughout the Sol-Workflow application
+ * Shared constants used throughout the dolphinflow application
  */
 
 // ============================================================================

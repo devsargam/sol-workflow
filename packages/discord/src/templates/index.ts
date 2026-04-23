@@ -51,7 +51,7 @@ export function getSuccessTemplate(context: TemplateContext): DiscordEmbed {
     color: COLORS.SUCCESS,
     fields,
     footer: {
-      text: "Sol Workflow",
+      text: "dolphinflow",
     },
     timestamp: new Date().toISOString(),
   };
@@ -90,7 +90,7 @@ export function getErrorTemplate(context: TemplateContext): DiscordEmbed {
     color: COLORS.ERROR,
     fields,
     footer: {
-      text: "Sol Workflow",
+      text: "dolphinflow",
     },
     timestamp: new Date().toISOString(),
   };
@@ -153,7 +153,7 @@ export function getDetailedTemplate(context: TemplateContext): DiscordEmbed {
     color: context.status === "success" ? COLORS.SUCCESS : COLORS.ERROR,
     fields,
     footer: {
-      text: "Sol Workflow",
+      text: "dolphinflow",
     },
     timestamp: new Date().toISOString(),
   };

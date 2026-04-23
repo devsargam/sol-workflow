@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { XIcon } from "@phosphor-icons/react";
 
-const DISMISSED_KEY = "sol-workflow:announcement-dismissed";
+const DISMISSED_KEY = "dolphinflow:announcement-dismissed";
 
 export function AnnouncementBanner() {
   const [dismissed, setDismissed] = useState(true);

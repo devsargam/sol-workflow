@@ -1,9 +1,9 @@
-# Sol Workflow - Setup Guide
+# dolphinflow - Setup Guide
 
 ## ✅ Project Structure Created
 
 ```
-sol-workflow/
+dolphinflow/
 ├── apps/
 │   ├── web/                  # Next.js 14 + shadcn/ui (Vega theme)
 │   ├── api/                  # Hono API server (Bun runtime)

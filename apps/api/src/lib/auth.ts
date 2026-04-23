@@ -18,7 +18,7 @@ export function getAuthSecret() {
 
 export function buildWalletAuthMessage(walletAddress: string, nonce: string) {
   return [
-    "Sign in to SOL Workflow",
+    "Sign in to dolphinflow",
     "",
     `Wallet: ${walletAddress}`,
     `Nonce: ${nonce}`,

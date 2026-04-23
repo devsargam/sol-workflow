@@ -23,7 +23,7 @@ function truncate(str: string, maxLen: number) {
 }
 
 function formatHeader(context: TemplateContext) {
-  return `Sol Workflow\nWorkflow: ${context.workflowName}\nExecution: ${context.executionId}`;
+  return `dolphinflow\nWorkflow: ${context.workflowName}\nExecution: ${context.executionId}`;
 }
 
 export function getSuccessTemplate(context: TemplateContext): TelegramMessageTemplate {

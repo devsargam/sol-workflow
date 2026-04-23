@@ -2,7 +2,7 @@
 
 set -e
 
-echo "🚀 Sol Workflow - Initial Setup"
+echo "🚀 dolphinflow - Initial Setup"
 echo "================================"
 echo ""
 

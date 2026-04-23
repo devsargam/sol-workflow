@@ -1,4 +1,4 @@
-# Sol Workflow - Architecture Overview
+# dolphinflow - Architecture Overview
 
 ## System Architecture
 

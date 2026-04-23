@@ -25,7 +25,7 @@ export function DarkNav({ links = [], sticky = false }: DarkNavProps) {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 text-foreground">
           <CirclesFourIcon className="size-[18px]" weight="regular" />
-          <span className="text-sm font-semibold tracking-tight">SOL Workflow</span>
+          <span className="text-sm font-semibold tracking-tight">dolphinflow</span>
         </Link>
 
         {/* Optional centre links */}
