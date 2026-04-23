@@ -323,3 +323,31 @@ export async function fetchExecution(id: string): Promise<{ execution: Execution
   }
   return res.json();
 }
+
+// Solana helpers
+export async function requestAirdrop(): Promise<{ signature: string; sol: number }> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}${API.ROUTES.SOLANA}/airdrop`, { method: "POST", headers });
+  const json = await res.json().catch(() => null);
+  if (!res.ok) throw new Error((json as any)?.error || "Airdrop failed");
+  return json as { signature: string; sol: number };
+}
+
+export async function fetchPlatformWallet(): Promise<{ address: string | null }> {
+  const res = await fetch(`${API_URL}${API.ROUTES.SOLANA}/platform-wallet`);
+  const json = await res.json().catch(() => ({ address: null }));
+  return json as { address: string | null };
+}
+
+export async function sendTelegramNotification(message: string): Promise<void> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}/telegram/send`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ message, parseMode: "Markdown" }),
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => null);
+    throw new Error((json as any)?.error || "Telegram notification failed");
+  }
+}

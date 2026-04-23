@@ -81,6 +81,11 @@ Set these at the stack level in Coolify so all services can inherit them:
 - `CORS_ORIGIN`
 - `AUTH_SECRET`
 
+#### Optional for Telegram relay
+
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_DEFAULT_CHAT_ID`
+
 #### Optional runtime tuning
 
 - `PORT`
@@ -102,6 +107,8 @@ NEXT_PUBLIC_API_URL=https://api.yourdomain.com
 NEXT_PUBLIC_SOLANA_RPC_URL=https://your-rpc-provider.example
 NEXT_PUBLIC_SOLANA_NETWORK=mainnet-beta
 AUTH_SECRET=replace-me-with-a-long-random-secret
+TELEGRAM_BOT_TOKEN=123456:replace-me
+TELEGRAM_DEFAULT_CHAT_ID=@your_channel_or_-1001234567890
 WORKER_CONCURRENCY=5
 RATE_LIMIT_MAX=10
 RATE_LIMIT_DURATION=1000

@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { QueryProvider } from "./query-provider";
 import { WalletAuthProvider } from "./wallet-auth-provider";
-import { AnnouncementBanner } from "@/components/layout/announcement-banner";
 
 export function Provider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
@@ -25,7 +24,10 @@ export function Provider({ children }: { children: React.ReactNode }) {
       localStorageKey="sol-workflow:wallet-kit"
       config={{
         autoConnect: true,
-        env: (process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet") as "devnet" | "testnet" | "mainnet-beta",
+        env: (process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet") as
+          | "devnet"
+          | "testnet"
+          | "mainnet-beta",
         metadata: {
           name: "SOL Workflow",
           description: "Wallet-powered Solana workflow automation",
@@ -37,7 +39,6 @@ export function Provider({ children }: { children: React.ReactNode }) {
     >
       <WalletAuthProvider>
         <QueryProvider>
-          <AnnouncementBanner />
           {children}
         </QueryProvider>
       </WalletAuthProvider>

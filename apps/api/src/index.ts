@@ -11,6 +11,7 @@ import executionRoutes from "./routes/executions";
 import solanaRoutes from "./routes/solana";
 import authRoutes from "./routes/auth";
 import telegramRoutes from "./routes/telegram";
+import demoRoutes from "./routes/demo";
 import { getCronScheduler, initCronScheduler } from "./cron";
 import { db, workflows as workflowsTable } from "@repo/db";
 import { ENV_DEFAULTS, API, QUEUES, getRedisOptions } from "utils";
@@ -68,6 +69,7 @@ app.route(API.ROUTES.TELEGRAM, telegramRoutes);
 app.route(API.ROUTES.WORKFLOWS, workflowRoutes); // Graph-based API
 app.route(API.ROUTES.EXECUTIONS, executionRoutes);
 app.route(API.ROUTES.SOLANA, solanaRoutes);
+app.route("/demo", demoRoutes);
 
 // Health check endpoint with comprehensive stats
 app.get("/health", async (c) => {
