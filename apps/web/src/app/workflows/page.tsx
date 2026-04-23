@@ -3,12 +3,7 @@
 import { type ReactNode, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  BroadcastIcon,
   CirclesFourIcon,
-  ClockIcon,
-  CubeIcon,
-  CurrencyCircleDollarIcon,
-  LightningIcon,
   PencilSimpleIcon,
   PlusIcon,
   TrashIcon,
@@ -19,76 +14,76 @@ import { DeleteModal } from "@/components/ui/delete-modal";
 import { useDeleteWorkflow, useToggleWorkflow, useWorkflows } from "@/lib/hooks/use-workflows";
 import { useWalletAuth } from "@/components/providers/wallet-auth-provider";
 
-function getTriggerInfo(graph: any) {
-  const triggerNode = graph?.nodes?.find((node: any) => node.type === "trigger");
-  if (!triggerNode) return { type: "Unknown", address: null, icon: "question" };
+// function getTriggerInfo(graph: any) {
+//   const triggerNode = graph?.nodes?.find((node: any) => node.type === "trigger");
+//   if (!triggerNode) return { type: "Unknown", address: null, icon: "question" };
 
-  const triggerType = triggerNode.data?.triggerType || "unknown";
-  const config = triggerNode.data?.config || {};
+//   const triggerType = triggerNode.data?.triggerType || "unknown";
+//   const config = triggerNode.data?.config || {};
 
-  const triggerLabels: Record<string, string> = {
-    balance_change: "Balance Change",
-    token_receipt: "Token Receipt",
-    nft_receipt: "NFT Receipt",
-    transaction_status: "Transaction Status",
-    program_log: "Program Log",
-    cron: "Scheduled (Cron)",
-  };
+//   const triggerLabels: Record<string, string> = {
+//     balance_change: "Balance Change",
+//     token_receipt: "Token Receipt",
+//     nft_receipt: "NFT Receipt",
+//     transaction_status: "Transaction Status",
+//     program_log: "Program Log",
+//     cron: "Scheduled (Cron)",
+//   };
 
-  return {
-    type: triggerLabels[triggerType] || triggerType,
-    address: config.address || config.programId || config.schedule || null,
-    icon: triggerType,
-  };
-}
+//   return {
+//     type: triggerLabels[triggerType] || triggerType,
+//     address: config.address || config.programId || config.schedule || null,
+//     icon: triggerType,
+//   };
+// }
 
-function getActionInfo(graph: any) {
-  const actionNode = graph?.nodes?.find((node: any) => node.type === "action");
-  if (!actionNode) return { type: "No Action", description: null, icon: "none" };
+// function getActionInfo(graph: any) {
+//   const actionNode = graph?.nodes?.find((node: any) => node.type === "action");
+//   if (!actionNode) return { type: "No Action", description: null, icon: "none" };
 
-  const actionType = actionNode.data?.actionType || "unknown";
-  const config = actionNode.data?.config || {};
+//   const actionType = actionNode.data?.actionType || "unknown";
+//   const config = actionNode.data?.config || {};
 
-  const actionLabels: Record<string, string> = {
-    send_sol: "Send SOL",
-    send_spl_token: "Send Token",
-    call_program: "Call Program",
-    do_nothing: "No Action",
-  };
+//   const actionLabels: Record<string, string> = {
+//     send_sol: "Send SOL",
+//     send_spl_token: "Send Token",
+//     call_program: "Call Program",
+//     do_nothing: "No Action",
+//   };
 
-  let description = null;
-  if (actionType === "send_sol" && config.toAddress) {
-    description = `To: ${config.toAddress.slice(0, 8)}...`;
-  } else if (actionType === "send_spl_token" && config.tokenMint) {
-    description = `Token: ${config.tokenMint.slice(0, 8)}...`;
-  } else if (actionType === "call_program" && config.programId) {
-    description = `Program: ${config.programId.slice(0, 8)}...`;
-  }
+//   let description = null;
+//   if (actionType === "send_sol" && config.toAddress) {
+//     description = `To: ${config.toAddress.slice(0, 8)}...`;
+//   } else if (actionType === "send_spl_token" && config.tokenMint) {
+//     description = `Token: ${config.tokenMint.slice(0, 8)}...`;
+//   } else if (actionType === "call_program" && config.programId) {
+//     description = `Program: ${config.programId.slice(0, 8)}...`;
+//   }
 
-  return {
-    type: actionLabels[actionType] || actionType,
-    description,
-    icon: actionType,
-  };
-}
+//   return {
+//     type: actionLabels[actionType] || actionType,
+//     description,
+//     icon: actionType,
+//   };
+// }
 
-function getNotifyInfo(graph: any) {
-  const notifyNode = graph?.nodes?.find((node: any) => node.type === "notify");
-  if (!notifyNode) return null;
+// function getNotifyInfo(graph: any) {
+//   const notifyNode = graph?.nodes?.find((node: any) => node.type === "notify");
+//   if (!notifyNode) return null;
 
-  const notifyType = notifyNode.data?.notifyType || "unknown";
-  const notifyLabels: Record<string, string> = {
-    discord: "Discord",
-    telegram: "Telegram",
-    slack: "Slack",
-    email: "Email",
-    webhook: "Webhook",
-  };
+//   const notifyType = notifyNode.data?.notifyType || "unknown";
+//   const notifyLabels: Record<string, string> = {
+//     discord: "Discord",
+//     telegram: "Telegram",
+//     slack: "Slack",
+//     email: "Email",
+//     webhook: "Webhook",
+//   };
 
-  return {
-    type: notifyLabels[notifyType] || notifyType,
-  };
-}
+//   return {
+//     type: notifyLabels[notifyType] || notifyType,
+//   };
+// }
 
 function WorkflowPageTitle() {
   return (
@@ -287,9 +282,9 @@ function WorkflowCard({
   onToggle: () => void;
   togglePending: boolean;
 }) {
-  const triggerInfo = getTriggerInfo(workflow.graph);
-  const actionInfo = getActionInfo(workflow.graph);
-  const notifyInfo = getNotifyInfo(workflow.graph);
+  // const triggerInfo = getTriggerInfo(workflow.graph);
+  // const actionInfo = getActionInfo(workflow.graph);
+  // const notifyInfo = getNotifyInfo(workflow.graph);
 
   return (
     <article
@@ -379,36 +374,36 @@ function StatusPill({ enabled }: { enabled: boolean }) {
   );
 }
 
-function TriggerIcon({ type }: { type: string }) {
-  switch (type) {
-    case "balance_change":
-      return <CurrencyCircleDollarIcon size={20} weight="regular" className="text-sky-600" />;
-    case "token_receipt":
-    case "nft_receipt":
-      return <CubeIcon size={20} weight="regular" className="text-sky-600" />;
-    case "program_log":
-      return <BroadcastIcon size={20} weight="regular" className="text-sky-600" />;
-    case "cron":
-      return <ClockIcon size={20} weight="regular" className="text-sky-600" />;
-    default:
-      return <CirclesFourIcon size={20} weight="regular" className="text-sky-600" />;
-  }
-}
+// function TriggerIcon({ type }: { type: string }) {
+//   switch (type) {
+//     case "balance_change":
+//       return <CurrencyCircleDollarIcon size={20} weight="regular" className="text-sky-600" />;
+//     case "token_receipt":
+//     case "nft_receipt":
+//       return <CubeIcon size={20} weight="regular" className="text-sky-600" />;
+//     case "program_log":
+//       return <BroadcastIcon size={20} weight="regular" className="text-sky-600" />;
+//     case "cron":
+//       return <ClockIcon size={20} weight="regular" className="text-sky-600" />;
+//     default:
+//       return <CirclesFourIcon size={20} weight="regular" className="text-sky-600" />;
+//   }
+// }
 
-function ActionIcon({ type }: { type: string }) {
-  switch (type) {
-    case "send_sol":
-      return (
-        <CurrencyCircleDollarIcon size={20} weight="regular" style={{ color: "var(--brand)" }} />
-      );
-    case "send_spl_token":
-      return <CubeIcon size={20} weight="regular" style={{ color: "var(--brand)" }} />;
-    case "call_program":
-      return <BroadcastIcon size={20} weight="regular" style={{ color: "var(--brand)" }} />;
-    default:
-      return <LightningIcon size={20} weight="regular" style={{ color: "var(--brand)" }} />;
-  }
-}
+// function ActionIcon({ type }: { type: string }) {
+//   switch (type) {
+//     case "send_sol":
+//       return (
+//         <CurrencyCircleDollarIcon size={20} weight="regular" style={{ color: "var(--brand)" }} />
+//       );
+//     case "send_spl_token":
+//       return <CubeIcon size={20} weight="regular" style={{ color: "var(--brand)" }} />;
+//     case "call_program":
+//       return <BroadcastIcon size={20} weight="regular" style={{ color: "var(--brand)" }} />;
+//     default:
+//       return <LightningIcon size={20} weight="regular" style={{ color: "var(--brand)" }} />;
+//   }
+// }
 
 function StatePanel({ children }: { children: ReactNode }) {
   return (
