@@ -1,11 +1,11 @@
 "use client";
 
 import {
-  BanknoteIcon,
+  FadersHorizontalIcon as SlidersHorizontalIcon,
+  LightningIcon as ZapIcon,
   MegaphoneIcon,
-  SlidersHorizontalIcon,
-  ZapIcon,
-} from "lucide-react";
+  MoneyIcon as BanknoteIcon,
+} from "@phosphor-icons/react";
 import React from "react";
 
 const NODE_TYPES = [

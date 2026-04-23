@@ -13,7 +13,6 @@
   "dependencies": {
     "@hono/node-server": "^1.13.7",
     "@hono/zod-validator": "^0.4.1",
-    "@privy-io/node": "^0.7.0",
     "@repo/db": "workspace:*",
     "@repo/solana": "workspace:*",
     "@repo/types": "workspace:*",
@@ -23,6 +22,7 @@
     "drizzle-orm": "^0.36.4",
     "hono": "^4.11.3",
     "ioredis": "^5.4.1",
+    "tweetnacl": "^1.0.3",
     "utils": "workspace:*",
     "zod": "^3.24.1"
   },

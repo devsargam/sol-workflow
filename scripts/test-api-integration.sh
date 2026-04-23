@@ -8,8 +8,7 @@ export DATABASE_URL="postgresql://postgres:postgres@localhost:55432/solworkflow_
 export REDIS_URL="redis://localhost:56379"
 export NODE_ENV="test"
 export CORS_ORIGIN="http://localhost:3000"
-export PRIVY_APP_ID="test-app-id"
-export PRIVY_APP_SECRET="test-app-secret"
+export AUTH_SECRET="test-auth-secret"
 export SOLANA_NETWORK="devnet"
 
 cleanup() {

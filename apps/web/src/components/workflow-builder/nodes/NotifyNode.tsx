@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { Handle, NodeProps, Position } from "@xyflow/react";
-import { MegaphoneIcon } from "lucide-react";
+import { MegaphoneIcon } from "@phosphor-icons/react";
 import { memo } from "react";
 import type { NotifyNodeData } from "../types";
 import { errorHandleStyle, rowHandleStyle } from "./node-layout";

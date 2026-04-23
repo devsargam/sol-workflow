@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useWalletAuth } from "@/components/providers/wallet-auth-provider";
 import {
   fetchWorkflows,
   fetchWorkflow,
@@ -12,17 +13,22 @@ import {
 } from "@/lib/api";
 
 export function useWorkflows() {
+  const { authenticated, ready, walletAddress } = useWalletAuth();
+
   return useQuery({
-    queryKey: ["workflows"],
+    queryKey: ["workflows", walletAddress],
     queryFn: fetchWorkflows,
+    enabled: ready && authenticated,
   });
 }
 
 export function useWorkflow(id: string) {
+  const { authenticated, ready, walletAddress } = useWalletAuth();
+
   return useQuery({
-    queryKey: ["workflows", id],
+    queryKey: ["workflows", walletAddress, id],
     queryFn: () => fetchWorkflow(id),
-    enabled: !!id,
+    enabled: ready && authenticated && !!id,
   });
 }
 

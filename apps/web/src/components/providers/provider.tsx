@@ -1,44 +1,40 @@
 "use client";
-import { PrivyProvider } from "@privy-io/react-auth";
+
+import { UnifiedWalletProvider } from "@jup-ag/wallet-adapter";
 import { useEffect, useState } from "react";
 import { QueryProvider } from "./query-provider";
+import { WalletAuthProvider } from "./wallet-auth-provider";
 
 export function Provider({ children }: { children: React.ReactNode }) {
-  const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID || "";
-  // @todo-fix it
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const hasValidAppId = Boolean(appId && appId !== "missing_privy_app_id");
-  if (!mounted || !hasValidAppId) {
-    // Avoid failing static prerender/build and avoid initializing Privy on the server.
-    // Auth features will be unavailable until a valid app id is provided at runtime.
+  if (!mounted) {
     return <QueryProvider>{children}</QueryProvider>;
   }
 
   return (
-    <PrivyProvider
-      appId={appId}
+    <UnifiedWalletProvider
+      wallets={[]}
+      localStorageKey="sol-workflow:wallet-kit"
       config={{
-        loginMethods: ["email"],
-        appearance: {
-          theme: "light",
-          accentColor: "#000000",
-          logo: undefined,
+        autoConnect: true,
+        env: (process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet") as "devnet" | "testnet" | "mainnet-beta",
+        metadata: {
+          name: "SOL Workflow",
+          description: "Wallet-powered Solana workflow automation",
+          url: typeof window === "undefined" ? "http://localhost:3000" : window.location.origin,
+          iconUrls: ["https://solana.com/src/img/branding/solanaLogoMark.svg"],
         },
-        embeddedWallets: {
-          // createOnLogin:{
-          //     solana:{
-          //         accountSuffix: "sol-workflow",
-          //     }
-          // }
-        },
+        theme: "light",
       }}
     >
-      <QueryProvider>{children}</QueryProvider>
-    </PrivyProvider>
+      <WalletAuthProvider>
+        <QueryProvider>{children}</QueryProvider>
+      </WalletAuthProvider>
+    </UnifiedWalletProvider>
   );
 }

@@ -1,21 +1,59 @@
 // API client for graph-based workflows
 import { ENV_DEFAULTS, WORKFLOW_METADATA, API } from "utils";
-import { getAccessToken } from "@privy-io/react-auth";
+import { getStoredWalletSession } from "./auth-storage";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || ENV_DEFAULTS.NEXT_PUBLIC_API_URL;
 
 async function getAuthHeaders(): Promise<HeadersInit> {
-  try {
-    const token = await getAccessToken();
-    return {
+  const token = getStoredWalletSession()?.token;
+
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
+
+export async function requestWalletChallenge(
+  walletAddress: string
+): Promise<{ nonce: string; message: string; expiresIn: number }> {
+  const res = await fetch(`${API_URL}${API.ROUTES.AUTH}/challenge`, {
+    method: "POST",
+    headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    };
-  } catch (error) {
-    return {
-      "Content-Type": "application/json",
-    };
+    },
+    body: JSON.stringify({ walletAddress }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to create wallet challenge");
   }
+
+  return res.json();
+}
+
+export async function verifyWalletChallenge(data: {
+  walletAddress: string;
+  nonce: string;
+  message: string;
+  signature: string;
+}): Promise<{ token: string; walletAddress: string }> {
+  const res = await fetch(`${API_URL}${API.ROUTES.AUTH}/verify`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    const errorMessage =
+      typeof (json as any)?.error === "string" ? (json as any).error : "Wallet verification failed";
+    throw new Error(errorMessage);
+  }
+
+  return json as { token: string; walletAddress: string };
 }
 
 export interface WorkflowGraph {
@@ -181,7 +219,7 @@ export interface Execution {
 export async function fetchExecutions(workflowId?: string): Promise<{ executions: Execution[] }> {
   const headers = await getAuthHeaders();
   const url = workflowId
-    ? `${API_URL}${API.ROUTES.EXECUTIONS}?workflowId=${workflowId}`
+    ? `${API_URL}${API.ROUTES.EXECUTIONS}?workflow_id=${workflowId}`
     : `${API_URL}${API.ROUTES.EXECUTIONS}`;
   const res = await fetch(url, { headers });
   if (!res.ok) {

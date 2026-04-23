@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { Handle, NodeProps, Position } from "@xyflow/react";
-import { SlidersHorizontalIcon } from "lucide-react";
+import { FadersHorizontalIcon as SlidersHorizontalIcon } from "@phosphor-icons/react";
 import { memo } from "react";
 import type { FilterNodeData } from "../types";
 import { errorHandleStyle, rowHandleStyle } from "./node-layout";

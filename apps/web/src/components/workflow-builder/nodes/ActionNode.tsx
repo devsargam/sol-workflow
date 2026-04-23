@@ -3,12 +3,12 @@
 import { cn } from "@/lib/utils";
 import { Handle, NodeProps, Position } from "@xyflow/react";
 import {
-  BanknoteIcon,
-  CircleOffIcon,
   CodeIcon,
   CoinsIcon,
+  MoneyIcon as BanknoteIcon,
+  ProhibitIcon as CircleOffIcon,
   RocketIcon,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { memo } from "react";
 import type { ActionNodeData } from "../types";
 import { errorHandleStyle, rowHandleStyle } from "./node-layout";

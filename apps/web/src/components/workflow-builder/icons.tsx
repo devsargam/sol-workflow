@@ -1,21 +1,22 @@
 "use client";
 
 import {
-  BanknoteIcon,
-  BellIcon,
-  CircleDollarSignIcon,
-  CircleOffIcon,
   CodeIcon,
-  FileTextIcon,
-  ImageIcon,
-  MailIcon,
+  CoinsIcon,
+  CurrencyCircleDollarIcon as CircleDollarSignIcon,
+  EnvelopeSimpleIcon as MailIcon,
+  LightningIcon as ZapIcon,
   MegaphoneIcon,
-  MessageCircleIcon,
+  MoneyIcon as BanknoteIcon,
+  PaperPlaneTiltIcon as SendIcon,
+  ProhibitIcon as CircleOffIcon,
   RocketIcon,
-  SearchIcon,
-  SendIcon,
-  ZapIcon,
-} from "lucide-react";
+  ChatCircleTextIcon as MessageCircleIcon,
+  BroadcastIcon as BellIconAlias,
+  ImageIcon,
+  FileTextIcon,
+  FadersHorizontalIcon as SearchIcon,
+} from "@phosphor-icons/react";
 import { type ComponentType, type ReactElement } from "react";
 
 export type NotificationType = "discord" | "telegram" | "slack" | "email" | "webhook";
@@ -32,12 +33,12 @@ export const NOTIFICATION_ICONS: Record<NotificationType, ComponentType<{ classN
   telegram: SendIcon,
   slack: MessageCircleIcon,
   email: MailIcon,
-  webhook: BellIcon,
+  webhook: BellIconAlias,
 };
 
 export const ACTION_ICONS: Record<ActionType, ComponentType<{ className?: string }>> = {
   send_sol: BanknoteIcon,
-  send_spl_token: CircleDollarSignIcon,
+  send_spl_token: CoinsIcon,
   call_program: CodeIcon,
   do_nothing: CircleOffIcon,
 };

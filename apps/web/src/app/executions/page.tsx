@@ -1,14 +1,14 @@
 "use client";
 
-import { usePrivy } from "@privy-io/react-auth";
 import { Header } from "@/components/layout/header";
 import { AuthError } from "@/components/ui/auth-error";
 import { useExecutions } from "@/lib/hooks/use-executions";
 import { useWorkflows } from "@/lib/hooks/use-workflows";
+import { useWalletAuth } from "@/components/providers/wallet-auth-provider";
 import { ExecutionStatus } from "utils";
 
 export default function ExecutionsPage() {
-  const { authenticated, ready } = usePrivy();
+  const { authenticated, ready } = useWalletAuth();
   const { data: executionsData, isLoading, error } = useExecutions();
   const { data: workflowsData } = useWorkflows();
 

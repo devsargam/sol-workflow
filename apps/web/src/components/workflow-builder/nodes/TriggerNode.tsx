@@ -3,14 +3,14 @@
 import { cn } from "@/lib/utils";
 import { Handle, NodeProps, Position } from "@xyflow/react";
 import {
-  BanknoteIcon,
-  CircleDollarSignIcon,
   ClockIcon,
   CodeIcon,
+  CurrencyCircleDollarIcon as CircleDollarSignIcon,
   FileTextIcon,
   ImageIcon,
-  ZapIcon,
-} from "lucide-react";
+  LightningIcon as ZapIcon,
+  MoneyIcon as BanknoteIcon,
+} from "@phosphor-icons/react";
 import { memo } from "react";
 import type { TriggerNodeData } from "../types";
 import { rowHandleStyle } from "./node-layout";

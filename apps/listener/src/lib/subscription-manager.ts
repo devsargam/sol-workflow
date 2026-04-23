@@ -30,6 +30,7 @@ interface TriggerNode {
 
 export class SubscriptionManager {
   private subscriptions: Map<string, number> = new Map();
+  private balanceSnapshots: Map<string, number> = new Map();
   private connection: Connection;
   private queue: Queue;
 
@@ -106,8 +107,8 @@ export class SubscriptionManager {
 
   async subscribe(workflow: Workflow): Promise<void> {
     const triggerNodes = workflow.graph.nodes.filter(
-      (n: TriggerNode) => n.type === NodeType.TRIGGER
-    ) as TriggerNode[];
+      (n) => n.type === NodeType.TRIGGER
+    ) as unknown as TriggerNode[];
 
     log.debug(
       `[SubscriptionManager] Workflow ${workflow.id}: Found ${triggerNodes.length} trigger nodes out of ${workflow.graph.nodes.length} total nodes`,
@@ -123,7 +124,7 @@ export class SubscriptionManager {
       log.warn(`No trigger nodes found in workflow ${workflow.id}`, {
         service: "listener",
         workflowId: workflow.id,
-        availableNodeTypes: workflow.graph.nodes.map((n: TriggerNode) => n.type).join(", "),
+        availableNodeTypes: workflow.graph.nodes.map((n) => n.type).join(", "),
       });
       return;
     }
@@ -223,16 +224,54 @@ export class SubscriptionManager {
       }
     );
     const address = new PublicKey(config.address);
+    const snapshotKey = `${workflow.id}:${triggerNodeId}:${address.toBase58()}`;
+
+    try {
+      const initialLamports = await this.connection.getBalance(address, SOLANA.COMMITMENT);
+      this.balanceSnapshots.set(snapshotKey, initialLamports);
+    } catch (error) {
+      log.warn(`Unable to seed balance snapshot for ${address.toBase58()}`, {
+        service: "listener",
+        workflowId: workflow.id,
+        triggerNodeId,
+        address: address.toBase58(),
+      });
+    }
 
     const subscriptionId = this.connection.onAccountChange(
       address,
       async (accountInfo, context) => {
+        const previousLamports = this.balanceSnapshots.get(snapshotKey) ?? accountInfo.lamports;
+        const changeLamports = accountInfo.lamports - previousLamports;
+        const changeDirection =
+          changeLamports > 0 ? "increase" : changeLamports < 0 ? "decrease" : "same";
+        const absoluteChange = Math.abs(changeLamports);
+        const minChange = Number(config.minChange ?? 0);
+        const requestedChangeType = config.changeType || "any";
+
+        this.balanceSnapshots.set(snapshotKey, accountInfo.lamports);
+
+        if (requestedChangeType === "increase" && changeLamports <= 0) {
+          return;
+        }
+
+        if (requestedChangeType === "decrease" && changeLamports >= 0) {
+          return;
+        }
+
+        if (absoluteChange < minChange) {
+          return;
+        }
+
         log.info(`Account change detected for ${address.toBase58()} (workflow: ${workflow.name})`, {
           service: "listener",
           workflowId: workflow.id,
           workflowName: workflow.name,
           address: address.toBase58(),
+          previousLamports,
           lamports: accountInfo.lamports,
+          changeLamports,
+          changeDirection,
           slot: context.slot,
         });
 
@@ -250,7 +289,11 @@ export class SubscriptionManager {
             triggerNodeId,
             triggerData: {
               address: address.toBase58(),
+              previousLamports,
               lamports: accountInfo.lamports,
+              changeLamports,
+              changeSol: changeLamports / 1_000_000_000,
+              changeDirection,
               slot: context.slot,
             },
             graph: workflow.graph,
@@ -480,6 +523,12 @@ export class SubscriptionManager {
 
     // Remove from database
     await this.removeSubscriptionFromDb(workflowId);
+
+    for (const key of Array.from(this.balanceSnapshots.keys())) {
+      if (key.startsWith(`${workflowId}:`)) {
+        this.balanceSnapshots.delete(key);
+      }
+    }
   }
 
   async unsubscribeAll(): Promise<void> {
@@ -498,6 +547,7 @@ export class SubscriptionManager {
       }
     }
     this.subscriptions.clear();
+    this.balanceSnapshots.clear();
   }
 
   getStats() {

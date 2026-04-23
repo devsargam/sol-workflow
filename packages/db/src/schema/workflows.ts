@@ -6,7 +6,7 @@ export const workflows = pgTable("workflows", {
   description: text("description"),
 
   // User ownership
-  userId: text("user_id"), // Privy user ID
+  userId: text("user_id"), // Wallet address or other auth subject
 
   // Graph-based workflow definition
   graph: jsonb("graph").notNull(), // Contains nodes and edges for the workflow

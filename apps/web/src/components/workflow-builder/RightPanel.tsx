@@ -4,18 +4,18 @@ import { cn } from "@/lib/utils";
 import { useReactFlow, type Edge, type Node } from "@xyflow/react";
 import {
   ArrowLeftIcon,
-  BanknoteIcon,
-  BellIcon,
-  MailIcon,
+  BroadcastIcon as WebhookIcon,
+  ChatCircleTextIcon as MessageCircleIcon,
+  EnvelopeSimpleIcon as MailIcon,
+  FadersHorizontalIcon as SlidersHorizontalIcon,
+  LightningIcon as ZapIcon,
   MegaphoneIcon,
-  MessageCircleIcon,
+  MoneyIcon as BanknoteIcon,
   PlusIcon,
-  SendIcon,
-  SlidersHorizontalIcon,
-  WebhookIcon,
   XIcon,
-  ZapIcon,
-} from "lucide-react";
+  BellIcon,
+  PaperPlaneTiltIcon as SendIcon,
+} from "@phosphor-icons/react";
 import { useState, useCallback, useMemo } from "react";
 import type {
   ActionNodeData,
@@ -321,7 +321,15 @@ type Condition = { field: string; operator: string; value: string };
 type ReferenceSuggestion = { value: string; label: string; hint: string };
 
 const TRIGGER_REFERENCE_FIELDS: Record<string, string[]> = {
-  balance_change: ["address", "lamports", "slot"],
+  balance_change: [
+    "address",
+    "lamports",
+    "previousLamports",
+    "changeLamports",
+    "changeSol",
+    "changeDirection",
+    "slot",
+  ],
   token_receipt: ["address", "slot", "accountData", "type"],
   nft_receipt: ["address", "slot", "accountData", "type"],
   transaction_status: ["signature", "status", "slot", "err"],

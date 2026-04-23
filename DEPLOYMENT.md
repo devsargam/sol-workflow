@@ -45,7 +45,7 @@ Provision these first:
 - Redis 7+
 - A Solana RPC endpoint
 - A Solana WebSocket endpoint
-- A Privy app with both app ID and secret
+- An application auth secret for wallet challenge verification
 
 Make sure PostgreSQL allows inbound traffic from your Coolify host and that Redis requires authentication.
 
@@ -75,13 +75,11 @@ Set these at the stack level in Coolify so all services can inherit them:
 - `NEXT_PUBLIC_API_URL`
 - `NEXT_PUBLIC_SOLANA_RPC_URL`
 - `NEXT_PUBLIC_SOLANA_NETWORK`
-- `NEXT_PUBLIC_PRIVY_APP_ID`
 
 #### Required for the API
 
 - `CORS_ORIGIN`
-- `PRIVY_APP_ID`
-- `PRIVY_APP_SECRET`
+- `AUTH_SECRET`
 
 #### Optional runtime tuning
 
@@ -103,9 +101,7 @@ CORS_ORIGIN=https://app.yourdomain.com
 NEXT_PUBLIC_API_URL=https://api.yourdomain.com
 NEXT_PUBLIC_SOLANA_RPC_URL=https://your-rpc-provider.example
 NEXT_PUBLIC_SOLANA_NETWORK=mainnet-beta
-NEXT_PUBLIC_PRIVY_APP_ID=your-privy-app-id
-PRIVY_APP_ID=your-privy-app-id
-PRIVY_APP_SECRET=your-privy-app-secret
+AUTH_SECRET=replace-me-with-a-long-random-secret
 WORKER_CONCURRENCY=5
 RATE_LIMIT_MAX=10
 RATE_LIMIT_DURATION=1000
@@ -180,7 +176,7 @@ After deploy:
 ### `api`
 
 - Public JSON API
-- Needs PostgreSQL, Redis, Solana, and Privy credentials
+- Needs PostgreSQL, Redis, Solana, and an auth secret
 - Exposes `/health`, `/ready`, and `/live`
 - Also initializes cron scheduling unless `ENABLE_CRON=false`
 
@@ -206,7 +202,7 @@ After deploy:
 
 ## Important Notes
 
-- The API must have `PRIVY_APP_ID` and `PRIVY_APP_SECRET` set at startup
+- The API must have `AUTH_SECRET` set at startup
 - `NEXT_PUBLIC_*` values for the frontend should point at the public production API and RPC endpoints
 - `CORS_ORIGIN` should be the exact public frontend URL
 - `SOLANA_WS_URL` must be a websocket endpoint, not an HTTPS URL

@@ -53,6 +53,7 @@ export const API = {
     DEFAULT_ORIGIN: "http://localhost:3000",
   },
   ROUTES: {
+    AUTH: "/auth",
     WORKFLOWS: "/workflows",
     EXECUTIONS: "/executions",
     SOLANA: "/solana",

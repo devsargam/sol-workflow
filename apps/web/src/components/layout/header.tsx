@@ -2,86 +2,87 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
-import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { useEffect, useState } from "react";
+import { CirclesFourIcon } from "@phosphor-icons/react";
+import { useWalletAuth } from "@/components/providers/wallet-auth-provider";
 
 function WorkflowIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className}>
-      <circle cx="12" cy="12" r="4" fill="currentColor" />
-      <motion.circle
-        cx="12"
-        cy="12"
-        r="8"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeDasharray="4 2"
-        initial={{ rotate: 0 }}
-        animate={{ rotate: 360 }}
-        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-        style={{ transformOrigin: "center" }}
-      />
-    </svg>
-  );
+  return <CirclesFourIcon className={className} weight="regular" />;
 }
 
 export function Header() {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
-  const hasValidAppId = Boolean(
-    process.env.NEXT_PUBLIC_PRIVY_APP_ID &&
-      process.env.NEXT_PUBLIC_PRIVY_APP_ID !== "missing_privy_app_id"
-  );
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   return (
-    <header className="border-b border-black bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
-          <motion.div whileHover={{ scale: 1.1 }} transition={{ type: "spring", stiffness: 400 }}>
-            <WorkflowIcon className="size-8" />
-          </motion.div>
-          <span className="text-xl font-dynapuff">SOL Workflow</span>
+    <header
+      className="sticky top-0 z-50 border-b"
+      style={{
+        borderColor: "rgba(23, 23, 23, 0.08)",
+        background: "rgba(255, 255, 255, 0.92)",
+        backdropFilter: "blur(12px)",
+      }}
+    >
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+        <Link href="/" className="flex items-center gap-3">
+          <div
+            className="flex h-10 w-10 items-center justify-center rounded-full border"
+            style={{
+              borderColor: "rgba(23, 23, 23, 0.08)",
+              color: "var(--text-primary)",
+            }}
+          >
+            <WorkflowIcon className="size-5" />
+          </div>
+          <span
+            className="text-xl font-semibold tracking-[-0.03em]"
+            style={{ color: "var(--text-primary)" }}
+          >
+            SOL Workflow
+          </span>
         </Link>
 
-        <nav className="flex items-center gap-1">
+        <nav
+          className="hidden items-center gap-1 rounded-2xl border p-1 md:flex"
+          style={{
+            background: "rgba(23, 23, 23, 0.03)",
+            borderColor: "rgba(23, 23, 23, 0.06)",
+          }}
+        >
           <Link
             href="/workflows"
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              pathname === "/workflows"
-                ? "bg-neutral-100 text-neutral-900"
-                : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50"
-            }`}
+            className="rounded-xl px-4 py-2 text-sm font-medium"
+            style={{
+              background: pathname === "/workflows" ? "white" : "transparent",
+              color: pathname === "/workflows" ? "var(--text-primary)" : "var(--text-secondary)",
+            }}
           >
             Workflows
           </Link>
           <Link
             href="/executions"
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              pathname === "/executions"
-                ? "bg-neutral-100 text-neutral-900"
-                : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50"
-            }`}
+            className="rounded-xl px-4 py-2 text-sm font-medium"
+            style={{
+              background: pathname === "/executions" ? "white" : "transparent",
+              color: pathname === "/executions" ? "var(--text-primary)" : "var(--text-secondary)",
+            }}
           >
             Executions
           </Link>
         </nav>
 
-        <div className="flex items-center gap-4">
-          {mounted && hasValidAppId ? <HeaderAuth /> : null}
-        </div>
+        <div className="flex items-center gap-4">{mounted ? <HeaderAuth /> : null}</div>
       </div>
     </header>
   );
 }
 
 function HeaderAuth() {
-  const { ready, authenticated, login, logout, user } = usePrivy();
-  const { wallets } = useWallets();
+  const { ready, authenticated, login, logout, walletAddress } = useWalletAuth();
 
   if (!ready) {
     return null;
@@ -90,19 +91,20 @@ function HeaderAuth() {
   if (authenticated) {
     return (
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 text-sm text-neutral-600">
-          {user?.email?.address && (
-            <span className="hidden sm:inline">{user.email.address}</span>
-          )}
-          {wallets.length > 0 && wallets[0] && (
-            <span className="hidden sm:inline font-mono text-xs">
-              {wallets[0].address.slice(0, 4)}...{wallets[0].address.slice(-4)}
+        <div className="flex items-center gap-2 text-sm" style={{ color: "var(--text-secondary)" }}>
+          {walletAddress && (
+            <span
+              className="hidden rounded-md border px-3 py-1 font-mono text-xs sm:inline"
+              style={{ borderColor: "rgba(23, 23, 23, 0.08)" }}
+            >
+              {walletAddress.slice(0, 4)}...{walletAddress.slice(-4)}
             </span>
           )}
         </div>
         <button
           onClick={logout}
-          className="px-4 py-2 text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors"
+          className="rounded-md px-4 py-2 text-sm font-medium"
+          style={{ color: "var(--text-primary)" }}
         >
           Logout
         </button>
@@ -113,9 +115,14 @@ function HeaderAuth() {
   return (
     <button
       onClick={login}
-      className="px-4 py-2 bg-black text-white rounded-md hover:bg-neutral-800 transition-colors text-sm font-medium"
+      className="rounded-xl border px-4 py-2 text-sm font-medium"
+      style={{
+        background: "white",
+        borderColor: "rgba(23, 23, 23, 0.08)",
+        color: "var(--text-primary)",
+      }}
     >
-      Login
+      Connect Wallet
     </button>
   );
 }
