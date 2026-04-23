@@ -90,14 +90,6 @@ function getNotifyInfo(graph: any) {
   };
 }
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
 function WorkflowPageTitle() {
   return (
     <div>
