@@ -54,6 +54,7 @@ export const API = {
   },
   ROUTES: {
     AUTH: "/auth",
+    TELEGRAM: "/telegram",
     WORKFLOWS: "/workflows",
     EXECUTIONS: "/executions",
     SOLANA: "/solana",

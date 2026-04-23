@@ -32,6 +32,9 @@ importers:
       '@repo/solana':
         specifier: workspace:*
         version: link:../../packages/solana
+      '@repo/telegram':
+        specifier: workspace:*
+        version: link:../../packages/telegram
       '@repo/types':
         specifier: workspace:*
         version: link:../../packages/types
