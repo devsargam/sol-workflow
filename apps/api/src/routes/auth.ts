@@ -8,6 +8,7 @@ import {
   createAuthToken,
   createWalletChallenge,
 } from "../lib/auth";
+import { db, users } from "@repo/db";
 
 const auth = new Hono();
 
@@ -51,6 +52,8 @@ auth.post("/verify", zValidator("json", verifySchema), async (c) => {
     }
 
     const token = await createAuthToken(walletAddress);
+
+    await db.insert(users).values({ walletAddress }).onConflictDoNothing();
 
     return c.json({
       token,

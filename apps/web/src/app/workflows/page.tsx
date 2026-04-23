@@ -270,7 +270,7 @@ function WorkflowCard({
               "rounded-md border px-3 py-1 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60",
               workflow.enabled
                 ? "border-[#9945FF]/20 bg-[#9945FF]/10 text-[#9945FF]"
-                : "border-white/[0.08] bg-white/[0.05] text-white/40",
+                : "border-neutral-300 bg-neutral-100 text-neutral-400 dark:border-white/[0.08] dark:bg-white/[0.05] dark:text-white/40",
             ].join(" ")}
           >
             {workflow.enabled ? "Live" : "Paused"}
@@ -292,13 +292,13 @@ function StatusPill({ enabled }: { enabled: boolean }) {
         "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs",
         enabled
           ? "border-[#14F195]/20 bg-[#14F195]/10 text-[#14F195]"
-          : "border-white/[0.08] bg-white/[0.05] text-white/40",
+          : "border-neutral-300 bg-neutral-100 text-neutral-400 dark:border-white/[0.08] dark:bg-white/[0.05] dark:text-white/40",
       ].join(" ")}
     >
       <span
         className={[
           "h-1 w-1 rounded-full",
-          enabled ? "bg-[#14F195]" : "bg-white/20",
+          enabled ? "bg-[#14F195]" : "bg-neutral-300 dark:bg-white/20",
         ].join(" ")}
       />
       {enabled ? "Live" : "Paused"}

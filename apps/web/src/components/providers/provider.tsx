@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { QueryProvider } from "./query-provider";
 import { WalletAuthProvider } from "./wallet-auth-provider";
+import { AnnouncementBanner } from "@/components/layout/announcement-banner";
 
 export function Provider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
@@ -35,7 +36,10 @@ export function Provider({ children }: { children: React.ReactNode }) {
       }}
     >
       <WalletAuthProvider>
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          <AnnouncementBanner />
+          {children}
+        </QueryProvider>
       </WalletAuthProvider>
     </UnifiedWalletProvider>
   );

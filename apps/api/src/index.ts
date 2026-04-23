@@ -16,6 +16,30 @@ import { ENV_DEFAULTS, API, QUEUES, getRedisOptions } from "utils";
 
 const app = new Hono();
 
+function normalizeOrigin(origin: string) {
+  return origin.trim().replace(/\/+$/, "");
+}
+
+const allowedCorsOrigins = (
+  process.env.CORS_ORIGIN?.split(",") ?? [ENV_DEFAULTS.CORS_ORIGIN]
+)
+  .map(normalizeOrigin)
+  .filter(Boolean);
+
+function resolveCorsOrigin(requestOrigin?: string) {
+  if (!requestOrigin) {
+    return undefined;
+  }
+
+  const normalizedRequestOrigin = normalizeOrigin(requestOrigin);
+
+  if (allowedCorsOrigins.includes(normalizedRequestOrigin)) {
+    return requestOrigin;
+  }
+
+  return undefined;
+}
+
 // Initialize Redis and BullMQ Queue for cron scheduling
 const { url: redisUrl, options: redisOptions } = getRedisOptions();
 const redis = new Redis(redisUrl, redisOptions);
@@ -32,12 +56,13 @@ app.use("*", prettyJSON());
 app.use(
   "*",
   cors({
-    origin: process.env.CORS_ORIGIN || ENV_DEFAULTS.CORS_ORIGIN,
+    origin: resolveCorsOrigin,
     credentials: true,
   })
 );
 
 app.route(API.ROUTES.AUTH, authRoutes);
+app.route(`/api${API.ROUTES.AUTH}`, authRoutes);
 app.route(API.ROUTES.WORKFLOWS, workflowRoutes); // Graph-based API
 app.route(API.ROUTES.EXECUTIONS, executionRoutes);
 app.route(API.ROUTES.SOLANA, solanaRoutes);

@@ -2,7 +2,49 @@
 import { ENV_DEFAULTS, WORKFLOW_METADATA, API } from "utils";
 import { getStoredWalletSession } from "./auth-storage";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || ENV_DEFAULTS.NEXT_PUBLIC_API_URL;
+function normalizeUrl(url: string) {
+  return url.trim().replace(/\/+$/, "");
+}
+
+function resolveApiUrl() {
+  const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+
+  if (configuredApiUrl) {
+    return normalizeUrl(configuredApiUrl);
+  }
+
+  if (typeof window === "undefined") {
+    return normalizeUrl(ENV_DEFAULTS.NEXT_PUBLIC_API_URL);
+  }
+
+  const { protocol, hostname } = window.location;
+
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    return "http://localhost:3001";
+  }
+
+  const baseHostname = hostname.replace(/^(www|app)\./, "");
+  return `${protocol}//api.${baseHostname}`;
+}
+
+const API_URL = resolveApiUrl();
+const AUTH_ROUTE_CANDIDATES = Array.from(new Set([API.ROUTES.AUTH, `/api${API.ROUTES.AUTH}`]));
+
+async function fetchAuthRoute(path: string, init: RequestInit) {
+  let lastResponse: Response | null = null;
+
+  for (const route of AUTH_ROUTE_CANDIDATES) {
+    const response = await fetch(`${API_URL}${route}${path}`, init);
+
+    if (response.status !== 404) {
+      return response;
+    }
+
+    lastResponse = response;
+  }
+
+  return lastResponse ?? fetch(`${API_URL}${API.ROUTES.AUTH}${path}`, init);
+}
 
 async function getAuthHeaders(): Promise<HeadersInit> {
   const token = getStoredWalletSession()?.token;
@@ -16,7 +58,7 @@ async function getAuthHeaders(): Promise<HeadersInit> {
 export async function requestWalletChallenge(
   walletAddress: string
 ): Promise<{ nonce: string; message: string; expiresIn: number }> {
-  const res = await fetch(`${API_URL}${API.ROUTES.AUTH}/challenge`, {
+  const res = await fetchAuthRoute("/challenge", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -37,7 +79,7 @@ export async function verifyWalletChallenge(data: {
   message: string;
   signature: string;
 }): Promise<{ token: string; walletAddress: string }> {
-  const res = await fetch(`${API_URL}${API.ROUTES.AUTH}/verify`, {
+  const res = await fetchAuthRoute("/verify", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -199,6 +241,45 @@ export async function toggleWorkflow(id: string): Promise<{ workflow: Workflow }
     throw new Error("Failed to toggle workflow");
   }
   return res.json();
+}
+
+export function buildBalanceMonitorGraph(walletAddress: string): WorkflowGraph {
+  return {
+    nodes: [
+      {
+        id: "trigger-1",
+        type: "trigger",
+        position: { x: 250, y: 100 },
+        data: {
+          nodeType: "trigger",
+          triggerType: "balance_change",
+          config: { address: walletAddress, changeType: "increase" },
+        },
+      },
+      {
+        id: "action-1",
+        type: "action",
+        position: { x: 250, y: 300 },
+        data: {
+          nodeType: "action",
+          actionType: "do_nothing",
+          config: {},
+        },
+      },
+    ],
+    edges: [{ id: "edge-1", source: "trigger-1", target: "action-1" }],
+  };
+}
+
+export async function createBalanceMonitorWorkflow(
+  walletAddress: string
+): Promise<{ workflow: Workflow }> {
+  return createWorkflow({
+    name: "SOL Balance Monitor",
+    description: "Watches for incoming SOL to your wallet",
+    graph: buildBalanceMonitorGraph(walletAddress),
+    metadata: { createdWith: "quick-setup" },
+  });
 }
 
 // Executions API

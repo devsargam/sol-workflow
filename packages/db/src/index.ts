@@ -16,3 +16,4 @@ export type { Workflow, NewWorkflow } from "./schema/workflows";
 export type { Execution, NewExecution } from "./schema/executions";
 export type { TriggerSubscription, NewTriggerSubscription } from "./schema/trigger-subscriptions";
 export type { AuditLog, NewAuditLog } from "./schema/audit-logs";
+export type { User, NewUser } from "./schema/users";
