@@ -1,7 +1,7 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { CirclesFourIcon } from "@phosphor-icons/react";
 import { useWalletAuth } from "@/components/providers/wallet-auth-provider";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -24,7 +24,14 @@ export function DarkNav({ links = [], sticky = false }: DarkNavProps) {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-5 sm:px-8 sm:py-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 text-foreground">
-          <CirclesFourIcon className="size-[18px]" weight="regular" />
+          <Image
+            src="/logo.jpg"
+            alt="dolphinflow logo"
+            width={20}
+            height={20}
+            className="h-5 w-5 rounded-full object-cover"
+            priority
+          />
           <span className="text-sm font-semibold tracking-tight">dolphinflow</span>
         </Link>
 

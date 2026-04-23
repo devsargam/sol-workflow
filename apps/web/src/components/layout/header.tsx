@@ -1,15 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CirclesFourIcon } from "@phosphor-icons/react";
 import { useWalletAuth } from "@/components/providers/wallet-auth-provider";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-
-function WorkflowIcon({ className }: { className?: string }) {
-  return <CirclesFourIcon className={className} weight="regular" />;
-}
 
 export function Header() {
   const pathname = usePathname();
@@ -30,15 +26,14 @@ export function Header() {
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center gap-3">
-          <div
-            className="flex h-10 w-10 items-center justify-center rounded-full border"
-            style={{
-              borderColor: "rgba(23, 23, 23, 0.08)",
-              color: "var(--text-primary)",
-            }}
-          >
-            <WorkflowIcon className="size-5" />
-          </div>
+          <Image
+            src="/logo.jpg"
+            alt="dolphinflow logo"
+            width={40}
+            height={40}
+            className="h-10 w-10 rounded-full object-cover"
+            priority
+          />
           <span
             className="text-xl font-semibold tracking-[-0.03em]"
             style={{ color: "var(--text-primary)" }}
