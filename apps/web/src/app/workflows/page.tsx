@@ -267,7 +267,7 @@ function WorkflowCard({
             onClick={onToggle}
             disabled={togglePending}
             className={[
-              "rounded-md border px-3 py-1 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60",
+              "rounded-md border px-3 py-1 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 min-w-20",
               workflow.enabled
                 ? "border-[#9945FF]/20 bg-[#9945FF]/10 text-[#9945FF]"
                 : "border-neutral-300 bg-neutral-100 text-neutral-400 dark:border-white/[0.08] dark:bg-white/[0.05] dark:text-white/40",
@@ -339,9 +339,7 @@ function StatusPill({ enabled }: { enabled: boolean }) {
 
 function StatePanel({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-12 text-center">
-      {children}
-    </div>
+    <div className="rounded-2xl border border-border bg-card p-12 text-center">{children}</div>
   );
 }
 
