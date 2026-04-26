@@ -107,27 +107,8 @@ const notifyValidators: Record<string, NodeValidator> = {
 
     return errors;
   },
-  telegram: (node) => {
-    const data = node.data as NotifyNodeData;
-    const errors: ValidationError[] = [];
-
-    if (
-      !data.telegramBotToken ||
-      typeof data.telegramBotToken !== "string" ||
-      data.telegramBotToken.trim().length === 0
-    ) {
-      errors.push(`Notify node ${node.id}: Telegram bot token is required`);
-    }
-
-    if (
-      !data.telegramChatId ||
-      typeof data.telegramChatId !== "string" ||
-      data.telegramChatId.trim().length === 0
-    ) {
-      errors.push(`Notify node ${node.id}: Telegram chat ID is required`);
-    }
-
-    return errors;
+  telegram: (_node) => {
+    return [];
   },
   webhook: (node) => {
     const data = node.data as NotifyNodeData;

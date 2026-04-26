@@ -995,7 +995,7 @@ function NotifyEditor({ id, data }: { id: string; data: NotifyNodeData }) {
                 <NodeField label="Bot Token">
                   <NodeInput
                     mono
-                    placeholder="1234567890:ABC..."
+                    placeholder="Optional — fallback to Dolphinflow default bot"
                     value={notif.telegramBotToken || ""}
                     onChange={(e) => update(i, { telegramBotToken: e.target.value })}
                   />
@@ -1003,11 +1003,14 @@ function NotifyEditor({ id, data }: { id: string; data: NotifyNodeData }) {
                 <NodeField label="Chat ID">
                   <NodeInput
                     mono
-                    placeholder="-100..."
+                    placeholder="Optional — fallback to Dolphinflow default chat"
                     value={notif.telegramChatId || ""}
                     onChange={(e) => update(i, { telegramChatId: e.target.value })}
                   />
                 </NodeField>
+                <p className="text-[11px] text-[var(--text-muted)]">
+                  Leave these blank to send to Dolphinflow&apos;s default Telegram bot and chat.
+                </p>
               </>
             )}
 

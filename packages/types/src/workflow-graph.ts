@@ -162,20 +162,7 @@ export const SingleNotificationConfigSchema = z
     }
 
     if (data.notifyType === "telegram") {
-      if (!data.telegramBotToken) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["telegramBotToken"],
-          message: "telegramBotToken is required for telegram notifications",
-        });
-      }
-      if (!data.telegramChatId) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["telegramChatId"],
-          message: "telegramChatId is required for telegram notifications",
-        });
-      }
+      return;
     }
   });
 
@@ -216,20 +203,7 @@ export const NotifyNodeDataSchema = z
         }
 
         if (notification.notifyType === "telegram") {
-          if (!notification.telegramBotToken) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              path: ["notifications", index, "telegramBotToken"],
-              message: "telegramBotToken is required for telegram notifications",
-            });
-          }
-          if (!notification.telegramChatId) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              path: ["notifications", index, "telegramChatId"],
-              message: "telegramChatId is required for telegram notifications",
-            });
-          }
+          return;
         }
       });
     } else if (data.notifyType) {
@@ -250,20 +224,7 @@ export const NotifyNodeDataSchema = z
       }
 
       if (data.notifyType === "telegram") {
-        if (!data.telegramBotToken) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ["telegramBotToken"],
-            message: "telegramBotToken is required for telegram notifications",
-          });
-        }
-        if (!data.telegramChatId) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ["telegramChatId"],
-            message: "telegramChatId is required for telegram notifications",
-          });
-        }
+        return;
       }
     } else {
       ctx.addIssue({

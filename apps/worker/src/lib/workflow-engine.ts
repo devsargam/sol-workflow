@@ -563,11 +563,7 @@ class NotifyNodeExecutor implements NodeExecutor {
     try {
       if (notificationConfig.notifyType === "discord" && notificationConfig.webhookUrl) {
         await this.sendDiscordNotification(notificationConfig, context);
-      } else if (
-        notificationConfig.notifyType === "telegram" &&
-        notificationConfig.telegramBotToken &&
-        notificationConfig.telegramChatId
-      ) {
+      } else if (notificationConfig.notifyType === "telegram") {
         await this.sendTelegramNotification(notificationConfig, context);
       } else if (notificationConfig.notifyType === "webhook" && notificationConfig.webhookUrl) {
         await this.sendWebhook(
@@ -651,7 +647,18 @@ class NotifyNodeExecutor implements NodeExecutor {
       throw new Error(`Workflow ${context.workflowId} not found`);
     }
 
-    const telegramClient = createTelegramClient(data.telegramBotToken!);
+    const botToken = data.telegramBotToken?.trim() || process.env.TELEGRAM_BOT_TOKEN?.trim();
+    const chatId = data.telegramChatId?.trim() || process.env.TELEGRAM_DEFAULT_CHAT_ID?.trim();
+
+    if (!botToken) {
+      throw new Error("Telegram bot token is not configured on the notification or Dolphinflow server");
+    }
+
+    if (!chatId) {
+      throw new Error("Telegram chat ID is not configured on the notification or Dolphinflow server");
+    }
+
+    const telegramClient = createTelegramClient(botToken);
     const txSignature = context.variables.get("txSignature");
 
     // Extract trigger type from the graph
@@ -674,7 +681,7 @@ class NotifyNodeExecutor implements NodeExecutor {
     const customPrefix = data.customMessage ? `${data.customMessage}\n\n` : "";
 
     await telegramClient.sendMessage({
-      chat_id: data.telegramChatId!,
+      chat_id: chatId,
       text: `${customPrefix}${template.text}`,
       parse_mode: data.telegramParseMode,
       disable_web_page_preview: data.telegramDisableWebPreview ?? template.disableWebPagePreview,
