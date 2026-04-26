@@ -1,7 +1,9 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { getPublicApiBaseUrl } from "@/lib/api";
 import { useReactFlow, type Edge, type Node } from "@xyflow/react";
+import { API } from "utils";
 import {
   ArrowLeftIcon,
   BroadcastIcon as WebhookIcon,
@@ -15,8 +17,9 @@ import {
   XIcon,
   BellIcon,
   PaperPlaneTiltIcon as SendIcon,
+  WebhooksLogoIcon,
 } from "@phosphor-icons/react";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import type {
   ActionNodeData,
   FilterNodeData,
@@ -193,7 +196,7 @@ export function RightPanel({
       {/* ── Tab content ── */}
       <div className="flex-1 overflow-y-auto">
         {activeTab === "editor" && (
-          <EditorTab selectedNode={selectedNode} />
+          <EditorTab selectedNode={selectedNode} workflowId={editId} />
         )}
         {activeTab === "toolbar" && <ToolbarTab />}
       </div>
@@ -203,7 +206,13 @@ export function RightPanel({
 
 // ─── Editor tab ───────────────────────────────────────────────
 
-function EditorTab({ selectedNode }: { selectedNode: Node | null }) {
+function EditorTab({
+  selectedNode,
+  workflowId,
+}: {
+  selectedNode: Node | null;
+  workflowId?: string | null;
+}) {
   if (!selectedNode) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -221,7 +230,11 @@ function EditorTab({ selectedNode }: { selectedNode: Node | null }) {
       </p>
 
       {selectedNode.type === "trigger" && (
-        <TriggerEditor id={selectedNode.id} data={selectedNode.data as TriggerNodeData} />
+        <TriggerEditor
+          id={selectedNode.id}
+          data={selectedNode.data as TriggerNodeData}
+          workflowId={workflowId}
+        />
       )}
       {selectedNode.type === "filter" && (
         <FilterEditor id={selectedNode.id} data={selectedNode.data as FilterNodeData} />
@@ -236,14 +249,43 @@ function EditorTab({ selectedNode }: { selectedNode: Node | null }) {
   );
 }
 
+function buildWebhookUrl(webhookId: string | undefined) {
+  if (!webhookId) return "";
+  return `${getPublicApiBaseUrl()}${API.ROUTES.WEBHOOKS}/${webhookId}`;
+}
+
 // ─── Trigger editor ───────────────────────────────────────────
 
-function TriggerEditor({ id, data }: { id: string; data: TriggerNodeData }) {
+function TriggerEditor({
+  id,
+  data,
+  workflowId,
+}: {
+  id: string;
+  data: TriggerNodeData;
+  workflowId?: string | null;
+}) {
   const { updateNodeData } = useReactFlow();
-  const isCron = data.type === "cron";
+  const triggerType = data.triggerType || data.type || "balance_change";
+  const isCron = triggerType === "cron";
+  const isWebhook = triggerType === "webhook";
+  const webhookUrl = buildWebhookUrl(data.config?.webhookId);
+  const webhookInputFormat = data.config?.inputFormat || [];
 
   const setType = useCallback(
-    (type: string) => updateNodeData(id, (n) => ({ ...n.data, type, triggerType: type })),
+    (type: string) =>
+      updateNodeData(id, (n) => {
+        const current = n.data as TriggerNodeData;
+        const nextConfig = { ...(current.config || {}) };
+
+        if (type === "webhook") {
+          nextConfig.webhookId ||= crypto.randomUUID();
+          nextConfig.authEnabled ??= false;
+          nextConfig.authHeaderName ||= "Authorization";
+        }
+
+        return { ...n.data, type, triggerType: type, config: nextConfig };
+      }),
     [id, updateNodeData]
   );
   const setConfig = useCallback(
@@ -254,11 +296,30 @@ function TriggerEditor({ id, data }: { id: string; data: TriggerNodeData }) {
     [id, updateNodeData]
   );
 
+  useEffect(() => {
+    if (!isWebhook) return;
+
+    if (!data.config?.webhookId) {
+      setConfig({ webhookId: crypto.randomUUID(), authEnabled: data.config?.authEnabled ?? false });
+      return;
+    }
+
+    if (data.config?.authEnabled && !data.config?.authHeaderName) {
+      setConfig({ authHeaderName: "Authorization" });
+    }
+  }, [
+    data.config?.authEnabled,
+    data.config?.authHeaderName,
+    data.config?.webhookId,
+    isWebhook,
+    setConfig,
+  ]);
+
   return (
     <div className="space-y-3">
       <NodeField label="Event Type">
         <NodeSelect
-          value={data.type || "balance_change"}
+          value={triggerType}
           onChange={(e) => setType(e.target.value)}
         >
           <option value="balance_change">Balance Change</option>
@@ -267,10 +328,11 @@ function TriggerEditor({ id, data }: { id: string; data: TriggerNodeData }) {
           <option value="transaction_status">Transaction Status</option>
           <option value="program_log">Program Log</option>
           <option value="cron">Scheduled (Cron)</option>
+          <option value="webhook">Webhook</option>
         </NodeSelect>
       </NodeField>
 
-      {!isCron && (
+      {!isCron && !isWebhook && (
         <NodeField label="Address">
           <NodeInput
             mono
@@ -281,7 +343,7 @@ function TriggerEditor({ id, data }: { id: string; data: TriggerNodeData }) {
         </NodeField>
       )}
 
-      {data.type === "program_log" && (
+      {triggerType === "program_log" && (
         <NodeField label="Log Pattern">
           <NodeInput
             placeholder="pattern to match..."
@@ -310,6 +372,79 @@ function TriggerEditor({ id, data }: { id: string; data: TriggerNodeData }) {
           </NodeField>
         </>
       )}
+
+      {isWebhook && (
+        <>
+          <NodeField label="Webhook URL">
+            <NodeInput mono readOnly value={webhookUrl} />
+          </NodeField>
+
+          <div className="flex items-center gap-2 rounded-md border border-[var(--node-border)] bg-[var(--surface-3)] px-2.5 py-2">
+            <WebhooksLogoIcon className="h-4 w-4 text-[var(--text-muted)]" />
+            <p className="text-[11px] text-[var(--text-secondary)]">
+              Request data becomes available later as `trigger.input`, `trigger.body`, `trigger.query`, and `trigger.headers`.
+            </p>
+          </div>
+
+          <NodeField label="Input Format">
+            <WebhookInputFormatEditor
+              fields={webhookInputFormat}
+              onChange={(next) => setConfig({ inputFormat: next })}
+            />
+          </NodeField>
+
+          <div className="flex items-center justify-between rounded-md border border-[var(--node-border)] bg-[var(--surface-3)] px-2.5 py-2">
+            <div>
+              <p className="text-[12px] text-[var(--text-primary)]">Require auth header</p>
+              <p className="text-[10px] text-[var(--text-muted)]">
+                Validates a header before the workflow runs
+              </p>
+            </div>
+            <input
+              type="checkbox"
+              checked={Boolean(data.config?.authEnabled)}
+              onChange={(e) => setConfig({ authEnabled: e.target.checked })}
+              className="h-4 w-4"
+            />
+          </div>
+
+          {data.config?.authEnabled && (
+            <>
+              <NodeField label="Auth Header Name">
+                <NodeInput
+                  mono
+                  placeholder="Authorization"
+                  value={data.config?.authHeaderName || "Authorization"}
+                  onChange={(e) => setConfig({ authHeaderName: e.target.value })}
+                />
+              </NodeField>
+              <NodeField label="Auth Header Value">
+                <NodeInput
+                  mono
+                  type="password"
+                  placeholder="Bearer your-secret"
+                  value={data.config?.authHeaderValue || ""}
+                  onChange={(e) => setConfig({ authHeaderValue: e.target.value })}
+                />
+              </NodeField>
+            </>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setConfig({ webhookId: crypto.randomUUID() })}
+            className="w-full rounded-md border border-[var(--node-border)] bg-[var(--surface-3)] px-2.5 py-2 text-[12px] font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--surface-4)]"
+          >
+            Rotate webhook URL
+          </button>
+
+          {!workflowId && (
+            <p className="text-[10px] text-[var(--text-muted)]">
+              Save the workflow once to get the final live backend URL.
+            </p>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -319,6 +454,7 @@ function TriggerEditor({ id, data }: { id: string; data: TriggerNodeData }) {
 const OPERATORS = ["==", "!=", ">", ">=", "<", "<=", "contains", "starts_with", "ends_with"];
 type Condition = { field: string; operator: string; value: string };
 type ReferenceSuggestion = { value: string; label: string; hint: string };
+type WebhookInputField = NonNullable<NonNullable<TriggerNodeData["config"]>["inputFormat"]>[number];
 
 const TRIGGER_REFERENCE_FIELDS: Record<string, string[]> = {
   balance_change: [
@@ -335,6 +471,17 @@ const TRIGGER_REFERENCE_FIELDS: Record<string, string[]> = {
   transaction_status: ["signature", "status", "slot", "err"],
   program_log: ["programId", "signature", "logs", "slot", "err"],
   cron: ["type", "firedAt", "schedule", "timezone"],
+  webhook: [
+    "type",
+    "firedAt",
+    "method",
+    "requestId",
+    "input",
+    "body",
+    "query",
+    "headers",
+    "rawBody",
+  ],
 };
 
 const STEP_OUTPUT_FIELDS: Record<string, string[]> = {
@@ -398,6 +545,22 @@ function buildReferenceSuggestions(currentNodeId: string, nodes: Node[], edges: 
           label: "Trigger",
           hint: field,
         });
+      }
+
+      if (triggerType === "webhook" && triggerData.config?.inputFormat?.length) {
+        for (const inputField of triggerData.config.inputFormat) {
+          const fieldName = inputField.name?.trim();
+          if (!fieldName) continue;
+
+          const value = `trigger.input.${fieldName}`;
+          if (seen.has(value)) continue;
+          seen.add(value);
+          suggestions.push({
+            value,
+            label: "Trigger",
+            hint: `${fieldName}${inputField.type ? ` (${inputField.type})` : ""}`,
+          });
+        }
       }
 
       continue;
@@ -624,6 +787,108 @@ function ActionEditor({ id, data }: { id: string; data: ActionNodeData }) {
           </NodeField>
         </>
       )}
+    </div>
+  );
+}
+
+function WebhookInputFormatEditor({
+  fields,
+  onChange,
+}: {
+  fields: WebhookInputField[];
+  onChange: (next: WebhookInputField[]) => void;
+}) {
+  const addField = () => {
+    onChange([
+      ...fields,
+      {
+        id: crypto.randomUUID(),
+        name: "",
+        type: "string",
+        description: "",
+        value: "",
+      },
+    ]);
+  };
+
+  const removeField = (index: number) => {
+    onChange(fields.filter((_, currentIndex) => currentIndex !== index));
+  };
+
+  const updateField = (index: number, patch: Partial<WebhookInputField>) => {
+    onChange(fields.map((field, currentIndex) => (currentIndex === index ? { ...field, ...patch } : field)));
+  };
+
+  return (
+    <div className="space-y-2">
+      {fields.map((field, index) => (
+        <div
+          key={field.id || `input-format-${index}`}
+          className="space-y-2 rounded-md border border-[var(--node-border)] bg-[var(--surface-3)] p-2.5"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
+              Input {index + 1}
+            </span>
+            <button
+              type="button"
+              onClick={() => removeField(index)}
+              className="h-4 w-4 flex items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-4)] transition-colors"
+            >
+              <XIcon className="h-3 w-3" />
+            </button>
+          </div>
+
+          <NodeField label="Name">
+            <NodeInput
+              placeholder="firstName"
+              value={field.name}
+              onChange={(e) => updateField(index, { name: e.target.value })}
+            />
+          </NodeField>
+
+          <NodeField label="Type">
+            <NodeSelect
+              value={field.type}
+              onChange={(e) =>
+                updateField(index, {
+                  type: e.target.value as WebhookInputField["type"],
+                })
+              }
+            >
+              <option value="string">String</option>
+              <option value="number">Number</option>
+              <option value="boolean">Boolean</option>
+              <option value="object">Object</option>
+            </NodeSelect>
+          </NodeField>
+
+          <NodeField label="Description">
+            <NodeInput
+              placeholder="Describe this field"
+              value={field.description || ""}
+              onChange={(e) => updateField(index, { description: e.target.value })}
+            />
+          </NodeField>
+
+          <NodeField label="Value">
+            <NodeInput
+              placeholder="Enter default value"
+              value={field.value || ""}
+              onChange={(e) => updateField(index, { value: e.target.value })}
+            />
+          </NodeField>
+        </div>
+      ))}
+
+      <button
+        type="button"
+        onClick={addField}
+        className="w-full flex items-center justify-center gap-1.5 py-2 rounded-md border border-dashed border-[var(--node-border)] text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--node-border-strong)] transition-colors"
+      >
+        <PlusIcon className="h-3 w-3" />
+        Add input
+      </button>
     </div>
   );
 }

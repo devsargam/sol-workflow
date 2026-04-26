@@ -8,6 +8,7 @@ export const TriggerTypeEnum = z.enum([
   "transaction_status",
   "program_log",
   "cron",
+  "webhook",
 ]);
 
 export type TriggerType = z.infer<typeof TriggerTypeEnum>;
@@ -66,6 +67,16 @@ export const CronTriggerConfigSchema = z.object({
 
 export type CronTriggerConfig = z.infer<typeof CronTriggerConfigSchema>;
 
+// Webhook Trigger (HTTP endpoint)
+export const WebhookTriggerConfigSchema = z.object({
+  webhookId: z.string().min(1),
+  authEnabled: z.boolean().default(false),
+  authHeaderName: z.string().min(1).optional(),
+  authHeaderValue: z.string().min(1).optional(),
+});
+
+export type WebhookTriggerConfig = z.infer<typeof WebhookTriggerConfigSchema>;
+
 // Union schema for all trigger configs
 export const TriggerConfigSchema = z.union([
   BalanceChangeTriggerConfigSchema,
@@ -74,6 +85,7 @@ export const TriggerConfigSchema = z.union([
   TransactionStatusTriggerConfigSchema,
   ProgramLogTriggerConfigSchema,
   CronTriggerConfigSchema,
+  WebhookTriggerConfigSchema,
 ]);
 
 export type TriggerConfig = z.infer<typeof TriggerConfigSchema>;

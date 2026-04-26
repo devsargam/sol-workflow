@@ -185,6 +185,15 @@ export class SubscriptionManager {
         case TriggerType.PROGRAM_LOG:
           await this.subscribeToProgramLogs(workflow, triggerNode.id, config);
           break;
+        case TriggerType.CRON:
+        case TriggerType.WEBHOOK:
+          log.debug(`Trigger type ${triggerType} does not require a listener subscription`, {
+            service: "listener",
+            workflowId: workflow.id,
+            triggerNodeId: triggerNode.id,
+            triggerType,
+          });
+          break;
         default:
           log.warn(`Unsupported trigger type: ${triggerType}`, {
             service: "listener",

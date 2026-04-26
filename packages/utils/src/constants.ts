@@ -58,6 +58,7 @@ export const API = {
     WORKFLOWS: "/workflows",
     EXECUTIONS: "/executions",
     SOLANA: "/solana",
+    WEBHOOKS: "/webhooks",
   },
 } as const;
 
@@ -154,6 +155,7 @@ export enum TriggerType {
   TRANSACTION_STATUS = "transaction_status",
   PROGRAM_LOG = "program_log",
   CRON = "cron",
+  WEBHOOK = "webhook",
 }
 
 // ============================================================================

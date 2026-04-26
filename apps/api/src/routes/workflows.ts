@@ -6,6 +6,7 @@ import {
   WorkflowMetadataSchema,
   isExecutableGraph,
   validateWorkflowGraph,
+  type WorkflowGraph,
 } from "@repo/types";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -23,6 +24,42 @@ const createWorkflowSchema = z.object({
   graph: WorkflowGraphSchema,
   metadata: WorkflowMetadataSchema.optional(),
 });
+
+function validateWebhookTriggerConfigs(graph: WorkflowGraph) {
+  const errors: string[] = [];
+
+  for (const node of graph.nodes) {
+    if (node.type !== "trigger") continue;
+
+    const triggerData = node.data as {
+      triggerType?: string;
+      config?: {
+        webhookId?: string;
+        authEnabled?: boolean;
+        authHeaderName?: string;
+        authHeaderValue?: string;
+      };
+    };
+
+    if (triggerData.triggerType !== "webhook") continue;
+
+    if (!triggerData.config?.webhookId?.trim()) {
+      errors.push(`Trigger node ${node.id}: Webhook endpoint is not initialized`);
+    }
+
+    if (triggerData.config?.authEnabled) {
+      if (!triggerData.config.authHeaderName?.trim()) {
+        errors.push(`Trigger node ${node.id}: Auth header name is required`);
+      }
+
+      if (!triggerData.config.authHeaderValue?.trim()) {
+        errors.push(`Trigger node ${node.id}: Auth header value is required`);
+      }
+    }
+  }
+
+  return errors;
+}
 
 workflows.get("/", async (c: AuthenticatedContext) => {
   try {
@@ -104,6 +141,17 @@ workflows.post("/", zValidator("json", createWorkflowSchema), async (c) => {
         {
           error: "Workflow graph is not executable",
           details: errors,
+        },
+        400
+      );
+    }
+
+    const configurationErrors = validateWebhookTriggerConfigs(data.graph);
+    if (configurationErrors.length > 0) {
+      return c.json(
+        {
+          error: "Workflow graph has invalid node configuration",
+          details: configurationErrors,
         },
         400
       );
@@ -222,6 +270,17 @@ workflows.patch("/:id", zValidator("json", createWorkflowSchema.partial()), asyn
           {
             error: "Workflow graph is not executable",
             details: errors,
+          },
+          400
+        );
+      }
+
+      const configurationErrors = validateWebhookTriggerConfigs(data.graph);
+      if (configurationErrors.length > 0) {
+        return c.json(
+          {
+            error: "Workflow graph has invalid node configuration",
+            details: configurationErrors,
           },
           400
         );

@@ -10,6 +10,7 @@ import {
   ImageIcon,
   LightningIcon as ZapIcon,
   MoneyIcon as BanknoteIcon,
+  WebhooksLogoIcon,
 } from "@phosphor-icons/react";
 import { memo } from "react";
 import type { TriggerNodeData } from "../types";
@@ -25,24 +26,31 @@ const TRIGGER_CONFIG: Record<
   transaction_status: { label: "Transaction Status", Icon: FileTextIcon },
   program_log: { label: "Program Log", Icon: CodeIcon },
   cron: { label: "Scheduled", Icon: ClockIcon },
+  webhook: { label: "Webhook", Icon: WebhooksLogoIcon },
 };
 
 const ACCENT = "#9945FF";
 
 export const TriggerNode = memo(({ data, selected }: NodeProps) => {
   const nodeData = data as TriggerNodeData;
-  const { label, Icon } = TRIGGER_CONFIG[nodeData.type || ""] ?? {
+  const triggerType = nodeData.triggerType || nodeData.type || "";
+  const { label, Icon } = TRIGGER_CONFIG[triggerType] ?? {
     label: "Trigger",
     Icon: ZapIcon,
   };
 
   const address = nodeData.config?.address;
   const schedule = nodeData.config?.schedule;
+  const webhookId = nodeData.config?.webhookId;
 
   const outputValue =
     address
       ? `${address.slice(0, 6)}...${address.slice(-4)}`
-      : schedule || nodeData.type || "—";
+      : schedule
+        ? schedule
+        : webhookId
+          ? `/${webhookId.slice(0, 8)}…`
+          : triggerType || "—";
 
   return (
     <div

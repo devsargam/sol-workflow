@@ -28,6 +28,9 @@ function resolveApiUrl() {
 }
 
 const API_URL = resolveApiUrl();
+export function getPublicApiBaseUrl() {
+  return API_URL;
+}
 const AUTH_ROUTE_CANDIDATES = Array.from(new Set([API.ROUTES.AUTH, `/api${API.ROUTES.AUTH}`]));
 
 async function fetchAuthRoute(path: string, init: RequestInit) {

@@ -26,6 +26,47 @@ const triggerValidators: Record<string, NodeValidator> = {
 
     return errors;
   },
+  webhook: (node) => {
+    const data = node.data as TriggerNodeData;
+    const config = data?.config || {};
+    const errors: ValidationError[] = [];
+
+    if (
+      !config.webhookId ||
+      typeof config.webhookId !== "string" ||
+      config.webhookId.trim().length === 0
+    ) {
+      errors.push(`Trigger node ${node.id}: Webhook endpoint is not initialized`);
+    }
+
+    if (config.authEnabled) {
+      if (
+        !config.authHeaderName ||
+        typeof config.authHeaderName !== "string" ||
+        config.authHeaderName.trim().length === 0
+      ) {
+        errors.push(`Trigger node ${node.id}: Auth header name is required`);
+      }
+
+      if (
+        !config.authHeaderValue ||
+        typeof config.authHeaderValue !== "string" ||
+        config.authHeaderValue.trim().length === 0
+      ) {
+        errors.push(`Trigger node ${node.id}: Auth header value is required`);
+      }
+    }
+
+    if (Array.isArray(config.inputFormat)) {
+      config.inputFormat.forEach((field: any, index: number) => {
+        if (!field?.name || typeof field.name !== "string" || field.name.trim().length === 0) {
+          errors.push(`Trigger node ${node.id}: Input format field ${index + 1} must have a name`);
+        }
+      });
+    }
+
+    return errors;
+  },
   // Add more trigger validators here as needed:
 };
 

@@ -22,8 +22,20 @@ export const TriggerNodeDataSchema = z.object({
     "transaction_status",
     "program_log",
     "cron",
+    "webhook",
   ]),
   config: z.object({
+    inputFormat: z
+      .array(
+        z.object({
+          id: z.string().optional(),
+          name: z.string().min(1),
+          type: z.enum(["string", "number", "boolean", "object"]),
+          description: z.string().optional(),
+          value: z.string().optional(),
+        })
+      )
+      .optional(),
     // Common fields
     address: z.string().optional(),
 
@@ -54,6 +66,12 @@ export const TriggerNodeDataSchema = z.object({
     // Cron trigger specific
     schedule: z.string().optional(), // Cron expression like "*/5 * * * *"
     timezone: z.string().optional(), // Timezone like "UTC" or "America/New_York"
+
+    // Webhook trigger specific
+    webhookId: z.string().optional(),
+    authEnabled: z.boolean().optional(),
+    authHeaderName: z.string().optional(),
+    authHeaderValue: z.string().optional(),
   }),
 });
 

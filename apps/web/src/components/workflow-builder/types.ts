@@ -3,6 +3,13 @@ export interface TriggerNodeData {
   type?: string;
   triggerType?: string;
   config?: {
+    inputFormat?: Array<{
+      id?: string;
+      name: string;
+      type: "string" | "number" | "boolean" | "object";
+      description?: string;
+      value?: string;
+    }>;
     address?: string;
     tokenAccount?: string;
     tokenMint?: string;
@@ -17,6 +24,11 @@ export interface TriggerNodeData {
     // Cron trigger specific
     schedule?: string;
     timezone?: string;
+    // Webhook trigger specific
+    webhookId?: string;
+    authEnabled?: boolean;
+    authHeaderName?: string;
+    authHeaderValue?: string;
   };
 }
 

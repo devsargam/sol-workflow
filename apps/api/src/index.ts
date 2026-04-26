@@ -12,6 +12,7 @@ import solanaRoutes from "./routes/solana";
 import authRoutes from "./routes/auth";
 import telegramRoutes from "./routes/telegram";
 import demoRoutes from "./routes/demo";
+import { createWebhookRoutes } from "./routes/webhooks";
 import { getCronScheduler, initCronScheduler } from "./cron";
 import { db, workflows as workflowsTable } from "@repo/db";
 import { ENV_DEFAULTS, API, QUEUES, getRedisOptions } from "utils";
@@ -66,6 +67,8 @@ app.use(
 app.route(API.ROUTES.AUTH, authRoutes);
 app.route(`/api${API.ROUTES.AUTH}`, authRoutes);
 app.route(API.ROUTES.TELEGRAM, telegramRoutes);
+app.route(API.ROUTES.WEBHOOKS, createWebhookRoutes(workflowQueue));
+app.route(`/api${API.ROUTES.WEBHOOKS}`, createWebhookRoutes(workflowQueue));
 app.route(API.ROUTES.WORKFLOWS, workflowRoutes); // Graph-based API
 app.route(API.ROUTES.EXECUTIONS, executionRoutes);
 app.route(API.ROUTES.SOLANA, solanaRoutes);

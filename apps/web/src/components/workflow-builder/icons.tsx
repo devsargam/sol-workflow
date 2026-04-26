@@ -16,6 +16,7 @@ import {
   ImageIcon,
   FileTextIcon,
   FadersHorizontalIcon as SearchIcon,
+  WebhooksLogoIcon,
 } from "@phosphor-icons/react";
 import { type ComponentType, type ReactElement } from "react";
 
@@ -26,7 +27,8 @@ export type TriggerType =
   | "token_receipt"
   | "nft_receipt"
   | "transaction_status"
-  | "program_log";
+  | "program_log"
+  | "webhook";
 
 export const NOTIFICATION_ICONS: Record<NotificationType, ComponentType<{ className?: string }>> = {
   discord: MessageCircleIcon,
@@ -49,6 +51,7 @@ export const TRIGGER_ICONS: Record<TriggerType, ComponentType<{ className?: stri
   nft_receipt: ImageIcon,
   transaction_status: FileTextIcon,
   program_log: CodeIcon,
+  webhook: WebhooksLogoIcon,
 };
 
 export const DEFAULT_ICONS = {
