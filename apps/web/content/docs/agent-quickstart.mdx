@@ -1,0 +1,68 @@
+---
+title: Agent Quickstart
+description: Minimal commands and environment variables for agents running Dolphinflow workflows.
+---
+
+## Environment
+
+Use these names when an agent needs to run API calls or trigger workflows from a script.
+
+```bash
+export DOLPHINFLOW_API_URL="https://dolphinflow.xyz"
+export DOLPHINFLOW_API_TOKEN="wallet-auth-token"
+export DOLPHINFLOW_WEBHOOK_URL="https://dolphinflow.xyz/webhooks/example-webhook-id"
+export DOLPHINFLOW_WEBHOOK_KEY="df_local_example_key"
+```
+
+For local development, use `http://localhost:3001` for `DOLPHINFLOW_API_URL` and `http://localhost:3001/webhooks/<webhook-id>` for `DOLPHINFLOW_WEBHOOK_URL`.
+
+`DOLPHINFLOW_API_TOKEN` is the Bearer token returned after wallet authentication. It is used for protected app API routes such as workflows and executions.
+
+`DOLPHINFLOW_WEBHOOK_KEY` is not a global platform key. It is a simple shared secret you configure on a webhook trigger by enabling auth and setting:
+
+```txt
+Header name: Authorization
+Header value: Bearer df_local_example_key
+```
+
+## Health Check
+
+Before touching workflows, verify the API is alive:
+
+```bash
+curl "$DOLPHINFLOW_API_URL/health"
+```
+
+## List Workflows
+
+Protected API routes expect `Authorization: Bearer <token>`.
+
+```bash
+curl "$DOLPHINFLOW_API_URL/workflows" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_TOKEN"
+```
+
+## Trigger a Webhook Workflow
+
+Webhook triggers only run enabled workflows. If auth is enabled on the trigger, send the exact configured header value.
+
+```bash
+curl -X POST "$DOLPHINFLOW_WEBHOOK_URL" \
+  -H "Authorization: Bearer $DOLPHINFLOW_WEBHOOK_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "wallet_address": "ExampleWallet111111111111111111111111111111",
+    "change_lamports": 1000000,
+    "source": "agent"
+  }'
+```
+
+Successful webhook requests return `202` with an `executionId`.
+
+## Suggested Agent Flow
+
+1. Check `/health`.
+2. Read the relevant docs page before editing graph behavior.
+3. Use webhook triggers for safe end-to-end tests.
+4. Keep sample keys in environment variables.
+5. Never paste real wallet tokens, bot tokens, webhook secrets, or private keys into docs or logs.

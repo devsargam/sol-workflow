@@ -3,6 +3,7 @@
   "pages": [
     "index",
     "agent-playbook",
+    "agent-quickstart",
     "workflow-builder",
     "triggers",
     "filters",

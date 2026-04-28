@@ -43,6 +43,24 @@ Authorization
 
 If the value does not match, the webhook returns `401`.
 
+A simple local setup for agents is:
+
+```txt
+Header name: Authorization
+Header value: Bearer df_local_example_key
+```
+
+Then call the webhook with:
+
+```bash
+export DOLPHINFLOW_WEBHOOK_KEY="df_local_example_key"
+
+curl -X POST "$DOLPHINFLOW_WEBHOOK_URL" \
+  -H "Authorization: Bearer $DOLPHINFLOW_WEBHOOK_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"source":"agent"}'
+```
+
 ## Accepted Response
 
 Successful webhook requests enqueue a workflow execution and return:

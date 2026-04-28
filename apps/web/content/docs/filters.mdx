@@ -54,6 +54,47 @@ References wrapped in angle brackets are normalized before evaluation:
 <trigger.input.wallet_address>
 ```
 
+## Agent-Friendly Example
+
+For webhook-driven tests, send simple snake_case fields and reference them from filters through `trigger.input`.
+
+Example webhook payload:
+
+```json
+{
+  "wallet_address": "ExampleWallet111111111111111111111111111111",
+  "change_lamports": 1000000,
+  "source": "agent"
+}
+```
+
+Useful filter references for that payload:
+
+```ts
+trigger.input.wallet_address
+trigger.input.change_lamports
+trigger.input.source
+```
+
+Example conditions:
+
+```txt
+trigger.input.change_lamports > 0
+trigger.input.source == agent
+trigger.input.wallet_address starts_with Example
+```
+
+When webhook auth is enabled, use an API-key style header so agents can run the workflow without hardcoding secrets:
+
+```bash
+export DOLPHINFLOW_WEBHOOK_KEY="df_local_example_key"
+
+curl -X POST "$DOLPHINFLOW_WEBHOOK_URL" \
+  -H "Authorization: Bearer $DOLPHINFLOW_WEBHOOK_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"wallet_address":"ExampleWallet111111111111111111111111111111","change_lamports":1000000,"source":"agent"}'
+```
+
 ## Trigger Reference Suggestions
 
 The builder suggests common fields based on the upstream trigger type. Webhook trigger input format fields also become suggestions under `trigger.input.<fieldName>`.
