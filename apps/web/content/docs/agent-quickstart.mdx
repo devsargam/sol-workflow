@@ -42,6 +42,71 @@ curl "$DOLPHINFLOW_API_URL/workflows" \
   -H "Authorization: Bearer $DOLPHINFLOW_API_TOKEN"
 ```
 
+## Discover Builder Capabilities
+
+Agents should read the workflow capability document before creating or editing workflow graphs. It returns supported node types, config fields, validation rules, webhook paths, and example graph payloads.
+
+```bash
+curl "$DOLPHINFLOW_API_URL/workflows/agent/capabilities" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_TOKEN"
+```
+
+To inspect one workflow in an agent-friendly shape, fetch its graph, diagnostics, node summaries, webhook trigger paths, and update hints:
+
+```bash
+curl "$DOLPHINFLOW_API_URL/workflows/<workflow-id>/agent" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_TOKEN"
+```
+
+Create workflows with the existing graph endpoint:
+
+```bash
+curl -X POST "$DOLPHINFLOW_API_URL/workflows" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Hourly Discord heartbeat",
+    "description": "Runs once an hour and sends a Discord notification.",
+    "graph": {
+      "nodes": [
+        {
+          "id": "trigger-1",
+          "type": "trigger",
+          "position": { "x": 0, "y": 0 },
+          "data": {
+            "nodeType": "trigger",
+            "triggerType": "cron",
+            "config": { "schedule": "0 * * * *", "timezone": "UTC" }
+          }
+        },
+        {
+          "id": "notify-1",
+          "type": "notify",
+          "position": { "x": 320, "y": 0 },
+          "data": {
+            "nodeType": "notify",
+            "notifications": [
+              {
+                "notifyType": "discord",
+                "webhookUrl": "https://discord.com/api/webhooks/...",
+                "template": "default"
+              }
+            ]
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "edge-trigger-1-notify-1",
+          "source": "trigger-1",
+          "target": "notify-1",
+          "type": "smoothstep"
+        }
+      ]
+    }
+  }'
+```
+
 ## Trigger a Webhook Workflow
 
 Webhook triggers only run enabled workflows. If auth is enabled on the trigger, send the exact configured header value.
@@ -62,7 +127,9 @@ Successful webhook requests return `202` with an `executionId`.
 ## Suggested Agent Flow
 
 1. Check `/health`.
-2. Read the relevant docs page before editing graph behavior.
-3. Use webhook triggers for safe end-to-end tests.
-4. Keep sample keys in environment variables.
-5. Never paste real wallet tokens, bot tokens, webhook secrets, or private keys into docs or logs.
+2. Read `/workflows/agent/capabilities`.
+3. Use `/workflows/<workflow-id>/agent` before changing an existing workflow.
+4. Create or patch workflows through `/workflows`.
+5. Use webhook triggers for safe end-to-end tests.
+6. Keep sample keys in environment variables.
+7. Never paste real wallet tokens, bot tokens, webhook secrets, or private keys into docs or logs.

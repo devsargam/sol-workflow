@@ -544,7 +544,7 @@ export default function HomePage() {
 
         <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-5 pb-20 pt-10 text-center sm:px-6 sm:pb-28 sm:pt-0">
           <h1 className="max-w-[18rem] text-3xl font-bold leading-[1.08] tracking-normal text-foreground sm:max-w-3xl sm:text-5xl md:text-6xl lg:text-7xl">
-            Agent workflows for Solana
+            onchain agent workflows for soalan
           </h1>
           <p className="mt-5 max-w-[19rem] text-sm leading-relaxed text-foreground/45 sm:max-w-md sm:text-base">
             Give agents like OpenClaw and Hermes on-chain signals, schedules, and tools so they can

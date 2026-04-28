@@ -13,6 +13,10 @@ import { z } from "zod";
 import { getCronScheduler } from "../cron";
 import { authMiddleware, AuthenticatedContext } from "../middleware/auth";
 import { createAuditLog, extractClientInfo } from "../lib/audit-logger";
+import {
+  buildAgentWorkflowCapabilities,
+  buildWorkflowAgentDetail,
+} from "../lib/agent-workflow-catalog";
 
 const workflows = new Hono();
 
@@ -77,6 +81,45 @@ workflows.get("/", async (c: AuthenticatedContext) => {
   } catch (error) {
     console.error("Error fetching workflows:", error);
     return c.json({ error: "Failed to fetch workflows" }, 500);
+  }
+});
+
+workflows.get("/agent/capabilities", (c: AuthenticatedContext) => {
+  const userId = c.user?.id;
+  if (!userId) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  return c.json(buildAgentWorkflowCapabilities());
+});
+
+workflows.get("/:id/agent", async (c: AuthenticatedContext) => {
+  try {
+    const userId = c.user?.id;
+    const id = c.req.param("id");
+
+    if (!userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const [workflow] = await db
+      .select()
+      .from(workflowsTable)
+      .where(eq(workflowsTable.id, id))
+      .limit(1);
+
+    if (!workflow) {
+      return c.json({ error: "Workflow not found" }, 404);
+    }
+
+    if (workflow.userId !== userId) {
+      return c.json({ error: "Forbidden" }, 403);
+    }
+
+    return c.json(buildWorkflowAgentDetail(workflow));
+  } catch (error) {
+    console.error("Error fetching agent workflow detail:", error);
+    return c.json({ error: "Failed to fetch agent workflow detail" }, 500);
   }
 });
 
