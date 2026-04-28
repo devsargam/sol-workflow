@@ -20,7 +20,7 @@ import {
 } from "@phosphor-icons/react";
 import { type ComponentType, type ReactElement } from "react";
 
-export type NotificationType = "discord" | "telegram" | "slack" | "email" | "webhook";
+export type NotificationType = "discord" | "telegram" | "email" | "webhook";
 export type ActionType = "send_sol" | "send_spl_token" | "call_program" | "do_nothing";
 export type TriggerType =
   | "balance_change"
@@ -33,7 +33,6 @@ export type TriggerType =
 export const NOTIFICATION_ICONS: Record<NotificationType, ComponentType<{ className?: string }>> = {
   discord: MessageCircleIcon,
   telegram: SendIcon,
-  slack: MessageCircleIcon,
   email: MailIcon,
   webhook: BellIconAlias,
 };

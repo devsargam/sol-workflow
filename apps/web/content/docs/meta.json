@@ -1,0 +1,13 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "agent-playbook",
+    "workflow-builder",
+    "triggers",
+    "filters",
+    "actions",
+    "notifications",
+    "webhooks"
+  ]
+}

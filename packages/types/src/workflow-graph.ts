@@ -134,7 +134,7 @@ export const ActionNodeDataSchema = z.object({
 
 export const SingleNotificationConfigSchema = z
   .object({
-    notifyType: z.enum(["discord", "telegram", "slack", "email", "webhook"]),
+    notifyType: z.enum(["discord", "telegram", "email", "webhook"]),
     webhookUrl: z.string().optional(),
     webhookSecret: z.string().optional(),
     telegramBotToken: z.string().min(1).optional(),
@@ -168,7 +168,7 @@ export const SingleNotificationConfigSchema = z
 
 export const NotifyNodeDataSchema = z
   .object({
-    notifyType: z.enum(["discord", "telegram", "slack", "email", "webhook"]).optional(),
+    notifyType: z.enum(["discord", "telegram", "email", "webhook"]).optional(),
     webhookUrl: z.string().optional(),
     webhookSecret: z.string().optional(),
     telegramBotToken: z.string().min(1).optional(),

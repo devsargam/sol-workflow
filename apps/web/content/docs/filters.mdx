@@ -1,0 +1,71 @@
+---
+title: Filters
+description: Condition operators, branches, and runtime references.
+---
+
+## What Filters Do
+
+Filter nodes evaluate one or more conditions and choose the next edge to follow.
+
+If every condition passes, the node follows the `if` output. If conditions do not pass, it follows `else`. If evaluation errors, it follows `error`.
+
+## Operators
+
+The builder exposes:
+
+- `==`
+- `!=`
+- `>`
+- `>=`
+- `<`
+- `<=`
+- `contains`
+- `starts_with`
+- `ends_with`
+
+The runtime also accepts long-form aliases such as `equals`, `not_equals`, `greater_than`, `less_than`, `greater_than_or_equal`, and `less_than_or_equal`.
+
+## Logic
+
+Filter data includes a `logic` field:
+
+- `and`: all conditions must pass.
+- `or`: at least one condition must pass.
+
+The current builder UI defaults to `and`. If adding an OR selector, keep the worker behavior and docs aligned.
+
+## Field References
+
+Filter fields can reference trigger data, workflow variables, or previous step outputs.
+
+Examples:
+
+```ts
+trigger.changeLamports
+trigger.input.wallet_address
+steps.action-1.txSignature
+action-1.txSignature
+workflow.someValue
+```
+
+References wrapped in angle brackets are normalized before evaluation:
+
+```ts
+<trigger.input.wallet_address>
+```
+
+## Trigger Reference Suggestions
+
+The builder suggests common fields based on the upstream trigger type. Webhook trigger input format fields also become suggestions under `trigger.input.<fieldName>`.
+
+## Filter Output
+
+Downstream steps can read filter output fields:
+
+```ts
+filter-1.passed
+filter-1.output
+filter-1.logic
+```
+
+The runtime stores each node output under its node id and under `steps.<nodeId>`.

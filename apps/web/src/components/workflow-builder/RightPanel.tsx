@@ -900,7 +900,6 @@ type Notif = NonNullable<NotifyNodeData["notifications"]>[number];
 const CHANNELS = [
   { value: "discord", label: "Discord", Icon: MessageCircleIcon, color: "#5865F2" },
   { value: "telegram", label: "Telegram", Icon: SendIcon, color: "#26A5E4" },
-  { value: "slack", label: "Slack", Icon: MessageCircleIcon, color: "#4A154B" },
   { value: "email", label: "Email", Icon: MailIcon, color: "#EA4335" },
   { value: "webhook", label: "Webhook", Icon: WebhookIcon, color: "#6B7280" },
 ];
@@ -979,7 +978,7 @@ function NotifyEditor({ id, data }: { id: string; data: NotifyNodeData }) {
               </button>
             </div>
 
-            {(notif.notifyType === "discord" || notif.notifyType === "slack" || notif.notifyType === "webhook") && (
+            {(notif.notifyType === "discord" || notif.notifyType === "webhook") && (
               <NodeField label="Webhook URL">
                 <NodeInput
                   mono

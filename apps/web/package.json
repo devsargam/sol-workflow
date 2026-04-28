@@ -18,8 +18,12 @@
     "@solana/wallet-adapter-react": "^0.15.39",
     "@solana/web3.js": "^1.98.0",
     "@tanstack/react-query": "^5.62.11",
+    "@types/mdx": "^2.0.13",
     "@xyflow/react": "^12.10.0",
     "clsx": "^2.1.1",
+    "fumadocs-core": "^16.8.5",
+    "fumadocs-mdx": "^14.3.2",
+    "fumadocs-ui": "^16.8.5",
     "next": "16.1.1",
     "next-themes": "^0.4.6",
     "react": "19.2.3",
@@ -27,7 +31,7 @@
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "utils": "workspace:*",
-    "zod": "^3.24.1",
+    "zod": "^4.3.6",
     "zustand": "^5.0.2"
   },
   "devDependencies": {

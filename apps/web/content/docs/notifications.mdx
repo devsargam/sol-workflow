@@ -1,0 +1,99 @@
+---
+title: Notifications
+description: Notification channels, templates, and delivery behavior.
+---
+
+## Supported Channels
+
+The notification node UI includes:
+
+- Discord
+- Telegram
+- Email
+- Webhook
+
+Runtime delivery currently exists for Discord, Telegram, and outbound webhook notifications. Email is represented in the type surface but is not implemented in the worker yet.
+
+## Multiple Channels
+
+A notify node can include a `notifications` array. Each item has its own channel, template, and channel-specific settings.
+
+If legacy single-channel fields are present, the runtime still supports them:
+
+```ts
+notifyType
+webhookUrl
+telegramBotToken
+telegramChatId
+template
+customMessage
+```
+
+## Templates
+
+Available templates:
+
+- `default`
+- `success`
+- `error`
+- `minimal`
+- `detailed`
+
+Discord and Telegram use package-level templates. Outbound webhook notifications format a message based on the selected template unless `customMessage` is provided.
+
+## Discord
+
+Required:
+
+- `webhookUrl`
+
+Optional:
+
+- `template`
+- `customMessage`
+
+Discord notifications include workflow name, execution id, status, trigger type, trigger data, and transaction signature when available.
+
+## Telegram
+
+Optional per notification:
+
+- `telegramBotToken`
+- `telegramChatId`
+- `telegramParseMode`
+- `telegramDisableWebPreview`
+
+If bot token or chat id are blank, the worker falls back to server environment variables:
+
+```txt
+TELEGRAM_BOT_TOKEN
+TELEGRAM_DEFAULT_CHAT_ID
+```
+
+## Outbound Webhook
+
+Required:
+
+- `webhookUrl`
+
+Optional:
+
+- `webhookSecret`
+- `template`
+- `customMessage`
+
+The worker posts JSON and includes `X-Webhook-Secret` when configured. It retries retryable failures with exponential backoff.
+
+## Notify Output
+
+Notify outputs are available downstream:
+
+```ts
+notify-1.output
+notify-1.success
+notify-1.error
+notify-1.notifyType
+notify-1.notificationCount
+```
+
+Notification errors are treated as non-fatal in the current worker implementation.

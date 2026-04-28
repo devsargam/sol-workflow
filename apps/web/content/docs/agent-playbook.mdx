@@ -1,0 +1,71 @@
+---
+title: Agent Playbook
+description: Compact operating context for agents working with Dolphinflow.
+---
+
+## Purpose
+
+Use this page as the high-signal map before changing workflow behavior, UI controls, API routes, or docs.
+
+## Product Shape
+
+Dolphinflow is a Solana workflow automation platform. Users authenticate with a wallet, create graph-based workflows in the visual builder, and enable those workflows.
+
+The main apps are:
+
+- `apps/web`: Next.js app with the dashboard, setup page, workflow list, workflow builder, and docs.
+- `apps/api`: Hono API for auth, workflows, webhooks, Solana helpers, Telegram sending, and cron scheduling.
+- `apps/listener`: Solana subscription listener for on-chain trigger sources.
+- `apps/worker`: BullMQ worker that executes graph nodes.
+- `packages/types`: shared workflow graph schemas and validation.
+
+## Core Workflow Model
+
+A workflow graph has `nodes`, `edges`, and an optional `viewport`.
+
+Supported node types:
+
+- `trigger`: starts a workflow.
+- `filter`: evaluates conditions and branches to `if`, `else`, or `error`.
+- `action`: performs an action and branches to `success` or `error`.
+- `notify`: sends notifications and branches to `sent` or `error`.
+
+For a workflow to be executable, it must have at least one trigger and at least one action or notify node. The builder validation is stricter in one place and currently expects at least one action node.
+
+## Important Implementation Notes
+
+- `send_sol`, `send_spl_token`, and `call_program` are present in the schema and UI, but the worker currently returns mock transaction signatures.
+- Discord, Telegram, and outbound webhook notifications are implemented in the worker.
+- Email is represented in the notification type surface, but delivery is not implemented yet.
+- Webhook triggers only run enabled workflows.
+- Cron triggers are scheduled when a workflow is enabled and unscheduled when disabled or deleted.
+- Balance, token receipt, NFT receipt, and program log triggers are handled by the Solana listener.
+- Filter references can read from `trigger.*`, `steps.<nodeId>.*`, direct upstream node ids such as `action-1.txSignature`, and `workflow.*`.
+
+## Common Agent Tasks
+
+When adding a new trigger:
+
+1. Add the type to shared schemas in `packages/types`.
+2. Add builder controls in `RightPanel.tsx`.
+3. Add listener/API scheduling behavior if the trigger has an event source.
+4. Add runtime payload docs.
+5. Add validation for required fields.
+
+When adding a new action:
+
+1. Add the schema and builder controls.
+2. Implement `ActionNodeExecutor` behavior.
+3. Decide output fields for downstream references.
+4. Add validation and docs.
+
+When adding a new notification channel:
+
+1. Add UI channel controls.
+2. Add validation rules.
+3. Implement worker delivery.
+4. Document required credentials and fallback behavior.
+
+## Safety Notes
+
+Do not treat user-entered webhook secrets, bot tokens, wallet addresses, or private keys as harmless sample data. These are sensitive values. Avoid logging them, copying them into docs, or transmitting them outside the intended API flow.

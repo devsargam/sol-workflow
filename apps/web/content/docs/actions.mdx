@@ -1,0 +1,80 @@
+---
+title: Actions
+description: Supported action nodes and current runtime behavior.
+---
+
+## Supported Action Types
+
+Dolphinflow supports these action types in schema and UI:
+
+- `send_sol`
+- `send_spl_token`
+- `call_program`
+- `do_nothing`
+
+## Send SOL
+
+Config fields:
+
+- `toAddress`: recipient Solana address.
+- `amount`: amount in lamports.
+- `fromKeypair`: optional base58 keypair field in the shared schema.
+- `usePDA`: optional PDA mode.
+- `pdaSeed`: optional PDA seed.
+
+Builder validation requires recipient address and a positive amount.
+
+## Send SPL Token
+
+Config fields:
+
+- `fromTokenAccount`
+- `toTokenAccount`
+- `tokenMint`
+- `amount`
+- `decimals`
+- `fromKeypair`
+- `usePDA`
+- `pdaSeed`
+
+The current builder exposes amount, recipient address, and token mint controls.
+
+## Call Program
+
+Config fields:
+
+- `programId`
+- `idl`
+- `instruction`
+- `accounts`
+- `args`
+- `signerKeypair`
+- `usePDA`
+- `pdaSeed`
+
+The current builder exposes program id and instruction controls.
+
+## Do Nothing
+
+`do_nothing` is a no-op action. Use it as a placeholder or to route a workflow branch without making an on-chain call.
+
+## Runtime Status
+
+The worker currently returns mock transaction signatures for `send_sol`, `send_spl_token`, and `call_program`. The runtime methods are placeholders and do not submit real Solana transactions yet.
+
+This is important for agents: do not document these actions as production transfers until the worker implementation is replaced with real transaction construction, signing, submission, and confirmation.
+
+## Action Output
+
+Action outputs are available to downstream nodes:
+
+```ts
+action-1.output
+action-1.success
+action-1.error
+action-1.actionType
+action-1.txSignature
+action-1.config
+```
+
+The worker also stores `txSignature` globally when an action returns a transaction signature.

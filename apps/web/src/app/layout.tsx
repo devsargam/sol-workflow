@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { RootProvider } from "fumadocs-ui/provider/next";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { Provider } from "@/components/providers/provider";
@@ -30,9 +31,11 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased min-h-screen`}>
         <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
-          <Provider>
-            <main>{children}</main>
-          </Provider>
+          <RootProvider theme={{ enabled: false }}>
+            <Provider>
+              <main>{children}</main>
+            </Provider>
+          </RootProvider>
         </ThemeProvider>
       </body>
     </html>

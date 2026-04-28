@@ -13,7 +13,6 @@ const ACCENT = "#10B981";
 const CHANNEL_LABELS: Record<string, string> = {
   discord: "Discord",
   telegram: "Telegram",
-  slack: "Slack",
   email: "Email",
   webhook: "Webhook",
 };

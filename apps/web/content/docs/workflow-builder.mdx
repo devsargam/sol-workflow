@@ -1,0 +1,59 @@
+---
+title: Workflow Builder
+description: How Dolphinflow workflows are built, saved, and executed.
+---
+
+## Builder Surface
+
+The workflow builder is a React Flow canvas. Users drag nodes into a graph, connect handles, edit node configuration in the right panel, then save or update the workflow.
+
+The available blocks are:
+
+- **Trigger**: event source for a workflow.
+- **Condition**: filter branch with one or more conditions.
+- **Action**: on-chain action or no-op placeholder.
+- **Notify**: message delivery to one or more channels.
+
+## Workflow Metadata
+
+Each workflow has:
+
+- `name`: required, up to 100 characters.
+- `description`: optional, up to 500 characters.
+- `graph`: nodes, edges, and viewport.
+- `metadata`: version, limits, and creator/update source.
+- `enabled`: whether triggers are active.
+
+New workflows are created disabled. Users enable them from the workflows list, which also syncs cron jobs for scheduled triggers.
+
+## Node Handles
+
+Trigger nodes expose:
+
+- `output`: continue after a trigger event.
+
+Filter nodes expose:
+
+- `if`: conditions passed.
+- `else`: conditions did not pass.
+- `error`: filter evaluation errored.
+
+Action nodes expose:
+
+- `success`: action succeeded.
+- `error`: action failed.
+
+Notify nodes expose:
+
+- `sent`: notification completed or was treated as non-fatal.
+- `error`: notification failed.
+
+## Validation
+
+The API validates graph structure and executable shape before create or update. It rejects graphs with missing trigger nodes, missing action/notify nodes, invalid edges, cycles back into triggers, invalid webhook trigger configuration, or invalid cron schedules.
+
+Builder validation currently checks required trigger/action/notify fields before save. Agents should keep builder validation, API validation, and runtime behavior aligned when changing node types.
+
+## Current Caveat
+
+The graph-level executable check allows notification-only workflows, but the builder validation currently requires at least one action node. If notification-only workflows should be supported in the UI, update builder validation to match the API behavior.

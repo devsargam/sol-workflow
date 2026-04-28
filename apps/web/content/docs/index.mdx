@@ -1,0 +1,41 @@
+---
+title: Getting Started
+description: Build Solana workflow automations from on-chain triggers, filters, actions, and notifications.
+---
+
+## Overview
+
+Dolphinflow helps Solana teams react to on-chain events and run repeatable operational workflows without stitching together one-off scripts.
+
+These docs are written for both humans and agents. They should answer what the platform supports, how workflow graphs are shaped, which runtime fields are available, and where the current implementation has limits.
+
+## Core Concepts
+
+- **Triggers** listen for events such as balance changes, token receipts, program logs, webhooks, or schedules.
+- **Filters** decide whether an execution should continue.
+- **Actions** run the on-chain or off-chain task attached to the workflow.
+- **Notifications** send updates to the channels your team already watches.
+
+## Docs Map
+
+- [Agent Playbook](/docs/agent-playbook): compact context for AI agents working in this codebase.
+- [Workflow Builder](/docs/workflow-builder): how the visual graph is composed.
+- [Triggers](/docs/triggers): event sources and trigger payloads.
+- [Filters](/docs/filters): condition operators and field references.
+- [Actions](/docs/actions): supported action nodes and current runtime behavior.
+- [Notifications](/docs/notifications): Discord, Telegram, webhook, and pending channels.
+- [Webhooks](/docs/webhooks): inbound webhook trigger behavior and outbound webhook notifications.
+
+## First Workflow
+
+Start with a small automation:
+
+1. Create a workflow.
+2. Choose the trigger that should start it.
+3. Add any filters you need.
+4. Attach an action or notification.
+5. Run a test execution before enabling it.
+
+## Next Steps
+
+Add more MDX files in `content/docs` as the product docs grow.

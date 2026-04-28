@@ -75,7 +75,6 @@ import { useWalletAuth } from "@/components/providers/wallet-auth-provider";
 //   const notifyLabels: Record<string, string> = {
 //     discord: "Discord",
 //     telegram: "Telegram",
-//     slack: "Slack",
 //     email: "Email",
 //     webhook: "Webhook",
 //   };

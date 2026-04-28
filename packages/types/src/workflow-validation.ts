@@ -122,7 +122,6 @@ const notifyValidators: Record<string, NodeValidator> = {
     return errors;
   },
   // Add more notify validators here as needed:
-  // slack: (node) => { ... },
 };
 
 function validateTriggerNodes(nodes: WorkflowNode[]): ValidationError[] {

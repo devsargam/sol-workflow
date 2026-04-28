@@ -1,0 +1,88 @@
+---
+title: Webhooks
+description: Inbound webhook triggers and outbound webhook notifications.
+---
+
+## Inbound Webhook Triggers
+
+Webhook triggers let external systems start an enabled workflow with an HTTP request.
+
+The API supports two endpoint shapes:
+
+```txt
+/webhooks/:webhookId
+/webhooks/:workflowId/:triggerNodeId/:webhookId
+```
+
+The shorter route only works when exactly one enabled workflow matches the webhook id. The longer route targets a specific workflow and trigger node.
+
+## Request Parsing
+
+The webhook route accepts any method.
+
+Body handling:
+
+- `GET` and `HEAD` produce `body: null` and `rawBody: ""`.
+- `application/json` is parsed as JSON when possible.
+- `application/x-www-form-urlencoded` is parsed into an object.
+- Other content types are stored as raw text.
+
+Query parameters are collected into `trigger.query`. Repeated query keys become arrays.
+
+`trigger.input` is the merged object of query and JSON/form body when body is an object. Otherwise it falls back to body or query.
+
+## Auth Header
+
+When `authEnabled` is true, the API compares the configured header name and value against the incoming request.
+
+Default header name:
+
+```txt
+Authorization
+```
+
+If the value does not match, the webhook returns `401`.
+
+## Accepted Response
+
+Successful webhook requests enqueue a workflow execution and return:
+
+```json
+{
+  "accepted": true,
+  "executionId": "...",
+  "workflowId": "...",
+  "triggerNodeId": "..."
+}
+```
+
+The response status is `202`.
+
+## Outbound Webhook Notifications
+
+Notify nodes can also send outbound webhooks. The worker posts a JSON payload to the configured URL.
+
+Payload fields include:
+
+```ts
+workflowId
+workflowName
+executionId
+status
+timestamp
+triggerType
+triggerData
+variables
+executionPath
+hasErrors
+txSignature
+message
+template
+```
+
+Retries:
+
+- Maximum retries: 3.
+- Timeout: 30 seconds per attempt.
+- Retryable failures: network errors, timeouts, HTTP `429`, and HTTP `5xx`.
+- Non-retryable failures: most HTTP `4xx` responses.

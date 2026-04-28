@@ -1,0 +1,132 @@
+---
+title: Triggers
+description: Supported event sources and trigger payloads.
+---
+
+## Supported Trigger Types
+
+Dolphinflow supports these trigger types:
+
+- `balance_change`
+- `token_receipt`
+- `nft_receipt`
+- `transaction_status`
+- `program_log`
+- `cron`
+- `webhook`
+
+Only some trigger types are currently wired to live event sources. Balance changes, token/NFT account changes, program logs, cron schedules, and webhooks have runtime paths. Transaction status exists in schema/UI but does not currently have a dedicated listener implementation.
+
+## Balance Change
+
+Use `balance_change` to watch a Solana account balance.
+
+Config fields:
+
+- `address`: Solana account address.
+- `minChange`: minimum lamport delta before the workflow runs.
+- `changeType`: `increase`, `decrease`, or `any`.
+
+Runtime payload fields include:
+
+```ts
+trigger.address
+trigger.previousLamports
+trigger.lamports
+trigger.changeLamports
+trigger.changeSol
+trigger.changeDirection
+trigger.slot
+```
+
+## Token Receipt and NFT Receipt
+
+Use `token_receipt` or `nft_receipt` to watch account changes for a token account or NFT-related account.
+
+Config fields include:
+
+- `address`: watched Solana account used by the current listener.
+- `tokenAccount`: token account address, present in shared schemas.
+- `tokenMint`: optional mint filter, present in shared schemas.
+- `walletAddress`: NFT wallet address, present in shared schemas.
+- `collectionAddress`: optional NFT collection filter, present in shared schemas.
+- `verifiedOnly`: defaults to true in shared schemas.
+
+Runtime payload fields include:
+
+```ts
+trigger.address
+trigger.slot
+trigger.accountData
+trigger.type
+```
+
+## Program Log
+
+Use `program_log` to listen to logs emitted by a Solana program.
+
+Config fields:
+
+- `programId`: Solana program address.
+- `logPattern`: optional regular expression checked against log lines.
+- `mentionedAccounts`: present in shared schemas for future filtering.
+
+Runtime payload fields include:
+
+```ts
+trigger.programId
+trigger.signature
+trigger.logs
+trigger.slot
+trigger.err
+```
+
+## Cron
+
+Use `cron` to schedule a workflow.
+
+Config fields:
+
+- `schedule`: cron expression such as `0 * * * *`.
+- `timezone`: timezone string, defaults to `UTC`.
+
+Cron schedules must be valid and have an interval of at least one minute. Cron jobs are synced when workflows are enabled, disabled, updated, deleted, or reconciled on API startup.
+
+Runtime payload fields include:
+
+```ts
+trigger.type
+trigger.firedAt
+trigger.schedule
+trigger.timezone
+```
+
+## Webhook
+
+Use `webhook` to run a workflow from an HTTP request.
+
+Config fields:
+
+- `webhookId`: generated endpoint id.
+- `inputFormat`: optional documented fields for expected request input.
+- `authEnabled`: whether a header must match before execution.
+- `authHeaderName`: header name, defaults to `Authorization`.
+- `authHeaderValue`: required when auth is enabled.
+
+Runtime payload fields include:
+
+```ts
+trigger.type
+trigger.firedAt
+trigger.requestId
+trigger.method
+trigger.url
+trigger.path
+trigger.webhookId
+trigger.headers
+trigger.query
+trigger.body
+trigger.input
+trigger.rawBody
+trigger.auth
+```
