@@ -160,6 +160,98 @@ html {
   }
 }
 
+@keyframes heroParallaxIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.82;
+  }
+}
+
+@keyframes heroFloatA {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-1.5deg);
+  }
+  50% {
+    transform: translate3d(0, -10px, 0) rotate(1deg);
+  }
+}
+
+@keyframes heroFloatB {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(1.25deg);
+  }
+  50% {
+    transform: translate3d(0, 12px, 0) rotate(-1deg);
+  }
+}
+
+@keyframes heroFloatC {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(2deg);
+  }
+  50% {
+    transform: translate3d(0, -8px, 0) rotate(-1deg);
+  }
+}
+
+.hero-parallax-card {
+  opacity: 0;
+  will-change: transform;
+  animation: heroParallaxIn 700ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.hero-parallax-card img {
+  display: block;
+  filter: drop-shadow(0 22px 40px rgba(0, 0, 0, 0.36));
+}
+
+.sol-float-a {
+  animation: heroFloatA 8s ease-in-out infinite;
+}
+
+.sol-float-b {
+  animation: heroFloatB 9.5s ease-in-out infinite;
+}
+
+.sol-float-c {
+  animation: heroFloatC 10.5s ease-in-out infinite;
+}
+
+.sol-float-d {
+  animation: heroFloatA 11s ease-in-out infinite reverse;
+}
+
+@media (max-width: 767px) {
+  .hero-parallax-card {
+    opacity: 0.42;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .hero-parallax-card,
+  .hero-parallax-card img,
+  .sol-float-a,
+  .sol-float-b,
+  .sol-float-c,
+  .sol-float-d {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .hero-parallax-card {
+    opacity: 0.72;
+  }
+}
+
 /* Fumadocs route polish */
 #nd-docs-layout {
   --fd-layout-width: 100vw !important;

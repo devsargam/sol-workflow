@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { DarkNav } from "@/components/layout/dark-nav";
 
 /* ─── SVG layout constants ────────────────────────────────────── */
@@ -533,6 +534,122 @@ function HeroSVG() {
   );
 }
 
+const PARALLAX_IMAGES = [
+  {
+    src: "/hero/workflow-signal.svg",
+    alt: "Workflow signal diagram",
+    className:
+      "left-[4vw] top-[18svh] w-[13rem] sm:left-[5vw] sm:top-[22svh] sm:w-[16rem] lg:left-[4vw] lg:top-[20svh] lg:w-[19rem]",
+    floatClass: "sol-float-a",
+    parallax: 0.045,
+    scroll: -0.16,
+  },
+  {
+    src: "/hero/workflow-agent.svg",
+    alt: "Agent execution panel",
+    className:
+      "right-[4vw] top-[16svh] hidden w-[13rem] sm:block md:right-[6vw] md:top-[20svh] lg:right-[7vw] lg:w-[17rem]",
+    floatClass: "sol-float-b",
+    parallax: -0.035,
+    scroll: -0.2,
+  },
+  {
+    src: "/hero/workflow-validate.svg",
+    alt: "Workflow validation receipt",
+    className:
+      "bottom-[8svh] left-[2vw] hidden w-[10rem] sm:block md:bottom-[13svh] md:left-[7vw] lg:w-[14rem]",
+    floatClass: "sol-float-c",
+    parallax: -0.025,
+    scroll: -0.12,
+  },
+  {
+    src: "/hero/workflow-webhook.svg",
+    alt: "Webhook workflow route",
+    className:
+      "bottom-[9svh] right-[-10vw] w-[14rem] sm:right-[2vw] sm:w-[17rem] md:bottom-[12svh] lg:right-[4vw] lg:w-[21rem]",
+    floatClass: "sol-float-d",
+    parallax: 0.04,
+    scroll: -0.18,
+  },
+] as const;
+
+function HeroParallaxArt() {
+  const layerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const layer = layerRef.current;
+    if (!layer) return;
+
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) return;
+
+    const items = Array.from(layer.querySelectorAll<HTMLElement>("[data-parallax-item]"));
+    let pointerX = 0;
+    let pointerY = 0;
+    let ticking = false;
+
+    const update = () => {
+      ticking = false;
+      const scrollY = window.scrollY;
+
+      for (const item of items) {
+        const parallax = Number(item.dataset.parallaxIntensity ?? 0);
+        const scroll = Number(item.dataset.scrollIntensity ?? 0);
+        const x = pointerX * parallax;
+        const y = pointerY * parallax + scrollY * scroll;
+        item.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      }
+    };
+
+    const requestUpdate = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(update);
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      pointerX = event.clientX - window.innerWidth / 2;
+      pointerY = event.clientY - window.innerHeight / 2;
+      requestUpdate();
+    };
+
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    window.addEventListener("scroll", requestUpdate, { passive: true });
+    update();
+
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("scroll", requestUpdate);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={layerRef}
+      className="pointer-events-none absolute inset-0 z-[2] overflow-visible"
+      aria-hidden="true"
+    >
+      {PARALLAX_IMAGES.map((image, index) => (
+        <div
+          key={image.src}
+          data-parallax-item
+          data-parallax-intensity={image.parallax}
+          data-scroll-intensity={image.scroll}
+          className={`hero-parallax-card absolute ${image.className}`}
+          style={{ animationDelay: `${0.25 + index * 0.12}s` }}
+        >
+          <img
+            src={image.src}
+            alt={image.alt}
+            loading="lazy"
+            className={`h-auto w-full ${image.floatClass}`}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ─── Page ────────────────────────────────────────────────────── */
 
 export default function HomePage() {
@@ -540,7 +657,13 @@ export default function HomePage() {
     <div className="min-h-screen bg-background text-foreground">
       <section className="relative flex min-h-[100svh] flex-col overflow-hidden">
         <HeroSVG />
-        <DarkNav links={[{ label: "Workflows", href: "/workflows" }]} />
+        <HeroParallaxArt />
+        <DarkNav
+          links={[
+            { label: "Workflows", href: "/workflows" },
+            { label: "Docs", href: "/docs" },
+          ]}
+        />
 
         <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-5 pb-20 pt-10 text-center sm:px-6 sm:pb-28 sm:pt-0">
           <h1 className="max-w-[18rem] text-3xl font-bold leading-[1.08] tracking-normal text-foreground sm:max-w-3xl sm:text-5xl md:text-6xl lg:text-7xl">
@@ -556,6 +679,12 @@ export default function HomePage() {
               className="rounded-xl bg-foreground px-6 py-3 text-sm font-medium text-background text-center transition-colors hover:bg-foreground/90"
             >
               Start building
+            </Link>
+            <Link
+              href="/docs"
+              className="rounded-xl border border-border bg-background/20 px-6 py-3 text-center text-sm font-medium text-foreground backdrop-blur-sm transition-colors hover:bg-foreground/10"
+            >
+              Read docs
             </Link>
           </div>
         </div>
