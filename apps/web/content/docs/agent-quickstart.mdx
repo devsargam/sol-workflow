@@ -51,6 +51,8 @@ curl "$DOLPHINFLOW_API_URL/workflows/agent/capabilities" \
   -H "Authorization: Bearer $DOLPHINFLOW_API_TOKEN"
 ```
 
+For the full prompt-to-workflow process, request body, validation response, and examples, use [Agent Workflow Creation](/docs/agent-workflow-creation).
+
 To inspect one workflow in an agent-friendly shape, fetch its graph, diagnostics, node summaries, webhook trigger paths, and update hints:
 
 ```bash
@@ -59,6 +61,15 @@ curl "$DOLPHINFLOW_API_URL/workflows/<workflow-id>/agent" \
 ```
 
 Create workflows with the existing graph endpoint:
+
+Validate the same body first:
+
+```bash
+curl -X POST "$DOLPHINFLOW_API_URL/workflows/validate" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d @workflow-draft.json
+```
 
 ```bash
 curl -X POST "$DOLPHINFLOW_API_URL/workflows" \

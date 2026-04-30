@@ -4,6 +4,7 @@
     "index",
     "agent-playbook",
     "agent-quickstart",
+    "agent-workflow-creation",
     "workflow-builder",
     "triggers",
     "filters",

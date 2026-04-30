@@ -6,6 +6,7 @@ import {
   WorkflowMetadataSchema,
   isExecutableGraph,
   validateWorkflowGraph,
+  validateWorkflowGraphForBuilder,
   type WorkflowGraph,
 } from "@repo/types";
 import { Hono } from "hono";
@@ -28,6 +29,20 @@ const createWorkflowSchema = z.object({
   graph: WorkflowGraphSchema,
   metadata: WorkflowMetadataSchema.optional(),
 });
+
+const validateWorkflowSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().max(500).optional(),
+  graph: z.unknown(),
+  metadata: WorkflowMetadataSchema.optional(),
+});
+
+function formatZodIssues(error: z.ZodError) {
+  return error.issues.map((issue) => ({
+    path: issue.path.length > 0 ? issue.path.join(".") : "body",
+    message: issue.message,
+  }));
+}
 
 function validateWebhookTriggerConfigs(graph: WorkflowGraph) {
   const errors: string[] = [];
@@ -65,6 +80,87 @@ function validateWebhookTriggerConfigs(graph: WorkflowGraph) {
   return errors;
 }
 
+function validateWorkflowDraft(data: unknown) {
+  const bodyResult = validateWorkflowSchema.safeParse(data);
+
+  if (!bodyResult.success) {
+    return {
+      valid: false,
+      errors: ["Workflow validation request is malformed"],
+      checks: {
+        body: {
+          valid: false,
+          errors: formatZodIssues(bodyResult.error),
+        },
+      },
+    };
+  }
+
+  const graphResult = WorkflowGraphSchema.safeParse(bodyResult.data.graph);
+
+  if (!graphResult.success) {
+    return {
+      valid: false,
+      errors: ["Invalid workflow graph structure"],
+      checks: {
+        body: { valid: true, errors: [] },
+        graphSchema: {
+          valid: false,
+          errors: formatZodIssues(graphResult.error),
+        },
+      },
+    };
+  }
+
+  const graph = graphResult.data;
+  const executable = isExecutableGraph(graph);
+  const builderErrors = validateWorkflowGraphForBuilder(graph);
+  const webhookErrors = validateWebhookTriggerConfigs(graph);
+
+  const cronScheduler = getCronScheduler();
+  const cronValidation = cronScheduler
+    ? cronScheduler.validateWorkflowCronTriggers(graph)
+    : { valid: true, errors: [] };
+
+  const errors = [
+    ...executable.errors,
+    ...webhookErrors,
+    ...cronValidation.errors,
+  ];
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    checks: {
+      body: { valid: true, errors: [] },
+      graphSchema: { valid: true, errors: [] },
+      executableGraph: {
+        valid: executable.valid,
+        errors: executable.errors,
+      },
+      nodeConfiguration: {
+        valid: webhookErrors.length === 0,
+        errors: webhookErrors,
+      },
+      cron: cronValidation,
+      builder: {
+        valid: builderErrors.length === 0,
+        errors: builderErrors,
+        note:
+          "Builder validation mirrors the visual UI and may be stricter than API execution validation.",
+      },
+    },
+    summary: {
+      nodeCount: graph.nodes.length,
+      edgeCount: graph.edges.length,
+      triggerCount: graph.nodes.filter((node) => node.type === "trigger").length,
+      filterCount: graph.nodes.filter((node) => node.type === "filter").length,
+      actionCount: graph.nodes.filter((node) => node.type === "action").length,
+      notifyCount: graph.nodes.filter((node) => node.type === "notify").length,
+    },
+  };
+}
+
 workflows.get("/", async (c: AuthenticatedContext) => {
   try {
     const userId = c.user?.id;
@@ -91,6 +187,33 @@ workflows.get("/agent/capabilities", (c: AuthenticatedContext) => {
   }
 
   return c.json(buildAgentWorkflowCapabilities());
+});
+
+workflows.post("/validate", async (c: AuthenticatedContext) => {
+  const userId = c.user?.id;
+  if (!userId) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  try {
+    const data = await c.req.json();
+    const result = validateWorkflowDraft(data);
+    return c.json(result, result.valid ? 200 : 422);
+  } catch (error) {
+    return c.json(
+      {
+        valid: false,
+        errors: ["Request body must be valid JSON"],
+        checks: {
+          body: {
+            valid: false,
+            errors: [{ path: "body", message: (error as Error).message }],
+          },
+        },
+      },
+      400
+    );
+  }
 });
 
 workflows.get("/:id/agent", async (c: AuthenticatedContext) => {

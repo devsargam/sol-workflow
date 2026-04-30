@@ -203,6 +203,13 @@ export function buildAgentWorkflowCapabilities() {
     },
     endpoints: {
       listWorkflows: { method: "GET", path: API.ROUTES.WORKFLOWS },
+      validateWorkflow: {
+        method: "POST",
+        path: `${API.ROUTES.WORKFLOWS}/validate`,
+        body: "Same draft shape as createWorkflow: { name?, description?, graph, metadata? }",
+        response:
+          "{ valid, errors, checks: { body, graphSchema, executableGraph, nodeConfiguration, cron, builder }, summary }",
+      },
       createWorkflow: { method: "POST", path: API.ROUTES.WORKFLOWS },
       workflowAgentDetail: {
         method: "GET",

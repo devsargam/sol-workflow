@@ -1,0 +1,349 @@
+---
+title: Agent Workflow Creation
+description: How agents turn a prompt into a validated Dolphinflow workflow.
+---
+
+## Goal
+
+Agents can create workflows from a user prompt by producing a workflow graph, validating it, creating it through the API, and enabling it only after the draft passes validation.
+
+Use this guide for agents such as Hermes that need to build workflows without the visual builder.
+
+## Required Environment
+
+```bash
+export DOLPHINFLOW_API_URL="https://api.dolphinflow.xyz"
+export DOLPHINFLOW_API_TOKEN="wallet-auth-token"
+```
+
+For local development:
+
+```bash
+export DOLPHINFLOW_API_URL="http://localhost:3001"
+```
+
+Protected workflow routes require:
+
+```txt
+Authorization: Bearer <wallet-auth-token>
+Content-Type: application/json
+```
+
+## Prompt To Workflow Loop
+
+1. Read the machine contract:
+
+```bash
+curl "$DOLPHINFLOW_API_URL/workflows/agent/capabilities" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_TOKEN"
+```
+
+2. Convert the user prompt into a graph with `trigger`, optional `filter`, `action`, and optional `notify` nodes.
+
+3. Validate the draft:
+
+```bash
+curl -X POST "$DOLPHINFLOW_API_URL/workflows/validate" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d @workflow-draft.json
+```
+
+4. Fix every `errors` item returned by validation.
+
+5. Create the workflow:
+
+```bash
+curl -X POST "$DOLPHINFLOW_API_URL/workflows" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d @workflow-draft.json
+```
+
+6. Enable it only when the user confirms the workflow should go live:
+
+```bash
+curl -X POST "$DOLPHINFLOW_API_URL/workflows/<workflow-id>/toggle" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_TOKEN"
+```
+
+New workflows are created disabled, so a bad trigger cannot run immediately after creation.
+
+## Create Body
+
+Send this shape to both `POST /workflows/validate` and `POST /workflows`:
+
+```json
+{
+  "name": "Workflow name",
+  "description": "Optional description for humans and agents.",
+  "graph": {
+    "nodes": [],
+    "edges": [],
+    "viewport": { "x": 0, "y": 0, "zoom": 1 }
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "maxSolPerTx": 1000000,
+    "maxExecutionsPerHour": 10,
+    "createdWith": "api"
+  }
+}
+```
+
+Fields:
+
+- `name`: required for create, 1 to 100 characters. Optional for validation.
+- `description`: optional, up to 500 characters.
+- `graph.nodes`: React Flow style nodes.
+- `graph.edges`: directed connections between node ids.
+- `metadata`: optional. The API fills defaults when omitted.
+
+## Node Body
+
+Every node uses this base shape:
+
+```json
+{
+  "id": "trigger-1",
+  "type": "trigger",
+  "position": { "x": 0, "y": 0 },
+  "data": {
+    "nodeType": "trigger"
+  }
+}
+```
+
+Valid node `type` values:
+
+- `trigger`
+- `filter`
+- `action`
+- `notify`
+
+`data.nodeType` must match `type`.
+
+## Edge Body
+
+```json
+{
+  "id": "edge-trigger-1-action-1",
+  "source": "trigger-1",
+  "target": "action-1",
+  "type": "smoothstep"
+}
+```
+
+Optional edge fields include `sourceHandle`, `targetHandle`, `animated`, `style`, and `data`.
+
+Use handles when a branch matters:
+
+- Filter pass: `sourceHandle: "if"`
+- Filter fail: `sourceHandle: "else"`
+- Filter error: `sourceHandle: "error"`
+- Action success: `sourceHandle: "success"`
+- Action error: `sourceHandle: "error"`
+- Notify sent: `sourceHandle: "sent"`
+- Notify error: `sourceHandle: "error"`
+
+## Validation Endpoint
+
+`POST /workflows/validate` validates without writing to the database.
+
+Request:
+
+```json
+{
+  "name": "Hourly Discord heartbeat",
+  "graph": {
+    "nodes": [],
+    "edges": []
+  }
+}
+```
+
+Successful valid response:
+
+```json
+{
+  "valid": true,
+  "errors": [],
+  "checks": {
+    "body": { "valid": true, "errors": [] },
+    "graphSchema": { "valid": true, "errors": [] },
+    "executableGraph": { "valid": true, "errors": [] },
+    "nodeConfiguration": { "valid": true, "errors": [] },
+    "cron": { "valid": true, "errors": [] },
+    "builder": {
+      "valid": true,
+      "errors": [],
+      "note": "Builder validation mirrors the visual UI and may be stricter than API execution validation."
+    }
+  },
+  "summary": {
+    "nodeCount": 2,
+    "edgeCount": 1,
+    "triggerCount": 1,
+    "filterCount": 0,
+    "actionCount": 1,
+    "notifyCount": 0
+  }
+}
+```
+
+Invalid drafts return `422` with the same shape and non-empty `errors`. Invalid JSON returns `400`.
+
+The API create and update routes also validate graph structure, executable shape, webhook trigger configuration, and cron trigger configuration before writing.
+
+## Minimal Cron Example
+
+This workflow runs every hour and sends a Discord notification.
+
+```json
+{
+  "name": "Hourly Discord heartbeat",
+  "description": "Runs once an hour and sends a Discord notification.",
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger-1",
+        "type": "trigger",
+        "position": { "x": 0, "y": 0 },
+        "data": {
+          "nodeType": "trigger",
+          "triggerType": "cron",
+          "config": {
+            "schedule": "0 * * * *",
+            "timezone": "UTC"
+          }
+        }
+      },
+      {
+        "id": "notify-1",
+        "type": "notify",
+        "position": { "x": 320, "y": 0 },
+        "data": {
+          "nodeType": "notify",
+          "notifications": [
+            {
+              "notifyType": "discord",
+              "webhookUrl": "https://discord.com/api/webhooks/...",
+              "template": "default"
+            }
+          ]
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge-trigger-1-notify-1",
+        "source": "trigger-1",
+        "target": "notify-1",
+        "type": "smoothstep"
+      }
+    ]
+  },
+  "metadata": {
+    "createdWith": "api"
+  }
+}
+```
+
+## Webhook Example
+
+This workflow receives an agent webhook, validates `amount`, then runs a no-op action. Replace the webhook id with a stable id generated by the agent.
+
+```json
+{
+  "name": "Hermes amount gate",
+  "description": "Accepts an agent payload and only continues for small amounts.",
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger-1",
+        "type": "trigger",
+        "position": { "x": 0, "y": 0 },
+        "data": {
+          "nodeType": "trigger",
+          "triggerType": "webhook",
+          "config": {
+            "webhookId": "hermes-amount-gate",
+            "authEnabled": true,
+            "authHeaderName": "Authorization",
+            "authHeaderValue": "Bearer replace-with-shared-secret",
+            "inputFormat": [
+              {
+                "name": "amount",
+                "type": "number",
+                "description": "Lamports requested by the caller"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "filter-1",
+        "type": "filter",
+        "position": { "x": 320, "y": 0 },
+        "data": {
+          "nodeType": "filter",
+          "logic": "and",
+          "conditions": [
+            {
+              "field": "input.amount",
+              "operator": "less_than_or_equal",
+              "value": 1000000
+            }
+          ]
+        }
+      },
+      {
+        "id": "action-1",
+        "type": "action",
+        "position": { "x": 640, "y": 0 },
+        "data": {
+          "nodeType": "action",
+          "actionType": "do_nothing",
+          "config": {}
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge-trigger-1-filter-1",
+        "source": "trigger-1",
+        "target": "filter-1",
+        "type": "smoothstep"
+      },
+      {
+        "id": "edge-filter-1-action-1",
+        "source": "filter-1",
+        "sourceHandle": "if",
+        "target": "action-1",
+        "type": "smoothstep"
+      }
+    ]
+  },
+  "metadata": {
+    "createdWith": "api"
+  }
+}
+```
+
+After the workflow is created and enabled, call the webhook:
+
+```bash
+curl -X POST "$DOLPHINFLOW_API_URL/webhooks/<workflow-id>/trigger-1/hermes-amount-gate" \
+  -H "Authorization: Bearer replace-with-shared-secret" \
+  -H "Content-Type: application/json" \
+  -d '{"amount":1000,"source":"hermes"}'
+```
+
+## Agent Rules
+
+- Generate stable, unique node ids such as `trigger-1`, `filter-1`, `action-1`, and `notify-1`.
+- Keep positions spaced about 300 pixels apart so humans can open the graph in the builder.
+- Use webhook auth for agent-owned webhook triggers.
+- Validate every draft before create or patch.
+- Treat `builder.errors` as UI compatibility warnings when `valid` is true, and as required fixes when the target is a builder-editable workflow.
+- Never include private keys, wallet seed phrases, bot tokens, or real webhook secrets in prompts, logs, or docs.
