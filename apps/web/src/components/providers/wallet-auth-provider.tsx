@@ -21,16 +21,8 @@ import {
 } from "@/lib/auth-storage";
 import { requestWalletChallenge, verifyWalletChallenge } from "@/lib/api";
 
-function toBase64(bytes: Uint8Array) {
-  if (typeof window === "undefined") {
-    return "";
-  }
-
-  let binary = "";
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
-  }
-  return window.btoa(binary);
+function toBase64(bytes: Uint8Array): string {
+  return Buffer.from(bytes).toString("base64");
 }
 
 type WalletAuthContextValue = {

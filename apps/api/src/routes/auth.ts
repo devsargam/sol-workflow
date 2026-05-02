@@ -47,9 +47,24 @@ auth.post("/verify", zValidator("json", verifySchema), async (c) => {
     return c.json({ error: "Challenge payload mismatch" }, 400);
   }
 
+  let signatureBytes: Buffer;
+  try {
+    signatureBytes = Buffer.from(signature, "base64");
+  } catch {
+    return c.json({ error: "Invalid signature encoding" }, 400);
+  }
+
+  if (signatureBytes.length !== 64) {
+    log.warn("Wallet signature has unexpected size", {
+      service: "api",
+      walletAddress,
+      signatureLength: signatureBytes.length,
+    });
+    return c.json({ error: "Invalid signature size" }, 400);
+  }
+
   try {
     const publicKey = new PublicKey(walletAddress);
-    const signatureBytes = Buffer.from(signature, "base64");
     const messageBytes = new TextEncoder().encode(message);
     const verified = nacl.sign.detached.verify(messageBytes, signatureBytes, publicKey.toBytes());
 
@@ -66,6 +81,7 @@ auth.post("/verify", zValidator("json", verifySchema), async (c) => {
       walletAddress,
     });
   } catch (error) {
+    log.error("Wallet signature verification threw", error as Error, { service: "api", walletAddress });
     return c.json({ error: "Unable to verify wallet signature" }, 400);
   }
 });

@@ -148,11 +148,6 @@ export default function HomePage() {
 
           <div className="relative z-10 grid flex-1 items-center gap-10 px-6 pb-8 pt-4 sm:px-10 sm:pb-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-4 lg:px-16 lg:pb-12 xl:px-24">
             <div className="max-w-3xl pt-8 lg:pt-0">
-              <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/16 px-3 py-1.5 text-xs font-semibold text-black/70 shadow-[0_10px_30px_rgba(243,217,172,0.16)] backdrop-blur-md">
-                <span className="h-2 w-2 rounded-full bg-[#27d6ff] shadow-[0_0_18px_rgba(39,214,255,0.78)]" />
-                Live products for Solana teams
-              </div>
-
               <h1 className="max-w-[720px] text-5xl font-bold leading-none tracking-normal text-black sm:text-6xl lg:text-7xl xl:text-[5.2rem]">
                 <span className="block">Onchain</span>
                 <span className="block">workflow</span>
@@ -182,9 +177,15 @@ export default function HomePage() {
               </div>
 
               <div className="mt-8 flex flex-wrap gap-3 text-xs font-medium text-white/72">
-                <span className="rounded-full border border-white/14 bg-white/10 px-3 py-1.5">No glue code</span>
-                <span className="rounded-full border border-white/14 bg-white/10 px-3 py-1.5">Wallet-native</span>
-                <span className="rounded-full border border-white/14 bg-white/10 px-3 py-1.5">Runs 24/7</span>
+                <span className="rounded-full border border-white/14 bg-white/10 px-3 py-1.5">
+                  No glue code
+                </span>
+                <span className="rounded-full border border-white/14 bg-white/10 px-3 py-1.5">
+                  Wallet-native
+                </span>
+                <span className="rounded-full border border-white/14 bg-white/10 px-3 py-1.5">
+                  Runs 24/7
+                </span>
               </div>
             </div>
 
@@ -216,7 +217,9 @@ function LandingNav({ authenticated, login, logout, ready, walletAddress }: Land
           className="h-9 w-9 rounded-xl object-cover"
           priority
         />
-        <span className="hidden text-lg font-bold tracking-normal min-[390px]:inline">Dolphinflow</span>
+        <span className="hidden text-lg font-bold tracking-normal min-[390px]:inline">
+          Dolphinflow
+        </span>
       </Link>
 
       <div className="hidden items-center gap-10 text-sm font-medium text-black/76 md:flex">
@@ -302,7 +305,10 @@ function OrbitIconBadge({ icon }: { icon: OrbitIcon }) {
     top: `${icon.y}%`,
   } as CSSProperties;
 
-  const sizeClass = icon.size === "large" ? "h-20 w-20 sm:h-[4.75rem] sm:w-[4.75rem]" : "h-16 w-16 sm:h-[4.35rem] sm:w-[4.35rem]";
+  const sizeClass =
+    icon.size === "large"
+      ? "h-20 w-20 sm:h-[4.75rem] sm:w-[4.75rem]"
+      : "h-16 w-16 sm:h-[4.35rem] sm:w-[4.35rem]";
 
   return (
     <div className="absolute z-20 -translate-x-1/2 -translate-y-1/2" style={positionStyle}>
@@ -364,7 +370,17 @@ function IconRenderer({ kind }: { kind: OrbitIconKind }) {
     case "wallet":
       return (
         <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
-          <rect x="6" y="10" width="24" height="18" rx="5" fill="#F3D9AC" fillOpacity="0.2" stroke="#FFE4AC" strokeWidth="2" />
+          <rect
+            x="6"
+            y="10"
+            width="24"
+            height="18"
+            rx="5"
+            fill="#F3D9AC"
+            fillOpacity="0.2"
+            stroke="#FFE4AC"
+            strokeWidth="2"
+          />
           <path
             d="M10 10V8.8C10 6.9 11.7 5.5 13.6 5.9L24.3 8.1C25.6 8.4 26.5 9.5 26.5 10.8"
             stroke="#FFE4AC"
@@ -377,18 +393,61 @@ function IconRenderer({ kind }: { kind: OrbitIconKind }) {
     case "cron":
       return (
         <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
-          <circle cx="18" cy="18" r="12" fill="#F3D9AC" fillOpacity="0.18" stroke="#FFE4AC" strokeWidth="2" />
-          <path d="M18 11V18L23 21" stroke="#F8F4FF" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.4" />
+          <circle
+            cx="18"
+            cy="18"
+            r="12"
+            fill="#F3D9AC"
+            fillOpacity="0.18"
+            stroke="#FFE4AC"
+            strokeWidth="2"
+          />
+          <path
+            d="M18 11V18L23 21"
+            stroke="#F8F4FF"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2.4"
+          />
           <path d="M10 7L7 10M26 7L29 10" stroke="#FFE4AC" strokeLinecap="round" strokeWidth="2" />
         </svg>
       );
     case "webhook":
       return (
         <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
-          <circle cx="11" cy="12" r="4" fill="#9A65F2" fillOpacity="0.34" stroke="#C9AAFF" strokeWidth="2" />
-          <circle cx="25" cy="12" r="4" fill="#9A65F2" fillOpacity="0.34" stroke="#C9AAFF" strokeWidth="2" />
-          <circle cx="18" cy="25" r="4" fill="#9A65F2" fillOpacity="0.34" stroke="#C9AAFF" strokeWidth="2" />
-          <path d="M15 12H21M13.5 15.3L16.2 21.4M22.5 15.3L19.8 21.4" stroke="#F8F4FF" strokeLinecap="round" strokeWidth="2" />
+          <circle
+            cx="11"
+            cy="12"
+            r="4"
+            fill="#9A65F2"
+            fillOpacity="0.34"
+            stroke="#C9AAFF"
+            strokeWidth="2"
+          />
+          <circle
+            cx="25"
+            cy="12"
+            r="4"
+            fill="#9A65F2"
+            fillOpacity="0.34"
+            stroke="#C9AAFF"
+            strokeWidth="2"
+          />
+          <circle
+            cx="18"
+            cy="25"
+            r="4"
+            fill="#9A65F2"
+            fillOpacity="0.34"
+            stroke="#C9AAFF"
+            strokeWidth="2"
+          />
+          <path
+            d="M15 12H21M13.5 15.3L16.2 21.4M22.5 15.3L19.8 21.4"
+            stroke="#F8F4FF"
+            strokeLinecap="round"
+            strokeWidth="2"
+          />
         </svg>
       );
     case "telegram":
@@ -429,17 +488,38 @@ function SolanaLogo({ className }: { className?: string }) {
     <svg role="img" viewBox="0 0 24 24" className={className} xmlns="http://www.w3.org/2000/svg">
       <title>Solana</title>
       <defs>
-        <linearGradient id="solanaCenterA" x1="0" x2="24" y1="22.5" y2="17.2" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id="solanaCenterA"
+          x1="0"
+          x2="24"
+          y1="22.5"
+          y2="17.2"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop stopColor="#9945FF" />
           <stop offset="0.45" stopColor="#14F195" />
           <stop offset="1" stopColor="#00C2FF" />
         </linearGradient>
-        <linearGradient id="solanaCenterB" x1="0" x2="24" y1="14.6" y2="9.4" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id="solanaCenterB"
+          x1="0"
+          x2="24"
+          y1="14.6"
+          y2="9.4"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop stopColor="#00C2FF" />
           <stop offset="0.52" stopColor="#14F195" />
           <stop offset="1" stopColor="#9945FF" />
         </linearGradient>
-        <linearGradient id="solanaCenterC" x1="0" x2="24" y1="6.8" y2="1.5" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id="solanaCenterC"
+          x1="0"
+          x2="24"
+          y1="6.8"
+          y2="1.5"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop stopColor="#9945FF" />
           <stop offset="0.48" stopColor="#14F195" />
           <stop offset="1" stopColor="#00C2FF" />
