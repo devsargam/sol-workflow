@@ -1,8 +1,9 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useEffect, type CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useWalletAuth } from "@/components/providers/wallet-auth-provider";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -130,6 +131,13 @@ const orbitIcons: OrbitIcon[] = [
 
 export default function HomePage() {
   const { ready, authenticated, login, logout, walletAddress } = useWalletAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (ready && authenticated) {
+      router.replace("/dashboard");
+    }
+  }, [ready, authenticated, router]);
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#eadfcf] text-white">
