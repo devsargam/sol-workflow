@@ -5,6 +5,7 @@
     "agent-playbook",
     "agent-quickstart",
     "agent-workflow-creation",
+    "api-keys",
     "workflow-builder",
     "triggers",
     "filters",

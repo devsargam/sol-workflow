@@ -1,0 +1,261 @@
+---
+title: API Keys
+description: Authenticate agents and scripts that create, validate, and manage Dolphinflow workflows.
+---
+
+## What API Keys Are For
+
+API keys let external agents, scripts, and backend services call protected Dolphinflow API routes without a wallet signing flow.
+
+Use API keys when an agent needs to:
+
+- Discover supported workflow graph capabilities.
+- Validate a generated workflow draft.
+- Create a workflow through the API.
+- Read, update, delete, or enable workflows owned by the key's wallet.
+- Inspect executions and other protected resources.
+
+API keys are account scoped. A key acts on behalf of the wallet that created it.
+
+## Base URL
+
+Production:
+
+```bash
+export DOLPHINFLOW_API_URL="https://api.dolphinflow.xyz"
+```
+
+Local development:
+
+```bash
+export DOLPHINFLOW_API_URL="http://localhost:3001"
+```
+
+## Create A Key
+
+Create the first key from the app:
+
+```txt
+Dashboard -> API keys -> New API key
+```
+
+The full key is shown only once. Store it as an environment variable:
+
+```bash
+export DOLPHINFLOW_API_KEY="dk_live_..."
+```
+
+API keys use this shape:
+
+```txt
+dk_live_<64 hex characters>
+```
+
+Only a SHA-256 hash of the key is stored by Dolphinflow. The cleartext key cannot be recovered after the creation response is dismissed.
+
+## Authenticate Requests
+
+Send the key as a Bearer token:
+
+```txt
+Authorization: Bearer <api-key>
+Content-Type: application/json
+```
+
+Example:
+
+```bash
+curl "$DOLPHINFLOW_API_URL/workflows" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_KEY"
+```
+
+Successful API-key requests update the key's `lastUsedAt` timestamp.
+
+## Agent Workflow Flow
+
+Agents should use this loop when creating workflows:
+
+1. Check the API is reachable.
+2. Read workflow capabilities.
+3. Build a graph from the user prompt.
+4. Validate the draft.
+5. Create the workflow only after validation passes.
+6. Enable the workflow only after the user confirms it should go live.
+
+Health check:
+
+```bash
+curl "$DOLPHINFLOW_API_URL/health"
+```
+
+Read workflow capabilities:
+
+```bash
+curl "$DOLPHINFLOW_API_URL/workflows/agent/capabilities" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_KEY"
+```
+
+Validate a generated draft:
+
+```bash
+curl -X POST "$DOLPHINFLOW_API_URL/workflows/validate" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d @workflow-draft.json
+```
+
+Create the workflow:
+
+```bash
+curl -X POST "$DOLPHINFLOW_API_URL/workflows" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d @workflow-draft.json
+```
+
+Enable the workflow after confirmation:
+
+```bash
+curl -X POST "$DOLPHINFLOW_API_URL/workflows/<workflow-id>/toggle" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_KEY"
+```
+
+New workflows are created disabled by default.
+
+For the full graph contract, node schemas, validation responses, and examples, see [Agent Workflow Creation](/docs/agent-workflow-creation).
+
+## Minimal Workflow Payload
+
+Send this shape to both `POST /workflows/validate` and `POST /workflows`:
+
+```json
+{
+  "name": "Workflow name",
+  "description": "Optional description for humans and agents.",
+  "graph": {
+    "nodes": [],
+    "edges": [],
+    "viewport": { "x": 0, "y": 0, "zoom": 1 }
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "createdWith": "api"
+  }
+}
+```
+
+Important constraints:
+
+- `name` is required for create and must be 1 to 100 characters.
+- `description` is optional and must be 500 characters or fewer.
+- `graph` must pass the workflow graph schema.
+- The graph must be executable before it can be created.
+- Webhook trigger nodes must include initialized webhook configuration.
+- Cron trigger nodes must pass cron validation.
+- `metadata` is optional; the API fills defaults when omitted.
+
+## Managing API Keys
+
+These routes manage keys for the authenticated wallet. They require either wallet auth or an existing API key.
+
+List active keys:
+
+```bash
+curl "$DOLPHINFLOW_API_URL/api-keys" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "apiKeys": [
+    {
+      "id": "uuid",
+      "name": "Production agent",
+      "keyPrefix": "dk_live_abcd1234...",
+      "createdAt": "2026-05-02T00:00:00.000Z",
+      "lastUsedAt": null
+    }
+  ]
+}
+```
+
+Create a key:
+
+```bash
+curl -X POST "$DOLPHINFLOW_API_URL/api-keys" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Production agent"}'
+```
+
+Creation response:
+
+```json
+{
+  "apiKey": {
+    "id": "uuid",
+    "name": "Production agent",
+    "keyPrefix": "dk_live_abcd1234...",
+    "createdAt": "2026-05-02T00:00:00.000Z",
+    "lastUsedAt": null
+  },
+  "key": "dk_live_full_secret_shown_once"
+}
+```
+
+Revoke a key:
+
+```bash
+curl -X DELETE "$DOLPHINFLOW_API_URL/api-keys/<api-key-id>" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "success": true
+}
+```
+
+Revoked keys stop authenticating immediately.
+
+## Status Codes
+
+Common responses:
+
+- `200`: request succeeded.
+- `201`: API key or workflow was created.
+- `400`: malformed JSON or invalid workflow configuration.
+- `401`: missing, invalid, or revoked API key.
+- `403`: key belongs to a different wallet than the requested resource.
+- `404`: resource was not found.
+- `422`: workflow validation failed.
+- `500`: server-side failure.
+
+Validation failures return structured details. Agents should fix every returned error before calling `POST /workflows`.
+
+## Security Rules For Agents
+
+- Keep API keys in environment variables or a secret manager.
+- Never paste real keys into docs, logs, prompts, screenshots, commits, or issue comments.
+- Treat webhook shared secrets and API keys as different credentials.
+- Revoke keys that are no longer needed.
+- Create separate keys for production agents, local development, and experiments.
+- Prefer creating workflows disabled, validating first, then asking the user before enabling.
+
+## Copy-Paste Agent Bootstrap
+
+Give an agent this minimal bootstrap:
+
+```bash
+export DOLPHINFLOW_API_URL="https://api.dolphinflow.xyz"
+export DOLPHINFLOW_API_KEY="dk_live_..."
+
+curl "$DOLPHINFLOW_API_URL/workflows/agent/capabilities" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_KEY"
+```
+
+Then send the agent to this page and [Agent Workflow Creation](/docs/agent-workflow-creation).
