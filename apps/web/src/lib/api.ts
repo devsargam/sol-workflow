@@ -141,6 +141,26 @@ export interface CreateWorkflowData {
   metadata?: WorkflowMetadata;
 }
 
+export interface ApiKey {
+  id: string;
+  name: string;
+  keyPrefix: string;
+  createdAt: string;
+  lastUsedAt: string | null;
+}
+
+export interface CreateApiKeyData {
+  name: string;
+}
+
+function getErrorMessage(json: unknown, fallback: string) {
+  return typeof (json as any)?.error === "string"
+    ? (json as any).error
+    : typeof (json as any)?.message === "string"
+      ? (json as any).message
+      : fallback;
+}
+
 // Workflows API
 export async function fetchWorkflows(): Promise<{ workflows: Workflow[] }> {
   const headers = await getAuthHeaders();
@@ -248,6 +268,55 @@ export async function toggleWorkflow(id: string): Promise<{ workflow: Workflow }
     throw new Error("Failed to toggle workflow");
   }
   return res.json();
+}
+
+export async function fetchApiKeys(): Promise<{ apiKeys: ApiKey[] }> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}${API.ROUTES.API_KEYS}`, { headers });
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    if (res.status === 401) throw new Error("Unauthorized - Please login");
+    throw new Error(getErrorMessage(json, "Failed to fetch API keys"));
+  }
+
+  return json as { apiKeys: ApiKey[] };
+}
+
+export async function createApiKey(
+  data: CreateApiKeyData
+): Promise<{ apiKey: ApiKey; key: string }> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}${API.ROUTES.API_KEYS}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(data),
+  });
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    if (res.status === 401) throw new Error("Unauthorized - Please login");
+    throw new Error(getErrorMessage(json, "Failed to create API key"));
+  }
+
+  return json as { apiKey: ApiKey; key: string };
+}
+
+export async function revokeApiKey(id: string): Promise<{ success: true }> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}${API.ROUTES.API_KEYS}/${id}`, {
+    method: "DELETE",
+    headers,
+  });
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    if (res.status === 401) throw new Error("Unauthorized - Please login");
+    if (res.status === 403) throw new Error("Forbidden - You don't have access to this API key");
+    throw new Error(getErrorMessage(json, "Failed to revoke API key"));
+  }
+
+  return json as { success: true };
 }
 
 export function buildBalanceMonitorGraph(walletAddress: string): WorkflowGraph {

@@ -44,6 +44,15 @@ function formatZodIssues(error: z.ZodError) {
   }));
 }
 
+function getAuditActor(c: AuthenticatedContext) {
+  const user = c.user;
+
+  return {
+    actorId: user?.authMethod === "api_key" ? user.apiKeyId : user?.id,
+    actorType: user?.authMethod === "api_key" ? ("api" as const) : ("user" as const),
+  };
+}
+
 function validateWebhookTriggerConfigs(graph: WorkflowGraph) {
   const errors: string[] = [];
 
@@ -361,6 +370,7 @@ workflows.post("/", zValidator("json", createWorkflowSchema), async (c) => {
     // Log workflow creation
     if (workflow) {
       const clientInfo = extractClientInfo(c);
+      const actor = getAuditActor(ctx);
       await createAuditLog({
         workflowId: workflow.id,
         eventType: "workflow_created",
@@ -370,8 +380,7 @@ workflows.post("/", zValidator("json", createWorkflowSchema), async (c) => {
           nodeCount: data.graph.nodes.length,
           edgeCount: data.graph.edges.length,
         },
-        actorId: userId,
-        actorType: "user",
+        ...actor,
         ...clientInfo,
       });
     }
@@ -500,6 +509,7 @@ workflows.patch("/:id", zValidator("json", createWorkflowSchema.partial()), asyn
 
     // Log workflow update
     const clientInfo = extractClientInfo(c);
+    const actor = getAuditActor(ctx);
     await createAuditLog({
       workflowId: workflow.id,
       eventType: "workflow_updated",
@@ -508,8 +518,7 @@ workflows.patch("/:id", zValidator("json", createWorkflowSchema.partial()), asyn
         previousName: existing.name,
         newName: workflow.name,
       },
-      actorId: userId,
-      actorType: "user",
+      ...actor,
       ...clientInfo,
     });
 
@@ -557,6 +566,7 @@ workflows.delete("/:id", async (c: AuthenticatedContext) => {
 
     // Log workflow deletion
     const clientInfo = extractClientInfo(c as any);
+    const actor = getAuditActor(c);
     await createAuditLog({
       workflowId: id, // Use original ID since workflow is deleted
       eventType: "workflow_deleted",
@@ -564,8 +574,7 @@ workflows.delete("/:id", async (c: AuthenticatedContext) => {
         name: workflow.name,
         wasEnabled: workflow.enabled,
       },
-      actorId: userId,
-      actorType: "user",
+      ...actor,
       ...clientInfo,
     });
 
@@ -631,6 +640,7 @@ workflows.post("/:id/toggle", async (c: AuthenticatedContext) => {
 
     // Log workflow enable/disable
     const clientInfo = extractClientInfo(c as any);
+    const actor = getAuditActor(c);
     await createAuditLog({
       workflowId: workflow.id,
       eventType: newEnabledState ? "workflow_enabled" : "workflow_disabled",
@@ -639,8 +649,7 @@ workflows.post("/:id/toggle", async (c: AuthenticatedContext) => {
         previousState: current.enabled,
         newState: newEnabledState,
       },
-      actorId: userId,
-      actorType: "user",
+      ...actor,
       ...clientInfo,
     });
 

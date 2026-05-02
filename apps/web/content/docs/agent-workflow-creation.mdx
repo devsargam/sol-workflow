@@ -13,7 +13,7 @@ Use this guide for agents such as Hermes that need to build workflows without th
 
 ```bash
 export DOLPHINFLOW_API_URL="https://api.dolphinflow.xyz"
-export DOLPHINFLOW_API_TOKEN="wallet-auth-token"
+export DOLPHINFLOW_API_KEY="dk_live_..."
 ```
 
 For local development:
@@ -25,9 +25,11 @@ export DOLPHINFLOW_API_URL="http://localhost:3001"
 Protected workflow routes require:
 
 ```txt
-Authorization: Bearer <wallet-auth-token>
+Authorization: Bearer <api-key>
 Content-Type: application/json
 ```
+
+Create API keys from Dashboard -> API keys. The full key is only shown once.
 
 ## Prompt To Workflow Loop
 
@@ -35,7 +37,7 @@ Content-Type: application/json
 
 ```bash
 curl "$DOLPHINFLOW_API_URL/workflows/agent/capabilities" \
-  -H "Authorization: Bearer $DOLPHINFLOW_API_TOKEN"
+  -H "Authorization: Bearer $DOLPHINFLOW_API_KEY"
 ```
 
 2. Convert the user prompt into a graph with `trigger`, optional `filter`, `action`, and optional `notify` nodes.
@@ -44,7 +46,7 @@ curl "$DOLPHINFLOW_API_URL/workflows/agent/capabilities" \
 
 ```bash
 curl -X POST "$DOLPHINFLOW_API_URL/workflows/validate" \
-  -H "Authorization: Bearer $DOLPHINFLOW_API_TOKEN" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_KEY" \
   -H "Content-Type: application/json" \
   -d @workflow-draft.json
 ```
@@ -55,7 +57,7 @@ curl -X POST "$DOLPHINFLOW_API_URL/workflows/validate" \
 
 ```bash
 curl -X POST "$DOLPHINFLOW_API_URL/workflows" \
-  -H "Authorization: Bearer $DOLPHINFLOW_API_TOKEN" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_KEY" \
   -H "Content-Type: application/json" \
   -d @workflow-draft.json
 ```
@@ -64,7 +66,7 @@ curl -X POST "$DOLPHINFLOW_API_URL/workflows" \
 
 ```bash
 curl -X POST "$DOLPHINFLOW_API_URL/workflows/<workflow-id>/toggle" \
-  -H "Authorization: Bearer $DOLPHINFLOW_API_TOKEN"
+  -H "Authorization: Bearer $DOLPHINFLOW_API_KEY"
 ```
 
 New workflows are created disabled, so a bad trigger cannot run immediately after creation.

@@ -9,14 +9,14 @@ Use these names when an agent needs to run API calls or trigger workflows from a
 
 ```bash
 export DOLPHINFLOW_API_URL="https://dolphinflow.xyz"
-export DOLPHINFLOW_API_TOKEN="wallet-auth-token"
+export DOLPHINFLOW_API_KEY="dk_live_..."
 export DOLPHINFLOW_WEBHOOK_URL="https://dolphinflow.xyz/webhooks/example-webhook-id"
 export DOLPHINFLOW_WEBHOOK_KEY="df_local_example_key"
 ```
 
 For local development, use `http://localhost:3001` for `DOLPHINFLOW_API_URL` and `http://localhost:3001/webhooks/<webhook-id>` for `DOLPHINFLOW_WEBHOOK_URL`.
 
-`DOLPHINFLOW_API_TOKEN` is the Bearer token returned after wallet authentication. It is used for protected app API routes such as workflows and executions.
+`DOLPHINFLOW_API_KEY` is created from Dashboard -> API keys. It is used for protected app API routes such as workflows and executions.
 
 `DOLPHINFLOW_WEBHOOK_KEY` is not a global platform key. It is a simple shared secret you configure on a webhook trigger by enabling auth and setting:
 
@@ -35,11 +35,11 @@ curl "$DOLPHINFLOW_API_URL/health"
 
 ## List Workflows
 
-Protected API routes expect `Authorization: Bearer <token>`.
+Protected API routes expect `Authorization: Bearer <api-key>`.
 
 ```bash
 curl "$DOLPHINFLOW_API_URL/workflows" \
-  -H "Authorization: Bearer $DOLPHINFLOW_API_TOKEN"
+  -H "Authorization: Bearer $DOLPHINFLOW_API_KEY"
 ```
 
 ## Discover Builder Capabilities
@@ -48,7 +48,7 @@ Agents should read the workflow capability document before creating or editing w
 
 ```bash
 curl "$DOLPHINFLOW_API_URL/workflows/agent/capabilities" \
-  -H "Authorization: Bearer $DOLPHINFLOW_API_TOKEN"
+  -H "Authorization: Bearer $DOLPHINFLOW_API_KEY"
 ```
 
 For the full prompt-to-workflow process, request body, validation response, and examples, use [Agent Workflow Creation](/docs/agent-workflow-creation).
@@ -57,7 +57,7 @@ To inspect one workflow in an agent-friendly shape, fetch its graph, diagnostics
 
 ```bash
 curl "$DOLPHINFLOW_API_URL/workflows/<workflow-id>/agent" \
-  -H "Authorization: Bearer $DOLPHINFLOW_API_TOKEN"
+  -H "Authorization: Bearer $DOLPHINFLOW_API_KEY"
 ```
 
 Create workflows with the existing graph endpoint:
@@ -66,14 +66,14 @@ Validate the same body first:
 
 ```bash
 curl -X POST "$DOLPHINFLOW_API_URL/workflows/validate" \
-  -H "Authorization: Bearer $DOLPHINFLOW_API_TOKEN" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_KEY" \
   -H "Content-Type: application/json" \
   -d @workflow-draft.json
 ```
 
 ```bash
 curl -X POST "$DOLPHINFLOW_API_URL/workflows" \
-  -H "Authorization: Bearer $DOLPHINFLOW_API_TOKEN" \
+  -H "Authorization: Bearer $DOLPHINFLOW_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Hourly Discord heartbeat",

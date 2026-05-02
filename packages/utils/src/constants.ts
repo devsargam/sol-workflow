@@ -59,6 +59,7 @@ export const API = {
     EXECUTIONS: "/executions",
     SOLANA: "/solana",
     WEBHOOKS: "/webhooks",
+    API_KEYS: "/api-keys",
   },
 } as const;
 
