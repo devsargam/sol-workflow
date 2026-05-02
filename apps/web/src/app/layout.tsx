@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono, Geist } from "next/font/google";
 import { RootProvider } from "fumadocs-ui/provider/next";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { Provider } from "@/components/providers/provider";
+import { cn } from "@/lib/utils";
+import { TooltipProvider } from "@/components/ui/tooltip";
+
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 const inter = Inter({
   subsets: ["latin"],
@@ -28,12 +32,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
       <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased min-h-screen`}>
         <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
           <RootProvider theme={{ enabled: false }}>
             <Provider>
-              <main>{children}</main>
+              <TooltipProvider>
+                <main>{children}</main>
+              </TooltipProvider>
             </Provider>
           </RootProvider>
         </ThemeProvider>
