@@ -200,6 +200,11 @@ html {
 }
 
 /* Fumadocs route polish */
+/* Remove padding from SearchDialogFooter (bg-fd-secondary/50 p-3 empty:hidden) */
+.bg-fd-secondary\/50.p-3 {
+  padding: 0 !important;
+}
+
 #nd-docs-layout {
   --fd-layout-width: 100vw !important;
   --fd-toc-popover-height: 2.25rem !important;
