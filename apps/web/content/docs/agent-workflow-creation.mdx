@@ -40,7 +40,7 @@ curl "$DOLPHINFLOW_API_URL/workflows/agent/capabilities" \
   -H "Authorization: Bearer $DOLPHINFLOW_API_KEY"
 ```
 
-2. Convert the user prompt into a graph with `trigger`, optional `filter`, `action`, and optional `notify` nodes.
+2. Convert the user prompt into a graph. Only one structural rule applies: at least one `trigger` node. Everything downstream (`filter`, `action`, `notify`, or any custom node type registered with the worker) is optional and composable.
 
 3. Validate the draft:
 
@@ -116,14 +116,16 @@ Every node uses this base shape:
 }
 ```
 
-Valid node `type` values:
+Built-in node `type` values:
 
-- `trigger`
-- `filter`
-- `action`
-- `notify`
+- `trigger` — lifecycle hook for an external subscription (cron, webhook, on-chain event). Every graph needs at least one.
+- `filter` — gates execution on a condition.
+- `action` — performs work and returns `{success, output, handle, error}`.
+- `notify` — sends a message via Discord, email, etc.
 
 `data.nodeType` must match `type`.
+
+The node registry is open: any node type registered in the worker (`apps/worker/src/lib/node-types`) is accepted by the schema. Unknown `nodeType` values pass structural validation and are dispatched by manifest at execution time. Stick to the built-ins unless the target deployment has registered a custom manifest.
 
 ## Edge Body
 
@@ -147,6 +149,16 @@ Use handles when a branch matters:
 - Action error: `sourceHandle: "error"`
 - Notify sent: `sourceHandle: "sent"`
 - Notify error: `sourceHandle: "error"`
+
+## Execution Model
+
+The worker compiles each graph into a DAG and runs it with topological scheduling. Practical implications when generating graphs:
+
+- **Independent branches run in parallel.** Two nodes with no path between them on the same tick fire concurrently. Use this — fan out to multiple notify nodes from one trigger instead of chaining them.
+- **Diamond merges fire once.** A node with multiple incoming edges runs exactly once, after every upstream path has either resolved or been skipped.
+- **Skip propagation.** When a filter takes the `else` handle (or an action errors without a wired `error` edge), the unselected branch is marked skipped and that skip propagates transitively to anything reachable only from it.
+- **Real cycle detection runs before any side effect** (Kahn's algorithm). The shallow check in `isExecutableGraph` is just a hint; the worker is authoritative.
+- **Multi-trigger graphs.** When a specific `triggerNodeId` is provided at run time, every other trigger is explicitly skipped — they do not all fire.
 
 ## Validation Endpoint
 
