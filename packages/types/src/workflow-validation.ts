@@ -148,11 +148,9 @@ function validateActionNodes(nodes: WorkflowNode[]): ValidationError[] {
   const actionNodes = nodes.filter((n) => n.type === "action");
   const errors: ValidationError[] = [];
 
-  if (actionNodes.length === 0) {
-    errors.push("Workflow must have at least one action node");
-    return errors;
-  }
-
+  // Action nodes are no longer required — a workflow can be trigger -> notify
+  // (or any composition the user wires up). When present, they still get
+  // per-action-type config validation.
   for (const node of actionNodes) {
     const data = node.data as ActionNodeData;
     const actionType = data?.actionType;

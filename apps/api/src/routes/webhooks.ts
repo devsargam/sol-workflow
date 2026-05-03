@@ -1,8 +1,8 @@
 import { Hono, type Context } from "hono";
 import type { Queue } from "bullmq";
 import { db, workflows as workflowsTable, eq } from "@repo/db";
-import type { WorkflowGraph } from "@repo/types";
-import { generateExecutionId, JOB_NAMES, JOB_OPTIONS, NodeType, TriggerType, log } from "utils";
+import { isTriggerNode, type WorkflowGraph } from "@repo/types";
+import { generateExecutionId, JOB_NAMES, JOB_OPTIONS, TriggerType, log } from "utils";
 
 type WebhookTriggerMatch = {
   workflow: typeof workflowsTable.$inferSelect;
@@ -74,7 +74,7 @@ function findWebhookTriggerInGraph(
   expectedTriggerNodeId?: string
 ) {
   for (const node of graph.nodes) {
-    if (node.type !== NodeType.TRIGGER) continue;
+    if (!isTriggerNode(node)) continue;
     if (expectedTriggerNodeId && node.id !== expectedTriggerNodeId) continue;
 
     const triggerData = node.data as WebhookTriggerMatch["triggerData"];

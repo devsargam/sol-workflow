@@ -1,7 +1,7 @@
 import { Queue } from "bullmq";
 import { Cron } from "croner";
-import type { WorkflowGraph } from "@repo/types";
-import { CRON, JOB_OPTIONS, TriggerType, NodeType, JOB_NAMES, log } from "utils";
+import { isTriggerNode, type WorkflowGraph } from "@repo/types";
+import { CRON, JOB_OPTIONS, TriggerType, JOB_NAMES, log } from "utils";
 
 interface CronJobData {
   workflowId: string;
@@ -162,7 +162,7 @@ export class CronScheduler {
     return graph.nodes
       .filter((n) => {
         const data = n.data as any;
-        return n.type === NodeType.TRIGGER && data?.triggerType === TriggerType.CRON;
+        return isTriggerNode(n) && data?.triggerType === TriggerType.CRON;
       })
       .map((n) => {
         const data = n.data as any;

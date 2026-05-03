@@ -5,11 +5,10 @@ import {
   JOB_NAMES,
   JOB_OPTIONS,
   SOLANA,
-  NodeType,
   log,
   generateExecutionId,
 } from "utils";
-import type { WorkflowGraph } from "@repo/types";
+import { isTriggerNode, type WorkflowGraph } from "@repo/types";
 import { db, triggerSubscriptions, eq } from "@repo/db";
 
 interface Workflow {
@@ -107,7 +106,7 @@ export class SubscriptionManager {
 
   async subscribe(workflow: Workflow): Promise<void> {
     const triggerNodes = workflow.graph.nodes.filter(
-      (n) => n.type === NodeType.TRIGGER
+      (n) => isTriggerNode(n)
     ) as unknown as TriggerNode[];
 
     log.debug(

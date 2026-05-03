@@ -235,12 +235,23 @@ export const NotifyNodeDataSchema = z
     }
   });
 
-// Union of all node data types
+// Fallthrough for any node type registered outside the four well-known kinds.
+// Validates structure but doesn't constrain the data shape — that's the
+// node manifest's job at execution time.
+export const CustomNodeDataSchema = z
+  .object({
+    nodeType: z.string().min(1),
+  })
+  .passthrough();
+
+// Union of all node data types. The strict variants are tried first so known
+// types still get full validation; unknown types fall through to the open shape.
 export const NodeDataSchema = z.union([
   z.object({ nodeType: z.literal("trigger"), ...TriggerNodeDataSchema.shape }),
   z.object({ nodeType: z.literal("filter"), ...FilterNodeDataSchema.shape }),
   z.object({ nodeType: z.literal("action"), ...ActionNodeDataSchema.shape }),
   z.object({ nodeType: z.literal("notify") }).and(NotifyNodeDataSchema),
+  CustomNodeDataSchema,
 ]);
 
 // Complete node schema
@@ -316,24 +327,25 @@ export function validateWorkflowGraph(graph: unknown): WorkflowGraph {
   return WorkflowGraphSchema.parse(graph);
 }
 
-// Helper function to check if a graph is valid for execution
+// Trigger types are recognized by `node.type`. Adding a new trigger kind only
+// needs to register it here (and a manifest in the worker registry).
+const TRIGGER_NODE_TYPES = new Set<string>(["trigger"]);
+
+export function isTriggerNode(node: { type: string }): boolean {
+  return TRIGGER_NODE_TYPES.has(node.type);
+}
+
+// Helper function to check if a graph is valid for execution.
+// Structural-only: ≥1 trigger, all edges reference real nodes, no cycle hint.
+// "What kinds of nodes must exist" is a registry concern, not engine.
 export function isExecutableGraph(graph: WorkflowGraph): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
-  // Must have at least one trigger node
-  const triggerNodes = graph.nodes.filter((n) => n.type === "trigger");
+  const triggerNodes = graph.nodes.filter(isTriggerNode);
   if (triggerNodes.length === 0) {
     errors.push("Workflow must have at least one trigger node");
   }
 
-  // Must have at least one action OR notify node (workflows can be notification-only)
-  const actionNodes = graph.nodes.filter((n) => n.type === "action");
-  const notifyNodes = graph.nodes.filter((n) => n.type === "notify");
-  if (actionNodes.length === 0 && notifyNodes.length === 0) {
-    errors.push("Workflow must have at least one action or notify node");
-  }
-
-  // Check that all edges reference valid nodes
   const nodeIds = new Set(graph.nodes.map((n) => n.id));
   for (const edge of graph.edges) {
     if (!nodeIds.has(edge.source)) {
@@ -344,7 +356,8 @@ export function isExecutableGraph(graph: WorkflowGraph): { valid: boolean; error
     }
   }
 
-  // Check for cycles (simplified check - just ensure no node points back to trigger)
+  // Cheap shallow cycle hint: nothing should point back into a trigger.
+  // Real DAG cycle detection runs in the worker engine before execution.
   const triggerIds = new Set(triggerNodes.map((n) => n.id));
   for (const edge of graph.edges) {
     if (triggerIds.has(edge.target) && !triggerIds.has(edge.source)) {
