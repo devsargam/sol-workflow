@@ -13,6 +13,7 @@ import { db, workflows as workflowsTable, eq } from "@repo/db";
 interface ExecutionContext {
   workflowId: string;
   executionId: string;
+  triggerNodeId?: string;
   triggerData: any;
   variables: Map<string, any>; // For passing data between nodes
   stepOutputs: Record<string, any>;
@@ -26,6 +27,31 @@ interface NodeExecutor {
     node: WorkflowNode,
     context: ExecutionContext
   ): Promise<{ success: boolean; output?: any; error?: string }>;
+}
+
+type NodeExecutionResult = { success: boolean; output?: any; error?: string };
+
+interface DagEdge {
+  id: string;
+  source: string;
+  target: string;
+  sourceHandle: string;
+}
+
+interface CompiledWorkflowDag {
+  nodes: Map<string, WorkflowNode>;
+  outgoing: Map<string, DagEdge[]>;
+  incoming: Map<string, DagEdge[]>;
+  triggerNodeIds: string[];
+}
+
+interface DagExecutionState {
+  completed: Set<string>;
+  running: Set<string>;
+  activatedEdges: Set<string>;
+  skippedEdges: Set<string>;
+  skippedNodes: Set<string>;
+  errors: string[];
 }
 
 export class WorkflowEngine {
@@ -52,15 +78,9 @@ export class WorkflowEngine {
     executionPath: string[];
     errors: string[];
   }> {
-    const errors: string[] = [];
+    const dag = this.compileDag(graph);
 
-    // Build adjacency list for graph traversal
-    const adjacencyList = this.buildAdjacencyList(graph);
-
-    // Find all trigger nodes (entry points)
-    const triggerNodes = graph.nodes.filter((n: WorkflowNode) => n.type === NodeType.TRIGGER);
-
-    if (triggerNodes.length === 0) {
+    if (dag.triggerNodeIds.length === 0) {
       return {
         success: false,
         executionPath: context.executionPath,
@@ -68,128 +88,366 @@ export class WorkflowEngine {
       };
     }
 
-    // Execute from each trigger node (usually just one)
-    for (const triggerNode of triggerNodes) {
-      await this.executeNode(triggerNode, graph, adjacencyList, context, errors);
+    const cycleErrors = this.validateAcyclic(dag);
+    if (cycleErrors.length > 0) {
+      return {
+        success: false,
+        executionPath: context.executionPath,
+        errors: cycleErrors,
+      };
     }
 
+    const entryNodeIds = this.resolveEntryNodeIds(dag, context);
+    if (entryNodeIds.length === 0) {
+      return {
+        success: false,
+        executionPath: context.executionPath,
+        errors: [`Trigger node ${context.triggerNodeId} was not found in workflow graph`],
+      };
+    }
+
+    const state: DagExecutionState = {
+      completed: new Set(),
+      running: new Set(),
+      activatedEdges: new Set(),
+      skippedEdges: new Set(),
+      skippedNodes: new Set(),
+      errors: [],
+    };
+
+    this.skipInactiveTriggers(dag, entryNodeIds, state);
+    await this.executeDag(dag, context, state);
+
     return {
-      success: errors.length === 0,
+      success: state.errors.length === 0,
       executionPath: context.executionPath,
-      errors,
+      errors: state.errors,
     };
   }
 
-  /**
-   * Execute a single node and its downstream nodes
-   */
-  private async executeNode(
-    node: WorkflowNode,
-    graph: WorkflowGraph,
-    adjacencyList: Map<string, Map<string, string[]>>,
-    context: ExecutionContext,
-    errors: string[]
-  ): Promise<boolean> {
-    console.log(`Executing node: ${node.id} (${node.type})`);
+  private resolveEntryNodeIds(dag: CompiledWorkflowDag, context: ExecutionContext): string[] {
+    if (!context.triggerNodeId) {
+      return dag.triggerNodeIds;
+    }
 
+    return dag.triggerNodeIds.includes(context.triggerNodeId) ? [context.triggerNodeId] : [];
+  }
+
+  private skipInactiveTriggers(
+    dag: CompiledWorkflowDag,
+    entryNodeIds: string[],
+    state: DagExecutionState
+  ): void {
+    const entryNodeIdSet = new Set(entryNodeIds);
+
+    for (const triggerNodeId of dag.triggerNodeIds) {
+      if (entryNodeIdSet.has(triggerNodeId)) {
+        continue;
+      }
+
+      state.skippedNodes.add(triggerNodeId);
+
+      for (const edge of dag.outgoing.get(triggerNodeId) ?? []) {
+        state.skippedEdges.add(edge.id);
+      }
+    }
+  }
+
+  private compileDag(graph: WorkflowGraph): CompiledWorkflowDag {
+    const nodes = new Map<string, WorkflowNode>();
+    const outgoing = new Map<string, DagEdge[]>();
+    const incoming = new Map<string, DagEdge[]>();
+    const triggerNodeIds: string[] = [];
+
+    for (const node of graph.nodes) {
+      nodes.set(node.id, node);
+      outgoing.set(node.id, []);
+      incoming.set(node.id, []);
+
+      if (node.type === NodeType.TRIGGER) {
+        triggerNodeIds.push(node.id);
+      }
+    }
+
+    for (const edge of graph.edges) {
+      const sourceNode = nodes.get(edge.source);
+      const targetNode = nodes.get(edge.target);
+
+      if (!sourceNode || !targetNode) {
+        continue;
+      }
+
+      const dagEdge: DagEdge = {
+        id: edge.id,
+        source: edge.source,
+        target: edge.target,
+        sourceHandle: edge.sourceHandle || "_default",
+      };
+
+      outgoing.get(sourceNode.id)!.push(dagEdge);
+      incoming.get(targetNode.id)!.push(dagEdge);
+    }
+
+    return {
+      nodes,
+      outgoing,
+      incoming,
+      triggerNodeIds,
+    };
+  }
+
+  private validateAcyclic(dag: CompiledWorkflowDag): string[] {
+    const indegree = new Map<string, number>();
+
+    for (const nodeId of dag.nodes.keys()) {
+      indegree.set(nodeId, dag.incoming.get(nodeId)?.length ?? 0);
+    }
+
+    const ready = Array.from(indegree.entries())
+      .filter(([, degree]) => degree === 0)
+      .map(([nodeId]) => nodeId);
+    let visited = 0;
+
+    while (ready.length > 0) {
+      const nodeId = ready.shift()!;
+      visited++;
+
+      for (const edge of dag.outgoing.get(nodeId) ?? []) {
+        const nextDegree = (indegree.get(edge.target) ?? 0) - 1;
+        indegree.set(edge.target, nextDegree);
+        if (nextDegree === 0) {
+          ready.push(edge.target);
+        }
+      }
+    }
+
+    if (visited === dag.nodes.size) {
+      return [];
+    }
+
+    const cyclicNodeIds = Array.from(indegree.entries())
+      .filter(([, degree]) => degree > 0)
+      .map(([nodeId]) => nodeId);
+
+    return [
+      `Workflow graph must be a DAG. Cycle detected around node(s): ${cyclicNodeIds.join(", ")}`,
+    ];
+  }
+
+  private async executeDag(
+    dag: CompiledWorkflowDag,
+    context: ExecutionContext,
+    state: DagExecutionState
+  ): Promise<void> {
+    while (true) {
+      this.markUnreachableNodes(dag, state);
+
+      const readyNodes = this.getReadyNodes(dag, state);
+      if (readyNodes.length === 0) {
+        break;
+      }
+
+      for (const node of readyNodes) {
+        state.running.add(node.id);
+      }
+
+      await Promise.all(
+        readyNodes.map(async (node) => {
+          await this.executeDagNode(node, dag, context, state);
+        })
+      );
+    }
+
+    this.markUnreachableNodes(dag, state);
+
+    const blockedNodes = Array.from(dag.nodes.values()).filter(
+      (node) =>
+        !state.completed.has(node.id) &&
+        !state.running.has(node.id) &&
+        !state.skippedNodes.has(node.id)
+    );
+
+    if (blockedNodes.length > 0) {
+      state.errors.push(
+        `Workflow DAG stalled with unresolved node(s): ${blockedNodes.map((node) => node.id).join(", ")}`
+      );
+    }
+  }
+
+  private getReadyNodes(dag: CompiledWorkflowDag, state: DagExecutionState): WorkflowNode[] {
+    const readyNodes: WorkflowNode[] = [];
+
+    for (const node of dag.nodes.values()) {
+      if (
+        state.completed.has(node.id) ||
+        state.running.has(node.id) ||
+        state.skippedNodes.has(node.id)
+      ) {
+        continue;
+      }
+
+      if (node.type === NodeType.TRIGGER) {
+        readyNodes.push(node);
+        continue;
+      }
+
+      const incomingEdges = dag.incoming.get(node.id) ?? [];
+      const hasActivatedInput = incomingEdges.some((edge) => state.activatedEdges.has(edge.id));
+      const allInputsResolved = incomingEdges.every((edge) => this.isEdgeResolved(edge, state));
+
+      if (incomingEdges.length > 0 && hasActivatedInput && allInputsResolved) {
+        readyNodes.push(node);
+      }
+    }
+
+    return readyNodes;
+  }
+
+  private markUnreachableNodes(dag: CompiledWorkflowDag, state: DagExecutionState): void {
+    let changed = true;
+
+    while (changed) {
+      changed = false;
+
+      for (const node of dag.nodes.values()) {
+        if (
+          node.type === NodeType.TRIGGER ||
+          state.completed.has(node.id) ||
+          state.running.has(node.id) ||
+          state.skippedNodes.has(node.id)
+        ) {
+          continue;
+        }
+
+        const incomingEdges = dag.incoming.get(node.id) ?? [];
+        const hasActivatedInput = incomingEdges.some((edge) => state.activatedEdges.has(edge.id));
+        const allInputsResolved = incomingEdges.every((edge) => this.isEdgeResolved(edge, state));
+
+        if (incomingEdges.length > 0 && !hasActivatedInput && allInputsResolved) {
+          state.skippedNodes.add(node.id);
+
+          for (const edge of dag.outgoing.get(node.id) ?? []) {
+            state.skippedEdges.add(edge.id);
+          }
+
+          changed = true;
+        }
+      }
+    }
+  }
+
+  private async executeDagNode(
+    node: WorkflowNode,
+    dag: CompiledWorkflowDag,
+    context: ExecutionContext,
+    state: DagExecutionState
+  ): Promise<void> {
+    console.log(`Executing DAG node: ${node.id} (${node.type})`);
     context.executionPath.push(node.id);
 
     const executor = this.nodeExecutors.get(node.type);
     if (!executor) {
-      errors.push(`No executor registered for node type: ${node.type}`);
-      return false;
+      state.errors.push(`No executor registered for node type: ${node.type}`);
+      this.activateOutgoingEdges(node, dag, state, "error");
+      state.running.delete(node.id);
+      state.completed.add(node.id);
+      return;
     }
 
     const result = await executor.execute(node, context);
+    this.storeNodeOutput(node, result, context);
 
+    const outHandle = this.resolveOutputHandle(node, result, context, state.errors);
+    this.activateOutgoingEdges(node, dag, state, outHandle);
+
+    state.running.delete(node.id);
+    state.completed.add(node.id);
+  }
+
+  private storeNodeOutput(
+    node: WorkflowNode,
+    result: NodeExecutionResult,
+    context: ExecutionContext
+  ): void {
     const scopedOutput = this.buildScopedOutput(node, result);
-    if (scopedOutput !== undefined) {
-      context.variables.set(node.id, scopedOutput);
-      context.stepOutputs[node.id] = scopedOutput;
-
-      if (node.type === NodeType.TRIGGER) {
-        context.variables.set("trigger", scopedOutput);
-      }
+    if (scopedOutput === undefined) {
+      return;
     }
 
-    // Determine which output handle to follow based on node type and result
-    let outHandle: string;
+    context.variables.set(node.id, scopedOutput);
+    context.stepOutputs[node.id] = scopedOutput;
 
+    if (node.type === NodeType.TRIGGER) {
+      context.variables.set("trigger", scopedOutput);
+    }
+  }
+
+  private resolveOutputHandle(
+    node: WorkflowNode,
+    result: NodeExecutionResult,
+    context: ExecutionContext,
+    errors: string[]
+  ): string {
     if (node.type === NodeType.FILTER) {
       if (!result.success) {
-        outHandle = "error";
         context.hasErrors = true;
         errors.push(`Filter node ${node.id} errored: ${result.error || "Unknown error"}`);
-      } else if (result.output === true) {
-        outHandle = "if";
-      } else {
-        outHandle = "else";
+        return "error";
       }
-    } else if (node.type === NodeType.ACTION) {
+
+      return result.output === true ? "if" : "else";
+    }
+
+    if (node.type === NodeType.ACTION) {
       if (!result.success) {
-        outHandle = "error";
         context.hasErrors = true;
         errors.push(`Action node ${node.id} failed: ${result.error || "Unknown error"}`);
-      } else {
-        outHandle = "success";
+        return "error";
       }
-    } else if (node.type === NodeType.TRIGGER) {
+
+      return "success";
+    }
+
+    if (node.type === NodeType.TRIGGER) {
       if (!result.success) {
+        context.hasErrors = true;
         errors.push(`Trigger node ${node.id} failed: ${result.error || "Unknown error"}`);
-        return false;
-      }
-      outHandle = "output";
-    } else if (node.type === NodeType.NOTIFY) {
-      outHandle = result.success ? "sent" : "error";
-    } else {
-      outHandle = "_default";
-    }
-
-    const downstreamNodeIds = this.getDownstreamIds(adjacencyList, node.id, outHandle);
-
-    for (const downstreamNodeId of downstreamNodeIds) {
-      const downstreamNode = graph.nodes.find((n: WorkflowNode) => n.id === downstreamNodeId);
-      if (!downstreamNode) {
-        errors.push(`Downstream node ${downstreamNodeId} not found`);
-        continue;
+        return "error";
       }
 
-      await this.executeNode(downstreamNode, graph, adjacencyList, context, errors);
+      return "output";
     }
 
-    return true;
+    if (node.type === NodeType.NOTIFY) {
+      return result.success ? "sent" : "error";
+    }
+
+    return "_default";
   }
 
-  /**
-   * Build adjacency list keyed by source node + handle.
-   * Map layout: sourceNodeId → handleId → targetNodeIds[]
-   * Edges without a sourceHandle are stored under "_default".
-   */
-  private buildAdjacencyList(graph: WorkflowGraph): Map<string, Map<string, string[]>> {
-    const adjacencyList = new Map<string, Map<string, string[]>>();
-
-    for (const edge of graph.edges) {
-      if (!adjacencyList.has(edge.source)) {
-        adjacencyList.set(edge.source, new Map());
-      }
-      const handleMap = adjacencyList.get(edge.source)!;
-      const handle = (edge as any).sourceHandle || "_default";
-      const targets = handleMap.get(handle) || [];
-      targets.push(edge.target);
-      handleMap.set(handle, targets);
+  private isEdgeResolved(edge: DagEdge, state: DagExecutionState): boolean {
+    if (state.skippedEdges.has(edge.id)) {
+      return true;
     }
 
-    return adjacencyList;
+    return state.activatedEdges.has(edge.id) && state.completed.has(edge.source);
   }
 
-  private getDownstreamIds(
-    adjacencyList: Map<string, Map<string, string[]>>,
-    nodeId: string,
-    handle: string
-  ): string[] {
-    const handleMap = adjacencyList.get(nodeId);
-    if (!handleMap) return [];
-    return handleMap.get(handle) || handleMap.get("_default") || [];
+  private activateOutgoingEdges(
+    node: WorkflowNode,
+    dag: CompiledWorkflowDag,
+    state: DagExecutionState,
+    outHandle: string
+  ): void {
+    const outgoingEdges = dag.outgoing.get(node.id) ?? [];
+
+    for (const edge of outgoingEdges) {
+      if (edge.sourceHandle === outHandle || edge.sourceHandle === "_default") {
+        state.activatedEdges.add(edge.id);
+      } else {
+        state.skippedEdges.add(edge.id);
+      }
+    }
   }
 
   /**
