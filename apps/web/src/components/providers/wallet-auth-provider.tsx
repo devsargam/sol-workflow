@@ -45,42 +45,51 @@ const DEFAULT_WALLET_AUTH_CONTEXT: WalletAuthContextValue = {
 
 const WalletAuthContext = createContext<WalletAuthContextValue>(DEFAULT_WALLET_AUTH_CONTEXT);
 
-export function WalletAuthProvider({ children }: { children: ReactNode }) {
+export function WalletAuthProvider({
+  children,
+  initialSession = null,
+}: {
+  children: ReactNode;
+  initialSession?: WalletSession | null;
+}) {
   const wallet = useUnifiedWallet();
   const { setShowModal } = useUnifiedWalletContext();
-  const [mounted, setMounted] = useState(false);
-  const [session, setSession] = useState<WalletSession | null>(null);
+  const [mounted, setMounted] = useState(Boolean(initialSession));
+  const [session, setSession] = useState<WalletSession | null>(initialSession);
   const [authenticating, setAuthenticating] = useState(false);
   const [loginRequested, setLoginRequested] = useState(false);
 
-  const walletAddress = wallet.publicKey?.toBase58() || null;
-  const authenticated = Boolean(wallet.connected && walletAddress && session?.walletAddress === walletAddress);
+  const connectedWalletAddress = wallet.publicKey?.toBase58() || null;
+  const walletAddress = connectedWalletAddress ?? session?.walletAddress ?? null;
+  const authenticated = Boolean(
+    session && (!connectedWalletAddress || session.walletAddress === connectedWalletAddress)
+  );
 
   useEffect(() => {
     setMounted(true);
-    setSession(getStoredWalletSession());
-  }, []);
+    setSession(getStoredWalletSession() ?? initialSession);
+  }, [initialSession]);
 
   useEffect(() => {
-    if (walletAddress && session && session.walletAddress !== walletAddress) {
+    if (connectedWalletAddress && session && session.walletAddress !== connectedWalletAddress) {
       setSession(null);
       clearStoredWalletSession();
     }
-  }, [session, walletAddress]);
+  }, [connectedWalletAddress, session]);
 
   const authenticate = useCallback(async () => {
-    if (!walletAddress || !wallet.signMessage || authenticating) {
+    if (!connectedWalletAddress || !wallet.signMessage || authenticating) {
       return;
     }
 
     setAuthenticating(true);
 
     try {
-      const challenge = await requestWalletChallenge(walletAddress);
+      const challenge = await requestWalletChallenge(connectedWalletAddress);
       const encodedMessage = new TextEncoder().encode(challenge.message);
       const signature = await wallet.signMessage(encodedMessage);
       const nextSession = await verifyWalletChallenge({
-        walletAddress,
+        walletAddress: connectedWalletAddress,
         nonce: challenge.nonce,
         message: challenge.message,
         signature: toBase64(signature),
@@ -93,10 +102,10 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setAuthenticating(false);
     }
-  }, [authenticating, wallet, walletAddress]);
+  }, [authenticating, connectedWalletAddress, wallet]);
 
   useEffect(() => {
-    if (!mounted || !loginRequested || !wallet.connected || !walletAddress || authenticated || authenticating) {
+    if (!mounted || !loginRequested || !wallet.connected || !connectedWalletAddress || authenticated || authenticating) {
       return;
     }
 
@@ -112,7 +121,15 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [authenticate, authenticated, authenticating, loginRequested, mounted, wallet.connected, walletAddress]);
+  }, [
+    authenticate,
+    authenticated,
+    authenticating,
+    connectedWalletAddress,
+    loginRequested,
+    mounted,
+    wallet.connected,
+  ]);
 
   const login = useCallback(async () => {
     setLoginRequested(true);
@@ -143,7 +160,7 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
-      ready: mounted,
+      ready: mounted || Boolean(session),
       authenticated,
       authenticating,
       walletAddress,

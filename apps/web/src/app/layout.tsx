@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Geist } from "next/font/google";
+import { cookies } from "next/headers";
 import { RootProvider } from "fumadocs-ui/provider/next";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { Provider } from "@/components/providers/provider";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { decodeWalletSession, WALLET_SESSION_COOKIE_NAME } from "@/lib/auth-session";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -26,11 +28,16 @@ export const metadata: Metadata = {
   description: "Create workflows that react to on-chain events and trigger on-chain actions",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const initialWalletSession = decodeWalletSession(
+    cookieStore.get(WALLET_SESSION_COOKIE_NAME)?.value,
+  );
+
   return (
     <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
       <body
@@ -38,7 +45,7 @@ export default function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
           <RootProvider theme={{ enabled: false }}>
-            <Provider>
+            <Provider initialWalletSession={initialWalletSession}>
               <TooltipProvider>
                 <main>{children}</main>
               </TooltipProvider>

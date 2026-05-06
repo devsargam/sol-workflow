@@ -1,22 +1,19 @@
 "use client";
 
 import { UnifiedWalletProvider } from "@jup-ag/wallet-adapter";
-import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { QueryProvider } from "./query-provider";
 import { WalletAuthProvider } from "./wallet-auth-provider";
+import type { WalletSession } from "@/lib/auth-session";
 
-export function Provider({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
+export function Provider({
+  children,
+  initialWalletSession = null,
+}: {
+  children: React.ReactNode;
+  initialWalletSession?: WalletSession | null;
+}) {
   const { resolvedTheme } = useTheme();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return <QueryProvider>{children}</QueryProvider>;
-  }
 
   return (
     <UnifiedWalletProvider
@@ -37,7 +34,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
         theme: resolvedTheme === "dark" ? "dark" : "light",
       }}
     >
-      <WalletAuthProvider>
+      <WalletAuthProvider initialSession={initialWalletSession}>
         <QueryProvider>
           {children}
         </QueryProvider>

@@ -166,13 +166,14 @@ export default function HomePage() {
               </p>
 
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/workflows"
+                <button
+                  type="button"
+                  onClick={login}
                   className="group inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-white px-7 text-sm font-semibold text-black shadow-[0_0_0_1px_rgba(0,0,0,0.12),0_14px_34px_rgba(6,6,18,0.18)] transition hover:-translate-y-0.5 hover:bg-white/86 dark:bg-[#05050a] dark:text-white dark:shadow-[0_0_0_1px_rgba(255,255,255,0.18),0_14px_34px_rgba(6,6,18,0.38)] dark:hover:bg-black"
                 >
                   Start project
                   <span className="transition group-hover:translate-x-1">-&gt;</span>
-                </Link>
+                </button>
                 <Link
                   href="/docs"
                   className="inline-flex min-h-12 items-center justify-center rounded-full border border-black/16 bg-black/8 px-7 text-sm font-semibold text-black backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/12 dark:border-white/20 dark:bg-white/12 dark:text-white dark:hover:bg-white/18"
