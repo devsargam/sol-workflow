@@ -4,7 +4,15 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Plus, Pencil, Trash2, Workflow as WorkflowIcon } from "lucide-react"
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Workflow as WorkflowIcon,
+  Pause,
+  Play,
+  Loader2,
+} from "lucide-react"
 import {
   Card,
   CardContent,
@@ -13,17 +21,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { DeleteModal } from "@/components/ui/delete-modal"
+import { cn } from "@/lib/utils"
 import { fetchWorkflows, deleteWorkflow, toggleWorkflow } from "@/lib/api"
 
 export default function DashboardWorkflowsPage() {
@@ -53,6 +52,7 @@ export default function DashboardWorkflowsPage() {
   })
 
   const workflows = data?.workflows ?? []
+  const activeCount = workflows.filter((w) => w.enabled).length
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-6">
@@ -60,7 +60,9 @@ export default function DashboardWorkflowsPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Workflows</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Automations that react to onchain events.
+            {isLoading
+              ? "Loading…"
+              : `${workflows.length} total · ${activeCount} active`}
           </p>
         </div>
         <Button onClick={() => router.push("/workflows/builder")}>
@@ -69,110 +71,121 @@ export default function DashboardWorkflowsPage() {
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <WorkflowIcon className="size-4" />
-            All workflows
-          </CardTitle>
-          <CardDescription>
-            {isLoading
-              ? "Loading…"
-              : `${workflows.length} total · ${workflows.filter((w) => w.enabled).length} active`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
-          ) : workflows.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 rounded-md border border-dashed py-12 text-center">
-              <WorkflowIcon className="size-8 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">No workflows yet</p>
-                <p className="text-xs text-muted-foreground">
-                  Create your first automation to get started.
-                </p>
-              </div>
-              <Button
-                size="sm"
-                onClick={() => router.push("/workflows/builder")}
-              >
-                <Plus className="size-4" />
-                Create workflow
-              </Button>
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : workflows.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
+            <WorkflowIcon className="size-8 text-muted-foreground" />
+            <div>
+              <p className="text-sm font-medium">No workflows yet</p>
+              <p className="text-xs text-muted-foreground">
+                Create your first automation to get started.
+              </p>
             </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Updated</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {workflows.map((w) => (
-                  <TableRow key={w.id}>
-                    <TableCell className="font-medium">
-                      <Link
-                        href={`/workflows/${w.id}`}
-                        className="hover:underline"
-                      >
-                        {w.name}
-                      </Link>
-                      {w.description ? (
-                        <p className="text-xs text-muted-foreground">
-                          {w.description}
-                        </p>
-                      ) : null}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={w.enabled}
-                          onCheckedChange={() =>
-                            toggleMutation.mutate(w.id)
-                          }
-                          disabled={toggleMutation.isPending}
-                        />
-                        <Badge
-                          variant={w.enabled ? "default" : "secondary"}
-                        >
-                          {w.enabled ? "Active" : "Paused"}
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(w.updatedAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="flex justify-end gap-1">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() =>
-                          router.push(`/workflows/${w.id}`)
-                        }
-                      >
-                        <Pencil className="size-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() =>
-                          setPendingDelete({ id: w.id, name: w.name })
-                        }
-                      >
-                        <Trash2 className="size-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+            <Button
+              size="sm"
+              onClick={() => router.push("/workflows/builder")}
+            >
+              <Plus className="size-4" />
+              Create workflow
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {workflows.map((w) => (
+            <Card
+              key={w.id}
+              className="flex flex-col transition hover:border-foreground/20"
+            >
+              <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="truncate text-base">
+                    <Link
+                      href={`/workflows/${w.id}`}
+                      className="hover:underline"
+                    >
+                      {w.name}
+                    </Link>
+                  </CardTitle>
+                  {w.description ? (
+                    <CardDescription className="mt-1 line-clamp-2">
+                      {w.description}
+                    </CardDescription>
+                  ) : null}
+                </div>
+                <div className="flex shrink-0 items-center gap-1.5 rounded-full border bg-background px-2.5 py-1">
+                  <span
+                    className={cn(
+                      "size-1.5 rounded-full",
+                      w.enabled
+                        ? "bg-[#14F195] shadow-[0_0_6px_#14F195]"
+                        : "bg-muted-foreground",
+                    )}
+                  />
+                  <span className="text-xs font-medium">
+                    {w.enabled ? "Active" : "Paused"}
+                  </span>
+                </div>
+              </CardHeader>
+              <CardContent className="mt-auto flex items-center justify-between gap-2 border-t pt-4">
+                {(() => {
+                  const isToggling =
+                    toggleMutation.isPending &&
+                    toggleMutation.variables === w.id
+                  return (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => toggleMutation.mutate(w.id)}
+                      disabled={isToggling}
+                    >
+                      {isToggling ? (
+                        <>
+                          <Loader2 className="size-3.5 animate-spin" />
+                          {w.enabled ? "Pausing…" : "Activating…"}
+                        </>
+                      ) : w.enabled ? (
+                        <>
+                          <Pause className="size-3.5" />
+                          Pause
+                        </>
+                      ) : (
+                        <>
+                          <Play className="size-3.5" />
+                          Activate
+                        </>
+                      )}
+                    </Button>
+                  )
+                })()}
+                <div className="flex items-center gap-1">
+                  <span className="mr-1 text-xs text-muted-foreground">
+                    {new Date(w.updatedAt).toLocaleDateString()}
+                  </span>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => router.push(`/workflows/${w.id}`)}
+                  >
+                    <Pencil className="size-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() =>
+                      setPendingDelete({ id: w.id, name: w.name })
+                    }
+                  >
+                    <Trash2 className="size-4 text-destructive" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {pendingDelete ? (
         <DeleteModal
