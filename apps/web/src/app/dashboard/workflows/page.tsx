@@ -103,7 +103,7 @@ export default function DashboardWorkflowsPage() {
                 <div className="min-w-0 flex-1">
                   <CardTitle className="truncate text-base">
                     <Link
-                      href={`/workflows/${w.id}`}
+                      href={`/workflows/builder?edit=${w.id}`}
                       className="hover:underline"
                     >
                       {w.name}
@@ -167,7 +167,9 @@ export default function DashboardWorkflowsPage() {
                   <Button
                     size="icon"
                     variant="ghost"
-                    onClick={() => router.push(`/workflows/${w.id}`)}
+                    onClick={() =>
+                      router.push(`/workflows/builder?edit=${w.id}`)
+                    }
                   >
                     <Pencil className="size-4" />
                   </Button>
