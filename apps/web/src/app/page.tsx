@@ -140,12 +140,9 @@ export default function HomePage() {
   }, [ready, authenticated, router]);
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#eadfcf] text-white">
-      <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_12%_5%,rgba(248,244,255,0.94),transparent_32%),radial-gradient(circle_at_88%_12%,rgba(154,101,242,0.82),transparent_34%),radial-gradient(circle_at_94%_88%,rgba(243,217,172,0.95),transparent_38%),linear-gradient(135deg,#c6d7ff_0%,#7156d6_45%,#f3d9ac_100%)] px-3 py-4 sm:px-6 sm:py-8 lg:px-10">
-        <section className="relative mx-auto flex min-h-[calc(100svh-2rem)] max-w-[1740px] flex-col overflow-hidden rounded-[2rem] border border-white/20 bg-[#05070d] shadow-[0_34px_100px_rgba(20,10,60,0.38)] sm:min-h-[calc(100svh-4rem)] sm:rounded-[2.6rem]">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_13%_16%,rgba(243,217,172,0.94),transparent_27%),radial-gradient(circle_at_42%_24%,rgba(154,101,242,0.92),transparent_42%),radial-gradient(circle_at_58%_65%,rgba(16,27,52,0.86),transparent_40%),linear-gradient(110deg,#f3d9ac_0%,#8f59e8_42%,#101b34_70%,#05060b_100%)]" />
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.17),transparent_45%),radial-gradient(circle_at_72%_48%,rgba(20,241,149,0.08),transparent_32%)]" />
-
+    <main className="min-h-screen overflow-hidden bg-background text-foreground">
+      <div className="relative min-h-screen overflow-hidden bg-white px-3 py-4 dark:bg-black sm:px-6 sm:py-8 lg:px-10">
+        <section className="relative mx-auto flex min-h-[calc(100svh-2rem)] max-w-[1740px] flex-col overflow-hidden rounded-[2rem] border border-black/10 bg-white shadow-[0_34px_100px_rgba(0,0,0,0.12)] dark:border-white/12 dark:bg-black dark:shadow-[0_34px_100px_rgba(0,0,0,0.72)] sm:min-h-[calc(100svh-4rem)] sm:rounded-[2.6rem]">
           <LandingNav
             authenticated={authenticated}
             login={login}
@@ -156,14 +153,14 @@ export default function HomePage() {
 
           <div className="relative z-10 grid flex-1 items-center gap-10 px-6 pb-8 pt-4 sm:px-10 sm:pb-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-4 lg:px-16 lg:pb-12 xl:px-24">
             <div className="max-w-3xl pt-8 lg:pt-0">
-              <h1 className="max-w-[720px] text-5xl font-bold leading-none tracking-normal text-black sm:text-6xl lg:text-7xl xl:text-[5.2rem]">
+              <h1 className="max-w-[720px] text-5xl font-bold leading-none tracking-normal text-black dark:text-white sm:text-6xl lg:text-7xl xl:text-[5.2rem]">
                 <span className="block">Onchain</span>
                 <span className="block">workflow</span>
                 <span className="block">agents</span>
-                <span className="block text-white">one click away.</span>
+                <span className="block text-black dark:text-[#14f195]">one click away.</span>
               </h1>
 
-              <p className="mt-6 max-w-[34rem] text-base leading-7 text-white/82 sm:text-lg">
+              <p className="mt-6 max-w-[34rem] text-base leading-7 text-black/70 dark:text-white/82 sm:text-lg">
                 Automate on-chain signals, schedules, approvals, and notifications from one visual
                 workflow.
               </p>
@@ -171,27 +168,27 @@ export default function HomePage() {
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/workflows"
-                  className="group inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-[#05050a] px-7 text-sm font-semibold text-white shadow-[0_0_0_1px_rgba(255,255,255,0.18),0_14px_34px_rgba(6,6,18,0.38)] transition hover:-translate-y-0.5 hover:bg-black"
+                  className="group inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-white px-7 text-sm font-semibold text-black shadow-[0_0_0_1px_rgba(0,0,0,0.12),0_14px_34px_rgba(6,6,18,0.18)] transition hover:-translate-y-0.5 hover:bg-white/86 dark:bg-[#05050a] dark:text-white dark:shadow-[0_0_0_1px_rgba(255,255,255,0.18),0_14px_34px_rgba(6,6,18,0.38)] dark:hover:bg-black"
                 >
                   Start project
                   <span className="transition group-hover:translate-x-1">-&gt;</span>
                 </Link>
                 <Link
                   href="/docs"
-                  className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/20 bg-white/12 px-7 text-sm font-semibold text-white backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/18"
+                  className="inline-flex min-h-12 items-center justify-center rounded-full border border-black/16 bg-black/8 px-7 text-sm font-semibold text-black backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/12 dark:border-white/20 dark:bg-white/12 dark:text-white dark:hover:bg-white/18"
                 >
                   Read docs
                 </Link>
               </div>
 
-              <div className="mt-8 flex flex-wrap gap-3 text-xs font-medium text-white/72">
-                <span className="rounded-full border border-white/14 bg-white/10 px-3 py-1.5">
+              <div className="mt-8 flex flex-wrap gap-3 text-xs font-medium text-black/68 dark:text-white/72">
+                <span className="rounded-full border border-black/14 bg-black/8 px-3 py-1.5 dark:border-white/14 dark:bg-white/10">
                   No glue code
                 </span>
-                <span className="rounded-full border border-white/14 bg-white/10 px-3 py-1.5">
+                <span className="rounded-full border border-black/14 bg-black/8 px-3 py-1.5 dark:border-white/14 dark:bg-white/10">
                   Wallet-native
                 </span>
-                <span className="rounded-full border border-white/14 bg-white/10 px-3 py-1.5">
+                <span className="rounded-full border border-black/14 bg-black/8 px-3 py-1.5 dark:border-white/14 dark:bg-white/10">
                   Runs 24/7
                 </span>
               </div>
@@ -216,7 +213,7 @@ interface LandingNavProps {
 function LandingNav({ authenticated, login, logout, ready, walletAddress }: LandingNavProps) {
   return (
     <nav className="relative z-20 flex items-center justify-between px-6 py-5 sm:px-10 sm:py-7 lg:px-16 xl:px-24">
-      <Link href="/" className="flex items-center gap-3 text-black">
+      <Link href="/" className="flex items-center gap-3 text-black dark:text-white">
         <Image
           src="/logo.jpg"
           alt="Dolphinflow logo"
@@ -230,31 +227,19 @@ function LandingNav({ authenticated, login, logout, ready, walletAddress }: Land
         </span>
       </Link>
 
-      <div className="hidden items-center gap-10 text-sm font-medium text-black/76 md:flex">
-        <Link href="/workflows" className="transition hover:text-black">
-          Workflows
-        </Link>
-        <Link href="/docs" className="transition hover:text-black">
-          Docs
-        </Link>
-        <Link href="/executions" className="transition hover:text-black">
-          Executions
-        </Link>
-      </div>
-
       <div className="flex items-center gap-2 sm:gap-4">
-        <ThemeToggle className="hidden h-10 w-10 items-center justify-center rounded-2xl border border-white/18 bg-black/16 text-white backdrop-blur-md transition hover:bg-black/24 min-[360px]:flex" />
+        <ThemeToggle className="hidden h-10 w-10 items-center justify-center rounded-2xl border border-black/18 bg-white/24 text-black backdrop-blur-md transition hover:bg-white/36 dark:border-white/18 dark:bg-black/16 dark:text-white dark:hover:bg-black/24 min-[360px]:flex" />
 
         {authenticated ? (
           <div className="flex items-center gap-3">
             {walletAddress ? (
-              <span className="hidden rounded-full border border-white/15 bg-black/16 px-3 py-2 font-mono text-xs text-white/78 backdrop-blur-md sm:inline">
+              <span className="hidden rounded-full border border-black/15 bg-white/24 px-3 py-2 font-mono text-xs text-black/78 backdrop-blur-md dark:border-white/15 dark:bg-black/16 dark:text-white/78 sm:inline">
                 {walletAddress.slice(0, 4)}...{walletAddress.slice(-4)}
               </span>
             ) : null}
             <button
               onClick={logout}
-              className="whitespace-nowrap rounded-full bg-black/82 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_30px_rgba(155,124,255,0.25)] transition hover:bg-black"
+              className="whitespace-nowrap rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-black shadow-[0_0_30px_rgba(155,124,255,0.18)] transition hover:bg-white/86 dark:bg-black/82 dark:text-white dark:shadow-[0_0_30px_rgba(155,124,255,0.25)] dark:hover:bg-black"
             >
               Log out
             </button>
@@ -266,15 +251,9 @@ function LandingNav({ authenticated, login, logout, ready, walletAddress }: Land
           >
             <button
               onClick={login}
-              className="hidden text-sm font-semibold text-white/86 transition hover:text-white sm:block"
+              className="whitespace-nowrap rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-black shadow-[0_0_0_1px_rgba(0,0,0,0.14),0_0_34px_rgba(155,124,255,0.2)] transition hover:bg-white/86 dark:bg-black/86 dark:text-white dark:shadow-[0_0_0_1px_rgba(255,255,255,0.15),0_0_34px_rgba(155,124,255,0.45)] dark:hover:bg-black sm:px-6"
             >
-              Log in
-            </button>
-            <button
-              onClick={login}
-              className="whitespace-nowrap rounded-full bg-black/86 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_0_1px_rgba(255,255,255,0.15),0_0_34px_rgba(155,124,255,0.45)] transition hover:bg-black sm:px-6"
-            >
-              Join now
+              Connect wallet
             </button>
           </div>
         )}
@@ -286,12 +265,12 @@ function LandingNav({ authenticated, login, logout, ready, walletAddress }: Land
 function OrbitShowcase() {
   return (
     <div className="relative mx-auto flex aspect-square w-full max-w-[720px] items-center justify-center lg:mr-0">
-      <div className="absolute inset-[7%] rounded-full border border-white/20 orbit-ring-glow" />
-      <div className="absolute inset-[18%] rounded-full border border-white/24 orbit-ring-glow [animation-delay:-2s]" />
-      <div className="absolute inset-[30%] rounded-full border border-white/28 orbit-ring-glow [animation-delay:-4s]" />
-      <div className="absolute inset-[4%] rounded-full bg-[radial-gradient(circle,rgba(41,211,255,0.12),transparent_44%)]" />
+      <div className="absolute inset-[7%] rounded-full border border-[#9945ff]/28 shadow-[0_0_42px_rgba(153,69,255,0.12)] orbit-ring-glow dark:border-white/20 dark:shadow-none" />
+      <div className="absolute inset-[18%] rounded-full border border-[#14f195]/30 shadow-[0_0_42px_rgba(20,241,149,0.12)] orbit-ring-glow [animation-delay:-2s] dark:border-white/24 dark:shadow-none" />
+      <div className="absolute inset-[30%] rounded-full border border-[#29d3ff]/30 shadow-[0_0_42px_rgba(41,211,255,0.12)] orbit-ring-glow [animation-delay:-4s] dark:border-white/28 dark:shadow-none" />
+      <div className="absolute inset-[4%] rounded-full bg-black/5 dark:bg-white/[0.02]" />
 
-      <div className="relative z-10 flex h-36 w-36 items-center justify-center rounded-full border border-[#14f195]/28 bg-[radial-gradient(circle_at_50%_35%,rgba(20,241,149,0.18),rgba(154,101,242,0.18)_42%,rgba(5,6,11,0.62)_72%)] text-center shadow-[inset_0_0_42px_rgba(20,241,149,0.12),0_0_72px_rgba(20,241,149,0.18),0_26px_72px_rgba(5,6,11,0.38)] backdrop-blur-md sm:h-56 sm:w-56">
+      <div className="relative z-10 flex h-36 w-36 items-center justify-center rounded-full border border-[#14f195]/40 bg-white text-center shadow-[inset_0_0_42px_rgba(20,241,149,0.08),0_0_72px_rgba(20,241,149,0.16),0_26px_72px_rgba(5,6,11,0.12)] backdrop-blur-md dark:border-[#14f195]/28 dark:bg-black/62 dark:shadow-[inset_0_0_42px_rgba(20,241,149,0.12),0_0_72px_rgba(20,241,149,0.18),0_26px_72px_rgba(5,6,11,0.38)] sm:h-56 sm:w-56">
         <SolanaLogo className="h-20 w-20 drop-shadow-[0_0_24px_rgba(153,101,255,0.38)] sm:h-32 sm:w-32" />
       </div>
 

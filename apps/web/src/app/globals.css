@@ -49,6 +49,19 @@ html {
   scroll-behavior: smooth;
 }
 
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
 @layer base {
   :root {
     /* shadcn/ui tokens */
@@ -132,11 +145,11 @@ html {
 
   .dark {
     /* shadcn/ui tokens */
-    --background: oklch(0.145 0 0);
+    --background: #000000;
     --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
+    --card: #080808;
     --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
+    --popover: #080808;
     --popover-foreground: oklch(0.985 0 0);
     --primary: oklch(0.922 0 0);
     --primary-foreground: oklch(0.205 0 0);
@@ -153,11 +166,11 @@ html {
     --ring: oklch(0.556 0 0);
 
     /* Canvas & surface system */
-    --canvas-bg: #111111;
-    --surface-1: #161616;
-    --surface-2: #1a1a1a;
-    --surface-3: #1f1f1f;
-    --surface-4: #242424;
+    --canvas-bg: #000000;
+    --surface-1: #050505;
+    --surface-2: #0a0a0a;
+    --surface-3: #111111;
+    --surface-4: #181818;
 
     /* Node borders */
     --node-border: #2a2a2a;
@@ -174,7 +187,7 @@ html {
     --handle-color: #3a3a3a;
 
     /* Sidebar */
-    --sidebar-bg: #111111;
+    --sidebar-bg: #000000;
     --sidebar-border: oklch(1 0 0 / 10%);
 
     /* Brand — Solana */
@@ -200,7 +213,7 @@ html {
     --chart-3: oklch(0.439 0 0);
     --chart-4: oklch(0.371 0 0);
     --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
+    --sidebar: #050505;
     --sidebar-foreground: oklch(0.985 0 0);
     --sidebar-primary: oklch(0.488 0.243 264.376);
     --sidebar-primary-foreground: oklch(0.985 0 0);

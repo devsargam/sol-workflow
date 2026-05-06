@@ -33,7 +33,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
-      <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased min-h-screen`}>
+      <body
+        className={`${inter.variable} ${jetbrainsMono.variable} min-h-screen bg-background antialiased`}
+      >
         <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
           <RootProvider theme={{ enabled: false }}>
             <Provider>
