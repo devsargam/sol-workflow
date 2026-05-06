@@ -9,7 +9,7 @@ export function baseOptions(): BaseLayoutProps {
       {
         type: "main",
         text: "Workflows",
-        url: "/workflows",
+        url: "/dashboard/workflows",
       },
       {
         type: "button",

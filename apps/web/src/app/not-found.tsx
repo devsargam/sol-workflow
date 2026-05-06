@@ -39,7 +39,7 @@ export default function NotFound() {
             Go Home
           </Link>
           <Link
-            href="/workflows"
+            href="/dashboard/workflows"
             className="inline-flex items-center justify-center gap-2 px-6 py-2.5 border border-black text-sm font-medium rounded-lg hover:bg-black hover:text-white transition-all duration-200"
           >
             <svg

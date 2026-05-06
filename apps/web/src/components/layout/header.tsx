@@ -39,11 +39,14 @@ export function Header() {
           className="hidden items-center gap-1 rounded-2xl border border-border bg-muted/40 p-1 md:flex"
         >
           <Link
-            href="/workflows"
+            href="/dashboard/workflows"
             className="rounded-xl px-4 py-2 text-sm font-medium"
             style={{
-              background: pathname === "/workflows" ? "var(--card)" : "transparent",
-              color: pathname === "/workflows" ? "var(--text-primary)" : "var(--text-secondary)",
+              background: pathname === "/dashboard/workflows" ? "var(--card)" : "transparent",
+              color:
+                pathname === "/dashboard/workflows"
+                  ? "var(--text-primary)"
+                  : "var(--text-secondary)",
             }}
           >
             Workflows

@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Webhook, Plus, Copy, Trash2, Check } from "lucide-react"
+import { Webhook, Plus, Copy, Trash2, Check, BookOpen, ArrowRight } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -101,6 +102,26 @@ export default function ApiKeysPage() {
           New API key
         </Button>
       </div>
+
+      <Card className="border-[#9945ff]/25 bg-[#9945ff]/5">
+        <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex gap-3">
+            <BookOpen className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+            <div>
+              <p className="text-sm font-medium">Not sure where to use API keys?</p>
+              <p className="text-sm text-muted-foreground">
+                Check the docs for authentication examples and agent workflow setup.
+              </p>
+            </div>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/docs/api-keys">
+              Open docs
+              <ArrowRight className="size-4" />
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
 
       {revealedKey ? (
         <Card className="border-[#9945ff]/30 bg-[#9945ff]/5">

@@ -118,7 +118,7 @@ export default function DashboardPage() {
               <CardDescription>Last 5 runs</CardDescription>
             </div>
             <Link
-              href="/executions"
+              href="/dashboard/executions"
               className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
             >
               View all <ArrowRight className="size-3" />

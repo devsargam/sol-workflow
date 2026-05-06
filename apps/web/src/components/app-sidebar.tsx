@@ -16,7 +16,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { NavUser } from "@/components/nav-user"
-import { Workflow, Book, PlugZap, Webhook, Zap } from "lucide-react"
+import { Workflow, PlugZap, Webhook, Zap } from "lucide-react"
 import { useWalletAuth } from "@/components/providers/wallet-auth-provider"
 
 const navItems = [
@@ -26,13 +26,8 @@ const navItems = [
     icon: Workflow,
   },
   {
-    title: "Docs",
-    url: "/docs",
-    icon: Book,
-  },
-  {
     title: "Executions",
-    url: "/executions",
+    url: "/dashboard/executions",
     icon: PlugZap,
   },
   {
@@ -76,8 +71,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Workspace</SidebarGroupLabel>
-          <SidebarGroupContent>
+          <SidebarGroupContent className="flex flex-col gap-2">
+            <SidebarGroupLabel>Workspace</SidebarGroupLabel>
             <SidebarMenu>
               {navItems.map((item) => {
                 const isActive =
@@ -88,6 +83,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       asChild
                       tooltip={item.title}
                       isActive={isActive}
+                      className="data-active:bg-neutral-950 data-active:text-white data-active:hover:bg-neutral-950 data-active:hover:text-white dark:data-active:bg-white dark:data-active:text-black dark:data-active:hover:bg-white dark:data-active:hover:text-black [&_svg]:text-current"
                     >
                       <Link href={item.url}>
                         <item.icon />

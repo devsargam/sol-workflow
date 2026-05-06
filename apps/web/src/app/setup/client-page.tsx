@@ -376,7 +376,7 @@ function NotConfigured() {
     <div className="flex flex-col items-center justify-center py-32 text-center">
       <p className="text-sm text-muted-foreground">Set up a balance monitor workflow first.</p>
       <a
-        href="/workflows"
+        href="/dashboard/workflows"
         className="mt-4 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background"
       >
         Go to Workflows →

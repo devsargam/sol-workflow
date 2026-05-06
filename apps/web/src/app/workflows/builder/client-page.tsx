@@ -118,7 +118,7 @@ export default function WorkflowBuilderClientPage() {
         workflowId: editId || "new",
         workflowName: finalWorkflowName,
       });
-      router.push("/workflows");
+      router.push("/dashboard/workflows");
     } catch (error) {
       log.error("Failed to save workflow", error as Error, {
         service: "web",
@@ -154,7 +154,7 @@ export default function WorkflowBuilderClientPage() {
         onSave={handleSave}
         isSaving={isSaving}
         editId={editId}
-        onBack={() => router.push("/workflows")}
+        onBack={() => router.push("/dashboard/workflows")}
         errors={showErrors ? errors : []}
         onDismissErrors={() => {
           setErrors([]);
