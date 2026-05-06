@@ -154,15 +154,13 @@ export default function HomePage() {
           <div className="relative z-10 grid flex-1 items-center gap-10 px-6 pb-8 pt-4 sm:px-10 sm:pb-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-4 lg:px-16 lg:pb-12 xl:px-24">
             <div className="max-w-3xl pt-8 lg:pt-0">
               <h1 className="max-w-[720px] text-5xl font-bold leading-none tracking-normal text-black dark:text-white sm:text-6xl lg:text-7xl xl:text-[5.2rem]">
-                <span className="block">Onchain</span>
-                <span className="block">workflow</span>
-                <span className="block">agents</span>
-                <span className="block text-black dark:text-[#14f195]">one click away.</span>
+                <span className="block">On-chain</span>
+                <span className="block">workflows for</span>
+                <span className="block text-black dark:text-[#14f195]">AI agents</span>
               </h1>
 
               <p className="mt-6 max-w-[34rem] text-base leading-7 text-black/70 dark:text-white/82 sm:text-lg">
-                Automate on-chain signals, schedules, approvals, and notifications from one visual
-                workflow.
+                React to on-chain events, run actions, and coordinate notifications in real time.
               </p>
 
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
