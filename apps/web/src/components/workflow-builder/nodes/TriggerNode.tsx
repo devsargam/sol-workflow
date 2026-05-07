@@ -5,6 +5,7 @@ import { Handle, NodeProps, Position } from "@xyflow/react";
 import {
   ClockIcon,
   CodeIcon,
+  CoinsIcon,
   CurrencyCircleDollarIcon as CircleDollarSignIcon,
   FileTextIcon,
   ImageIcon,
@@ -25,6 +26,7 @@ const TRIGGER_CONFIG: Record<
   nft_receipt: { label: "NFT Receipt", Icon: ImageIcon },
   transaction_status: { label: "Transaction Status", Icon: FileTextIcon },
   program_log: { label: "Program Log", Icon: CodeIcon },
+  new_token_listing: { label: "New Token Listing", Icon: CoinsIcon },
   cron: { label: "Scheduled", Icon: ClockIcon },
   webhook: { label: "Webhook", Icon: WebhooksLogoIcon },
 };
@@ -42,6 +44,7 @@ export const TriggerNode = memo(({ data, selected }: NodeProps) => {
   const address = nodeData.config?.address;
   const schedule = nodeData.config?.schedule;
   const webhookId = nodeData.config?.webhookId;
+  const source = nodeData.config?.source;
 
   const outputValue =
     address
@@ -50,7 +53,9 @@ export const TriggerNode = memo(({ data, selected }: NodeProps) => {
         ? schedule
         : webhookId
           ? `/${webhookId.slice(0, 8)}…`
-          : triggerType || "—";
+          : source
+            ? source
+            : triggerType || "—";
 
   return (
     <div

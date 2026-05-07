@@ -7,6 +7,7 @@ import "./globals.css";
 import { Provider } from "@/components/providers/provider";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 import { decodeWalletSession, WALLET_SESSION_COOKIE_NAME } from "@/lib/auth-session";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
@@ -48,6 +49,7 @@ export default async function RootLayout({
             <Provider initialWalletSession={initialWalletSession}>
               <TooltipProvider>
                 <main>{children}</main>
+                <Toaster position="bottom-right" />
               </TooltipProvider>
             </Provider>
           </RootProvider>

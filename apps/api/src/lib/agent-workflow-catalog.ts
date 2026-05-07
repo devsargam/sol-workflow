@@ -278,6 +278,18 @@ export function buildAgentWorkflowCapabilities() {
             requiredConfig: ["programId"],
             optionalConfig: ["logPattern", "mentionedAccounts"],
           },
+          new_token_listing: {
+            requiredConfig: ["source"],
+            optionalConfig: [
+              "includeMemePlatforms",
+              "minLiquidityUsd",
+              "minVolume24hUsd",
+              "limit",
+              "pollIntervalSeconds",
+            ],
+            notes:
+              "Uses Dolphinflow's Birdeye integration. Runtime requires BIRDEYE_API_KEY on the listener service.",
+          },
           cron: {
             requiredConfig: ["schedule"],
             optionalConfig: ["timezone"],

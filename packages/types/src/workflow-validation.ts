@@ -26,6 +26,31 @@ const triggerValidators: Record<string, NodeValidator> = {
 
     return errors;
   },
+  new_token_listing: (node) => {
+    const data = node.data as TriggerNodeData;
+    const config = data?.config || {};
+    const errors: ValidationError[] = [];
+
+    if (config.source && config.source !== "birdeye") {
+      errors.push(`Trigger node ${node.id}: Unsupported token listing source`);
+    }
+
+    if (
+      config.pollIntervalSeconds !== undefined &&
+      (!Number.isInteger(config.pollIntervalSeconds) || config.pollIntervalSeconds < 30)
+    ) {
+      errors.push(`Trigger node ${node.id}: Poll interval must be at least 30 seconds`);
+    }
+
+    if (
+      config.limit !== undefined &&
+      (!Number.isInteger(config.limit) || config.limit < 1 || config.limit > 20)
+    ) {
+      errors.push(`Trigger node ${node.id}: Listing fetch limit must be between 1 and 20`);
+    }
+
+    return errors;
+  },
   webhook: (node) => {
     const data = node.data as TriggerNodeData;
     const config = data?.config || {};

@@ -12,10 +12,11 @@ Dolphinflow supports these trigger types:
 - `nft_receipt`
 - `transaction_status`
 - `program_log`
+- `new_token_listing`
 - `cron`
 - `webhook`
 
-Only some trigger types are currently wired to live event sources. Balance changes, token/NFT account changes, program logs, cron schedules, and webhooks have runtime paths. Transaction status exists in schema/UI but does not currently have a dedicated listener implementation.
+Only some trigger types are currently wired to live event sources. Balance changes, token/NFT account changes, program logs, new token listings, cron schedules, and webhooks have runtime paths. Transaction status exists in schema/UI but does not currently have a dedicated listener implementation.
 
 ## Balance Change
 
@@ -79,6 +80,38 @@ trigger.signature
 trigger.logs
 trigger.slot
 trigger.err
+```
+
+## New Token Listing
+
+Use `new_token_listing` to watch Birdeye's Solana new listings feed.
+
+Config fields:
+
+- `source`: currently `birdeye`.
+- `includeMemePlatforms`: includes listings from meme launch platforms when true.
+- `minLiquidityUsd`: optional listener-side liquidity threshold.
+- `minVolume24hUsd`: optional listener-side 24h volume threshold.
+- `limit`: Birdeye page size, from 1 to 20.
+- `pollIntervalSeconds`: polling interval, minimum 30 seconds.
+
+The listener service must have `BIRDEYE_API_KEY` configured.
+
+Runtime payload fields include:
+
+```ts
+trigger.type
+trigger.source
+trigger.firedAt
+trigger.address
+trigger.mint
+trigger.symbol
+trigger.name
+trigger.liquidityUsd
+trigger.volume24hUsd
+trigger.priceUsd
+trigger.marketCapUsd
+trigger.listedAt
 ```
 
 ## Cron

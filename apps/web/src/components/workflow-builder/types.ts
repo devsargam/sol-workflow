@@ -21,6 +21,13 @@ export interface TriggerNodeData {
     minChange?: number;
     changeType?: string;
     minAmount?: number;
+    // New token listing trigger specific
+    source?: "birdeye";
+    includeMemePlatforms?: boolean;
+    minLiquidityUsd?: number;
+    minVolume24hUsd?: number;
+    limit?: number;
+    pollIntervalSeconds?: number;
     // Cron trigger specific
     schedule?: string;
     timezone?: string;

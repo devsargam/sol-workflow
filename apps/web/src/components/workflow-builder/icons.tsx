@@ -28,6 +28,8 @@ export type TriggerType =
   | "nft_receipt"
   | "transaction_status"
   | "program_log"
+  | "new_token_listing"
+  | "cron"
   | "webhook";
 
 export const NOTIFICATION_ICONS: Record<NotificationType, ComponentType<{ className?: string }>> = {
@@ -50,6 +52,8 @@ export const TRIGGER_ICONS: Record<TriggerType, ComponentType<{ className?: stri
   nft_receipt: ImageIcon,
   transaction_status: FileTextIcon,
   program_log: CodeIcon,
+  new_token_listing: CoinsIcon,
+  cron: BellIconAlias,
   webhook: WebhooksLogoIcon,
 };
 

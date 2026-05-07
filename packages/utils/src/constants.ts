@@ -100,6 +100,7 @@ export const INTERVALS = {
   RELOAD_WORKFLOWS: 30000, // 30 seconds
   REFETCH_EXECUTIONS: 5000, // 5 seconds
   REFETCH_BALANCE: 10000, // 10 seconds
+  BIRDEYE_TOKEN_LISTINGS: 60000, // 1 minute
 } as const;
 
 // ============================================================================
@@ -155,9 +156,24 @@ export enum TriggerType {
   NFT_RECEIPT = "nft_receipt",
   TRANSACTION_STATUS = "transaction_status",
   PROGRAM_LOG = "program_log",
+  NEW_TOKEN_LISTING = "new_token_listing",
   CRON = "cron",
   WEBHOOK = "webhook",
 }
+
+// ============================================================================
+// External Data Source Constants
+// ============================================================================
+
+export const BIRDEYE = {
+  API_BASE_URL: "https://public-api.birdeye.so",
+  CHAIN: "solana",
+  NEW_LISTINGS_PATH: "/defi/v2/tokens/new_listing",
+  DEFAULT_LIMIT: 10,
+  MAX_LIMIT: 20,
+  MIN_POLL_INTERVAL_SECONDS: 30,
+  MIN_REQUEST_INTERVAL_MS: 1100,
+} as const;
 
 // ============================================================================
 // Cron Constants

@@ -21,6 +21,7 @@ export const TriggerNodeDataSchema = z.object({
     "nft_receipt",
     "transaction_status",
     "program_log",
+    "new_token_listing",
     "cron",
     "webhook",
   ]),
@@ -62,6 +63,14 @@ export const TriggerNodeDataSchema = z.object({
     // Program log specific
     logPattern: z.string().optional(),
     mentionedAccounts: z.array(z.string()).optional(),
+
+    // New token listing specific
+    source: z.enum(["birdeye"]).optional(),
+    includeMemePlatforms: z.boolean().optional(),
+    minLiquidityUsd: z.number().nonnegative().optional(),
+    minVolume24hUsd: z.number().nonnegative().optional(),
+    limit: z.number().int().min(1).max(20).optional(),
+    pollIntervalSeconds: z.number().int().min(30).max(3600).optional(),
 
     // Cron trigger specific
     schedule: z.string().optional(), // Cron expression like "*/5 * * * *"

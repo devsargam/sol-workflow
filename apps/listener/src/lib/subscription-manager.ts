@@ -1,10 +1,12 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { Queue } from "bullmq";
 import {
+  BIRDEYE,
   TriggerType,
   JOB_NAMES,
   JOB_OPTIONS,
   SOLANA,
+  INTERVALS,
   log,
   generateExecutionId,
 } from "utils";
@@ -27,9 +29,38 @@ interface TriggerNode {
   };
 }
 
+type TokenListingSubscription = {
+  config: any;
+  triggerNodeId: string;
+  workflow: Workflow;
+};
+
+type NormalizedTokenListing = {
+  address: string;
+  symbol?: string;
+  name?: string;
+  liquidityUsd?: number;
+  volume24hUsd?: number;
+  priceUsd?: number;
+  marketCapUsd?: number;
+  listedAt?: number | string;
+  source: "birdeye";
+  raw: Record<string, unknown>;
+};
+
 export class SubscriptionManager {
   private subscriptions: Map<string, number> = new Map();
   private balanceSnapshots: Map<string, number> = new Map();
+  private tokenListingSubscriptions: Map<string, TokenListingSubscription> = new Map();
+  private tokenListingSeen: Map<string, Set<string>> = new Map();
+  private tokenListingSeeded: Set<string> = new Set();
+  private tokenListingPollers: Map<string, NodeJS.Timeout> = new Map();
+  private tokenListingPollIntervals: Map<string, number> = new Map();
+  private tokenListingBackoffUntil: Map<string, number> = new Map();
+  private tokenListingInFlight: Set<string> = new Set();
+  private workflowSignatures: Map<string, string> = new Map();
+  private birdeyeRequestQueue: Promise<void> = Promise.resolve();
+  private lastBirdeyeRequestAt = 0;
   private connection: Connection;
   private queue: Queue;
 
@@ -105,8 +136,8 @@ export class SubscriptionManager {
   }
 
   async subscribe(workflow: Workflow): Promise<void> {
-    const triggerNodes = workflow.graph.nodes.filter(
-      (n) => isTriggerNode(n)
+    const triggerNodes = workflow.graph.nodes.filter((n) =>
+      isTriggerNode(n)
     ) as unknown as TriggerNode[];
 
     log.debug(
@@ -125,6 +156,7 @@ export class SubscriptionManager {
         workflowId: workflow.id,
         availableNodeTypes: workflow.graph.nodes.map((n) => n.type).join(", "),
       });
+      this.workflowSignatures.set(workflow.id, getWorkflowSignature(workflow));
       return;
     }
 
@@ -184,6 +216,9 @@ export class SubscriptionManager {
         case TriggerType.PROGRAM_LOG:
           await this.subscribeToProgramLogs(workflow, triggerNode.id, config);
           break;
+        case TriggerType.NEW_TOKEN_LISTING:
+          await this.subscribeToNewTokenListings(workflow, triggerNode.id, config);
+          break;
         case TriggerType.CRON:
         case TriggerType.WEBHOOK:
           log.debug(`Trigger type ${triggerType} does not require a listener subscription`, {
@@ -200,6 +235,31 @@ export class SubscriptionManager {
             triggerType,
           });
       }
+    }
+
+    this.workflowSignatures.set(workflow.id, getWorkflowSignature(workflow));
+  }
+
+  async reconcile(workflows: Workflow[]): Promise<void> {
+    const activeWorkflowIds = new Set(workflows.map((workflow) => workflow.id));
+
+    for (const workflowId of Array.from(this.workflowSignatures.keys())) {
+      if (!activeWorkflowIds.has(workflowId)) {
+        await this.unsubscribe(workflowId);
+      }
+    }
+
+    for (const workflow of workflows) {
+      const nextSignature = getWorkflowSignature(workflow);
+      if (this.workflowSignatures.get(workflow.id) === nextSignature) {
+        continue;
+      }
+
+      if (this.workflowSignatures.has(workflow.id)) {
+        await this.unsubscribe(workflow.id);
+      }
+
+      await this.subscribe(workflow);
     }
   }
 
@@ -343,6 +403,296 @@ export class SubscriptionManager {
       triggerNodeId,
       address: address.toBase58(),
     });
+  }
+
+  private async subscribeToNewTokenListings(
+    workflow: Workflow,
+    triggerNodeId: string,
+    config: any
+  ): Promise<void> {
+    if (!process.env.BIRDEYE_API_KEY?.trim()) {
+      log.error(
+        `Birdeye token listing trigger ${triggerNodeId} cannot start without BIRDEYE_API_KEY`,
+        new Error("Missing BIRDEYE_API_KEY"),
+        {
+          service: "listener",
+          workflowId: workflow.id,
+          triggerNodeId,
+        }
+      );
+      return;
+    }
+
+    const source = config.source || "birdeye";
+    if (source !== "birdeye") {
+      log.warn(`Unsupported token listing source: ${source}`, {
+        service: "listener",
+        workflowId: workflow.id,
+        triggerNodeId,
+        source,
+      });
+      return;
+    }
+
+    const subscriptionKey = `${workflow.id}-${triggerNodeId}`;
+    this.tokenListingSubscriptions.set(subscriptionKey, {
+      workflow,
+      triggerNodeId,
+      config,
+    });
+
+    const groupKey = this.getTokenListingGroupKey(config);
+    this.ensureTokenListingPoller(groupKey);
+
+    log.info(`✅ Subscribed to Birdeye new token listings`, {
+      service: "listener",
+      workflowId: workflow.id,
+      triggerNodeId,
+      includeMemePlatforms: Boolean(config.includeMemePlatforms),
+      pollIntervalSeconds: config.pollIntervalSeconds,
+    });
+  }
+
+  private getTokenListingGroupKey(config: any): string {
+    return `birdeye:${config.includeMemePlatforms ? "meme" : "standard"}`;
+  }
+
+  private getTokenListingGroupSubscriptions(groupKey: string) {
+    return Array.from(this.tokenListingSubscriptions.values()).filter(
+      (subscription) => this.getTokenListingGroupKey(subscription.config) === groupKey
+    );
+  }
+
+  private getTokenListingPollIntervalMs(groupKey: string): number {
+    const configuredIntervals = this.getTokenListingGroupSubscriptions(groupKey)
+      .map((subscription) => Number(subscription.config.pollIntervalSeconds))
+      .filter(
+        (seconds) => Number.isFinite(seconds) && seconds >= BIRDEYE.MIN_POLL_INTERVAL_SECONDS
+      );
+
+    const minConfiguredSeconds =
+      configuredIntervals.length > 0 ? Math.min(...configuredIntervals) : undefined;
+
+    return (minConfiguredSeconds ?? INTERVALS.BIRDEYE_TOKEN_LISTINGS / 1000) * 1000;
+  }
+
+  private ensureTokenListingPoller(groupKey: string): void {
+    const intervalMs = this.getTokenListingPollIntervalMs(groupKey);
+    const existingPoller = this.tokenListingPollers.get(groupKey);
+    const existingIntervalMs = this.tokenListingPollIntervals.get(groupKey);
+
+    if (existingPoller && existingIntervalMs && existingIntervalMs <= intervalMs) {
+      return;
+    }
+
+    if (existingPoller) {
+      clearInterval(existingPoller);
+    }
+
+    const poll = () => {
+      const seedOnly = !this.tokenListingSeeded.has(groupKey);
+      void this.pollBirdeyeTokenListings(groupKey, seedOnly);
+    };
+
+    poll();
+
+    const poller = setInterval(poll, intervalMs);
+    this.tokenListingPollers.set(groupKey, poller);
+    this.tokenListingPollIntervals.set(groupKey, intervalMs);
+  }
+
+  private async pollBirdeyeTokenListings(groupKey: string, seedOnly: boolean): Promise<void> {
+    if (this.tokenListingInFlight.has(groupKey)) {
+      return;
+    }
+
+    const backoffUntil = this.tokenListingBackoffUntil.get(groupKey) ?? 0;
+    if (Date.now() < backoffUntil) {
+      return;
+    }
+
+    const subscriptions = this.getTokenListingGroupSubscriptions(groupKey);
+    if (subscriptions.length === 0) {
+      this.stopTokenListingPoller(groupKey);
+      return;
+    }
+
+    this.tokenListingInFlight.add(groupKey);
+
+    try {
+      const includeMemePlatforms = groupKey.endsWith(":meme");
+      const limit = Math.min(
+        BIRDEYE.MAX_LIMIT,
+        Math.max(
+          BIRDEYE.DEFAULT_LIMIT,
+          ...subscriptions.map((subscription) => Number(subscription.config.limit || 0))
+        )
+      );
+
+      const listings = await this.fetchBirdeyeNewListings({
+        includeMemePlatforms,
+        limit,
+      });
+
+      const seen = this.tokenListingSeen.get(groupKey) ?? new Set<string>();
+      this.tokenListingSeen.set(groupKey, seen);
+
+      if (seedOnly) {
+        for (const listing of listings) {
+          seen.add(listing.address);
+        }
+        this.tokenListingSeeded.add(groupKey);
+        log.info(`Seeded Birdeye token listing cursor`, {
+          service: "listener",
+          groupKey,
+          listingCount: listings.length,
+        });
+        return;
+      }
+
+      const newListings = listings.filter((listing) => !seen.has(listing.address));
+      for (const listing of newListings) {
+        seen.add(listing.address);
+        await this.queueTokenListingExecutions(subscriptions, listing);
+      }
+    } catch (error) {
+      const status = (error as { status?: number }).status;
+      if (status === 429) {
+        const retryAfterMs = 60_000;
+        this.tokenListingBackoffUntil.set(groupKey, Date.now() + retryAfterMs);
+      }
+
+      log.error("Failed to poll Birdeye token listings", error as Error, {
+        service: "listener",
+        groupKey,
+        status,
+      });
+    } finally {
+      this.tokenListingInFlight.delete(groupKey);
+    }
+  }
+
+  private async fetchBirdeyeNewListings({
+    includeMemePlatforms,
+    limit,
+  }: {
+    includeMemePlatforms: boolean;
+    limit: number;
+  }): Promise<NormalizedTokenListing[]> {
+    const baseUrl = process.env.BIRDEYE_API_BASE_URL || BIRDEYE.API_BASE_URL;
+    const url = new URL(BIRDEYE.NEW_LISTINGS_PATH, baseUrl);
+    url.searchParams.set("limit", String(limit));
+    url.searchParams.set("meme_platform_enabled", includeMemePlatforms ? "true" : "false");
+
+    await this.waitForBirdeyeRequestSlot();
+
+    const response = await fetch(url, {
+      headers: {
+        accept: "application/json",
+        "x-chain": BIRDEYE.CHAIN,
+        "X-API-KEY": process.env.BIRDEYE_API_KEY!,
+      },
+    });
+
+    if (!response.ok) {
+      const error = new Error(`Birdeye new listings request failed with ${response.status}`);
+      (error as Error & { status?: number }).status = response.status;
+      throw error;
+    }
+
+    const payload = await response.json();
+    return extractBirdeyeListingItems(payload)
+      .map(normalizeBirdeyeListing)
+      .filter((listing): listing is NormalizedTokenListing => Boolean(listing));
+  }
+
+  private async waitForBirdeyeRequestSlot(): Promise<void> {
+    const previousRequest = this.birdeyeRequestQueue;
+    let releaseCurrentRequest!: () => void;
+
+    this.birdeyeRequestQueue = new Promise<void>((resolve) => {
+      releaseCurrentRequest = resolve;
+    });
+
+    await previousRequest;
+
+    const elapsedMs = Date.now() - this.lastBirdeyeRequestAt;
+    const waitMs = Math.max(0, BIRDEYE.MIN_REQUEST_INTERVAL_MS - elapsedMs);
+
+    if (waitMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, waitMs));
+    }
+
+    this.lastBirdeyeRequestAt = Date.now();
+    releaseCurrentRequest();
+  }
+
+  private async queueTokenListingExecutions(
+    subscriptions: TokenListingSubscription[],
+    listing: NormalizedTokenListing
+  ): Promise<void> {
+    for (const subscription of subscriptions) {
+      const { workflow, triggerNodeId, config } = subscription;
+      if (!passesTokenListingConfig(listing, config)) continue;
+
+      const eventTime = listing.listedAt ?? Date.now();
+      const executionId = generateExecutionId(
+        workflow.id,
+        eventTime,
+        `${triggerNodeId}-${listing.address}`
+      );
+
+      await this.queue.add(
+        JOB_NAMES.WORKFLOW_EVENT,
+        {
+          workflowId: workflow.id,
+          executionId,
+          triggerNodeId,
+          triggerData: {
+            type: TriggerType.NEW_TOKEN_LISTING,
+            source: listing.source,
+            firedAt: new Date().toISOString(),
+            address: listing.address,
+            mint: listing.address,
+            symbol: listing.symbol,
+            name: listing.name,
+            liquidityUsd: listing.liquidityUsd,
+            volume24hUsd: listing.volume24hUsd,
+            priceUsd: listing.priceUsd,
+            marketCapUsd: listing.marketCapUsd,
+            listedAt: listing.listedAt,
+          },
+          graph: workflow.graph,
+          metadata: workflow.metadata,
+        },
+        {
+          jobId: executionId,
+          ...JOB_OPTIONS.DEFAULT,
+        }
+      );
+
+      await this.recordEventTime(workflow.id);
+
+      log.info(`✅ Queued token listing alert for workflow ${workflow.id}`, {
+        service: "listener",
+        workflowId: workflow.id,
+        executionId,
+        triggerNodeId,
+        tokenAddress: listing.address,
+        symbol: listing.symbol,
+      });
+    }
+  }
+
+  private stopTokenListingPoller(groupKey: string): void {
+    const poller = this.tokenListingPollers.get(groupKey);
+    if (poller) {
+      clearInterval(poller);
+      this.tokenListingPollers.delete(groupKey);
+    }
+    this.tokenListingPollIntervals.delete(groupKey);
+    this.tokenListingBackoffUntil.delete(groupKey);
+    this.tokenListingInFlight.delete(groupKey);
   }
 
   private async subscribeToTokenReceipt(
@@ -531,10 +881,25 @@ export class SubscriptionManager {
 
     // Remove from database
     await this.removeSubscriptionFromDb(workflowId);
+    this.workflowSignatures.delete(workflowId);
 
     for (const key of Array.from(this.balanceSnapshots.keys())) {
       if (key.startsWith(`${workflowId}:`)) {
         this.balanceSnapshots.delete(key);
+      }
+    }
+
+    for (const key of Array.from(this.tokenListingSubscriptions.keys())) {
+      if (key.startsWith(`${workflowId}-`)) {
+        const subscription = this.tokenListingSubscriptions.get(key);
+        this.tokenListingSubscriptions.delete(key);
+
+        if (subscription) {
+          const groupKey = this.getTokenListingGroupKey(subscription.config);
+          if (this.getTokenListingGroupSubscriptions(groupKey).length === 0) {
+            this.stopTokenListingPoller(groupKey);
+          }
+        }
       }
     }
   }
@@ -556,12 +921,116 @@ export class SubscriptionManager {
     }
     this.subscriptions.clear();
     this.balanceSnapshots.clear();
+
+    for (const poller of this.tokenListingPollers.values()) {
+      clearInterval(poller);
+    }
+    this.tokenListingPollers.clear();
+    this.tokenListingPollIntervals.clear();
+    this.tokenListingBackoffUntil.clear();
+    this.tokenListingInFlight.clear();
+    this.tokenListingSubscriptions.clear();
+    this.tokenListingSeen.clear();
+    this.tokenListingSeeded.clear();
+    this.workflowSignatures.clear();
   }
 
   getStats() {
     return {
       activeSubscriptions: this.subscriptions.size,
+      activeTokenListingSubscriptions: this.tokenListingSubscriptions.size,
+      activeTokenListingPollers: this.tokenListingPollers.size,
+      subscribedWorkflows: this.workflowSignatures.size,
       subscriptionKeys: Array.from(this.subscriptions.keys()),
     };
   }
+}
+
+function getWorkflowSignature(workflow: Workflow): string {
+  return JSON.stringify({
+    graph: workflow.graph,
+    metadata: workflow.metadata,
+  });
+}
+
+function extractBirdeyeListingItems(payload: any): Record<string, unknown>[] {
+  const candidates = [
+    payload?.data?.items,
+    payload?.data?.tokens,
+    payload?.data,
+    payload?.items,
+    payload,
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) {
+      return candidate.filter((item) => item && typeof item === "object");
+    }
+  }
+
+  return [];
+}
+
+function normalizeBirdeyeListing(item: Record<string, unknown>): NormalizedTokenListing | null {
+  const address = getString(item, ["address", "tokenAddress", "token_address", "mint"]);
+  if (!address) return null;
+
+  return {
+    address,
+    symbol: getString(item, ["symbol", "tokenSymbol"]),
+    name: getString(item, ["name", "tokenName"]),
+    liquidityUsd: getNumber(item, ["liquidityUsd", "liquidityUSD", "liquidity", "liquidity_usd"]),
+    volume24hUsd: getNumber(item, ["volume24hUsd", "volume24hUSD", "v24hUSD", "volume_24h_usd"]),
+    priceUsd: getNumber(item, ["priceUsd", "priceUSD", "price", "price_usd"]),
+    marketCapUsd: getNumber(item, ["marketCapUsd", "marketCapUSD", "mc", "market_cap"]),
+    listedAt:
+      getNumber(item, ["listedAt", "listedTime", "createdTime", "creationTime"]) ??
+      getString(item, ["listedAt", "listedTime", "createdAt", "created_time"]),
+    source: "birdeye",
+    raw: item,
+  };
+}
+
+function passesTokenListingConfig(listing: NormalizedTokenListing, config: any): boolean {
+  if (
+    config.minLiquidityUsd !== undefined &&
+    Number(listing.liquidityUsd ?? 0) < Number(config.minLiquidityUsd)
+  ) {
+    return false;
+  }
+
+  if (
+    config.minVolume24hUsd !== undefined &&
+    Number(listing.volume24hUsd ?? 0) < Number(config.minVolume24hUsd)
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+function getString(item: Record<string, unknown>, keys: string[]): string | undefined {
+  for (const key of keys) {
+    const value = item[key];
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+  return undefined;
+}
+
+function getNumber(item: Record<string, unknown>, keys: string[]): number | undefined {
+  for (const key of keys) {
+    const value = item[key];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+    if (typeof value === "string" && value.trim()) {
+      const numeric = Number(value);
+      if (Number.isFinite(numeric)) {
+        return numeric;
+      }
+    }
+  }
+  return undefined;
 }

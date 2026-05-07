@@ -52,6 +52,9 @@ async function start() {
     log.debug(`📊 Active subscriptions: ${stats.activeSubscriptions}`, {
       service: "listener",
       activeSubscriptions: stats.activeSubscriptions,
+      activeTokenListingSubscriptions: stats.activeTokenListingSubscriptions,
+      activeTokenListingPollers: stats.activeTokenListingPollers,
+      subscribedWorkflows: stats.subscribedWorkflows,
     });
   }, INTERVALS.MONITOR_CONNECTION);
 
@@ -60,9 +63,8 @@ async function start() {
     log.debug("🔄 Reloading workflows...", { service: "listener" });
     try {
       const workflows = await loadActiveWorkflows();
+      await subscriptionManager.reconcile(workflows as any);
 
-      // TODO: Handle dynamic subscription updates
-      // For now, just log the count
       log.debug(`📋 Currently ${workflows.length} active workflows`, {
         service: "listener",
         count: workflows.length,

@@ -7,6 +7,7 @@ export const TriggerTypeEnum = z.enum([
   "nft_receipt",
   "transaction_status",
   "program_log",
+  "new_token_listing",
   "cron",
   "webhook",
 ]);
@@ -59,6 +60,20 @@ export const ProgramLogTriggerConfigSchema = z.object({
 
 export type ProgramLogTriggerConfig = z.infer<typeof ProgramLogTriggerConfigSchema>;
 
+// New Token Listing Trigger
+export const NewTokenListingTriggerConfigSchema = z.object({
+  source: z.literal("birdeye"),
+  includeMemePlatforms: z.boolean().default(false),
+  minLiquidityUsd: z.number().nonnegative().optional(),
+  minVolume24hUsd: z.number().nonnegative().optional(),
+  limit: z.number().int().min(1).max(20).default(10),
+  pollIntervalSeconds: z.number().int().min(30).max(3600).optional(),
+});
+
+export type NewTokenListingTriggerConfig = z.infer<
+  typeof NewTokenListingTriggerConfigSchema
+>;
+
 // Cron Trigger (time-based scheduling)
 export const CronTriggerConfigSchema = z.object({
   schedule: z.string().min(9).max(100), // Cron expression like "*/5 * * * *"
@@ -84,6 +99,7 @@ export const TriggerConfigSchema = z.union([
   NFTReceiptTriggerConfigSchema,
   TransactionStatusTriggerConfigSchema,
   ProgramLogTriggerConfigSchema,
+  NewTokenListingTriggerConfigSchema,
   CronTriggerConfigSchema,
   WebhookTriggerConfigSchema,
 ]);

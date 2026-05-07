@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import type { ReactNode } from "react";
 import {
   Bell,
@@ -11,6 +10,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { DarkNav } from "@/components/layout/dark-nav";
+import { UseTemplateButton } from "./use-template-button";
 
 export const metadata: Metadata = {
   title: "Use Cases | Dolphinflow",
@@ -35,10 +35,10 @@ type UseCase = {
 const useCases: UseCase[] = [
   {
     title: "Whale Wallet Monitor",
-    trigger: "Wallet receives or swaps tokens",
-    filter: "Transaction > $50k",
-    action: "Send Telegram + Discord alert",
-    copy: "Monitor whale wallets and alert your team instantly.",
+    trigger: "Wallet balance changes",
+    filter: "Change > 0.9 SOL",
+    action: "Send Telegram alert",
+    copy: "Monitor large wallet balance changes and alert your team instantly.",
     imageSrc: "/usecases/whale.png",
     imageTitle: "Whale activity",
     imageTone: "from-[#14f195]/24 via-[#29d3ff]/16 to-[#9945ff]/22",
@@ -64,14 +64,15 @@ const useCases: UseCase[] = [
   },
   {
     title: "Token Listing Alerts",
-    trigger: "New token detected on Raydium/Jupiter",
-    filter: "Liquidity > threshold",
+    trigger: "Birdeye new token listing",
+    filter: "Liquidity > $10k",
     action: "Notify Telegram",
     copy: "Detect new token launches and react in real time.",
     imageSrc: "/usecases/token.png",
     imageTitle: "New listing",
     imageTone: "from-[#29d3ff]/22 via-[#14f195]/14 to-[#f3d9ac]/20",
     accent: "#29d3ff",
+    templateHref: "/workflows/builder?template=token-listing-alerts",
     reasons: [
       "Trading audience instantly understands",
       "High perceived value",
@@ -101,8 +102,8 @@ export default function UseCasesPage() {
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-8 sm:py-14">
         <div className="grid gap-5 lg:grid-cols-2">
-          {useCases.map((useCase, index) => (
-            <UseCaseCard key={useCase.title} index={index + 1} useCase={useCase} />
+          {useCases.map((useCase) => (
+            <UseCaseCard key={useCase.title} useCase={useCase} />
           ))}
         </div>
       </section>
@@ -110,19 +111,13 @@ export default function UseCasesPage() {
   );
 }
 
-function UseCaseCard({ index, useCase }: { index: number; useCase: UseCase }) {
+function UseCaseCard({ useCase }: { useCase: UseCase }) {
   return (
     <article className="group overflow-hidden rounded-3xl border border-border bg-card shadow-[0_20px_70px_rgba(0,0,0,0.06)] transition duration-300 hover:border-foreground/20 hover:shadow-[0_28px_90px_rgba(0,0,0,0.12)] dark:shadow-[0_20px_70px_rgba(0,0,0,0.34)]">
       <div className="grid gap-0 md:grid-cols-[minmax(0,1fr)_15rem] h-full">
         <div className="flex h-full flex-col p-5 sm:p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                <span className="rounded-full border border-border bg-muted/60 px-2.5 py-1 font-mono">
-                  {String(index).padStart(2, "0")}
-                </span>
-                Use case template
-              </div>
               <h2 className="mt-4 text-2xl font-semibold tracking-normal text-foreground">
                 {useCase.title}
               </h2>
@@ -161,14 +156,7 @@ function UseCaseCard({ index, useCase }: { index: number; useCase: UseCase }) {
                 </div>
               ))}
             </div>
-            {useCase.templateHref ? (
-              <Link
-                href={useCase.templateHref}
-                className="mt-5 inline-flex h-10 items-center justify-center rounded-xl bg-foreground px-4 text-sm font-medium text-background transition hover:bg-foreground/90"
-              >
-                Use template
-              </Link>
-            ) : null}
+            {useCase.templateHref ? <UseTemplateButton href={useCase.templateHref} /> : null}
           </div>
         </div>
 

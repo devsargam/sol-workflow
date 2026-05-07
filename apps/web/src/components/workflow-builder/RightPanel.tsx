@@ -249,6 +249,7 @@ function TriggerEditor({
   const isBalanceChange = triggerType === "balance_change";
   const isCron = triggerType === "cron";
   const isWebhook = triggerType === "webhook";
+  const isNewTokenListing = triggerType === "new_token_listing";
   const webhookUrl = buildWebhookUrl(data.config?.webhookId);
   const webhookInputFormat = data.config?.inputFormat || [];
 
@@ -262,6 +263,13 @@ function TriggerEditor({
           nextConfig.webhookId ||= crypto.randomUUID();
           nextConfig.authEnabled ??= false;
           nextConfig.authHeaderName ||= "Authorization";
+        }
+
+        if (type === "new_token_listing") {
+          nextConfig.source ||= "birdeye";
+          nextConfig.includeMemePlatforms ??= true;
+          nextConfig.limit ||= 10;
+          nextConfig.pollIntervalSeconds ||= 60;
         }
 
         return { ...n.data, type, triggerType: type, config: nextConfig };
@@ -307,12 +315,13 @@ function TriggerEditor({
           <option value="nft_receipt">NFT Receipt</option>
           <option value="transaction_status">Transaction Status</option>
           <option value="program_log">Program Log</option>
+          <option value="new_token_listing">New Token Listing</option>
           <option value="cron">Scheduled (Cron)</option>
           <option value="webhook">Webhook</option>
         </NodeSelect>
       </NodeField>
 
-      {!isCron && !isWebhook && (
+      {!isCron && !isWebhook && !isNewTokenListing && (
         <NodeField label="Address">
           <NodeInput
             mono
@@ -348,6 +357,87 @@ function TriggerEditor({
               <option value="decrease">Decrease</option>
             </NodeSelect>
           </NodeField>
+        </>
+      )}
+
+      {isNewTokenListing && (
+        <>
+          <NodeField label="Source">
+            <NodeSelect value={data.config?.source || "birdeye"} disabled>
+              <option value="birdeye">Birdeye</option>
+            </NodeSelect>
+          </NodeField>
+
+          <div className="flex items-center justify-between rounded-md border border-[var(--node-border)] bg-[var(--surface-3)] px-2.5 py-2">
+            <div>
+              <p className="text-[12px] text-[var(--text-primary)]">Include meme platforms</p>
+              <p className="text-[10px] text-[var(--text-muted)]">
+                Includes Birdeye listings from pump.fun-style launch sources
+              </p>
+            </div>
+            <input
+              type="checkbox"
+              checked={data.config?.includeMemePlatforms ?? true}
+              onChange={(e) => setConfig({ includeMemePlatforms: e.target.checked })}
+              className="h-4 w-4"
+            />
+          </div>
+
+          <NodeField label="Min Liquidity (USD)">
+            <NodeInput
+              type="number"
+              placeholder="10000"
+              value={data.config?.minLiquidityUsd ?? ""}
+              onChange={(e) =>
+                setConfig({
+                  minLiquidityUsd: e.target.value ? Number(e.target.value) : undefined,
+                })
+              }
+            />
+          </NodeField>
+
+          <NodeField label="Min 24h Volume (USD)">
+            <NodeInput
+              type="number"
+              placeholder="0"
+              value={data.config?.minVolume24hUsd ?? ""}
+              onChange={(e) =>
+                setConfig({
+                  minVolume24hUsd: e.target.value ? Number(e.target.value) : undefined,
+                })
+              }
+            />
+          </NodeField>
+
+          <div className="grid grid-cols-2 gap-2">
+            <NodeField label="Fetch Limit">
+              <NodeInput
+                type="number"
+                min={1}
+                max={20}
+                placeholder="10"
+                value={data.config?.limit ?? 10}
+                onChange={(e) =>
+                  setConfig({
+                    limit: e.target.value ? Number(e.target.value) : undefined,
+                  })
+                }
+              />
+            </NodeField>
+            <NodeField label="Poll Seconds">
+              <NodeInput
+                type="number"
+                min={30}
+                placeholder="60"
+                value={data.config?.pollIntervalSeconds ?? 60}
+                onChange={(e) =>
+                  setConfig({
+                    pollIntervalSeconds: e.target.value ? Number(e.target.value) : undefined,
+                  })
+                }
+              />
+            </NodeField>
+          </div>
         </>
       )}
 
@@ -478,6 +568,20 @@ const TRIGGER_REFERENCE_FIELDS: Record<string, string[]> = {
   nft_receipt: ["address", "slot", "accountData", "type"],
   transaction_status: ["signature", "status", "slot", "err"],
   program_log: ["programId", "signature", "logs", "slot", "err"],
+  new_token_listing: [
+    "type",
+    "source",
+    "firedAt",
+    "address",
+    "mint",
+    "symbol",
+    "name",
+    "liquidityUsd",
+    "volume24hUsd",
+    "priceUsd",
+    "marketCapUsd",
+    "listedAt",
+  ],
   cron: ["type", "firedAt", "schedule", "timezone"],
   webhook: [
     "type",

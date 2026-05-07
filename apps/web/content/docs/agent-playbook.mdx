@@ -41,7 +41,7 @@ For a workflow to be executable, it must have at least one trigger and at least 
 - Email is represented in the notification type surface, but delivery is not implemented yet.
 - Webhook triggers only run enabled workflows.
 - Cron triggers are scheduled when a workflow is enabled and unscheduled when disabled or deleted.
-- Balance, token receipt, NFT receipt, and program log triggers are handled by the Solana listener.
+- Balance, token receipt, NFT receipt, program log, and new token listing triggers are handled by the listener.
 - Filter references can read from `trigger.*`, `steps.<nodeId>.*`, direct upstream node ids such as `action-1.txSignature`, and `workflow.*`.
 
 ## Common Agent Tasks
