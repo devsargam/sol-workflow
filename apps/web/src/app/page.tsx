@@ -227,6 +227,13 @@ function LandingNav({ authenticated, login, logout, ready, walletAddress }: Land
       </Link>
 
       <div className="flex items-center gap-2 sm:gap-4">
+        <Link
+          href="/usecases"
+          className="hidden rounded-full border border-black/14 bg-black/6 px-4 py-2 text-sm font-semibold text-black/76 backdrop-blur-md transition hover:bg-black/10 hover:text-black dark:border-white/14 dark:bg-white/8 dark:text-white/78 dark:hover:bg-white/12 dark:hover:text-white sm:inline-flex"
+        >
+          Use cases
+        </Link>
+
         <ThemeToggle className="hidden h-10 w-10 items-center justify-center rounded-2xl border border-black/18 bg-white/24 text-black backdrop-blur-md transition hover:bg-white/36 dark:border-white/18 dark:bg-black/16 dark:text-white dark:hover:bg-black/24 min-[360px]:flex" />
 
         {authenticated ? (

@@ -19,7 +19,7 @@ import {
   PaperPlaneTiltIcon as SendIcon,
   WebhooksLogoIcon,
 } from "@phosphor-icons/react";
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useCallback, useMemo, useEffect } from "react";
 import type {
   ActionNodeData,
   FilterNodeData,
@@ -27,8 +27,6 @@ import type {
   TriggerNodeData,
 } from "./types";
 import { NodeField, NodeInput, NodeSelect } from "./nodes/node-inputs";
-
-type Tab = "toolbar" | "editor";
 
 // ─── Sidebar node palette items ───────────────────────────────
 
@@ -92,7 +90,6 @@ export function RightPanel({
   errors,
   onDismissErrors,
 }: RightPanelProps) {
-  const [activeTab, setActiveTab] = useState<Tab>("editor");
   const hasWorkflowMeta = !!(onNameChange || onSave || onBack);
 
   return (
@@ -149,29 +146,6 @@ export function RightPanel({
         </>
       )}
 
-      {/* ── Tabs ── */}
-      <div className="flex items-center gap-1 px-2 pt-3 pb-2">
-        {(["toolbar", "editor"] as Tab[]).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={cn(
-              "h-[28px] px-2 py-[5px] text-[12.5px] rounded-md border capitalize transition-colors",
-              activeTab === tab
-                ? "border-[var(--node-border)] text-[var(--text-primary)] bg-[var(--surface-2)]"
-                : "border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-4)]"
-            )}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      <div
-        className="border-t mx-2"
-        style={{ borderColor: "var(--node-border)" }}
-      />
-
       {/* ── Errors ── */}
       {errors && errors.length > 0 && (
         <div className="mx-2 mt-2 p-2.5 rounded-md bg-red-50 border border-red-200">
@@ -193,12 +167,17 @@ export function RightPanel({
         </div>
       )}
 
-      {/* ── Tab content ── */}
-      <div className="flex-1 overflow-y-auto">
-        {activeTab === "editor" && (
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <ToolbarTab />
+        </div>
+
+        <div
+          className="min-h-0 basis-1/2 overflow-y-auto border-t"
+          style={{ borderColor: "var(--node-border)" }}
+        >
           <EditorTab selectedNode={selectedNode} workflowId={editId} />
-        )}
-        {activeTab === "toolbar" && <ToolbarTab />}
+        </div>
       </div>
     </aside>
   );
@@ -267,6 +246,7 @@ function TriggerEditor({
 }) {
   const { updateNodeData } = useReactFlow();
   const triggerType = data.triggerType || data.type || "balance_change";
+  const isBalanceChange = triggerType === "balance_change";
   const isCron = triggerType === "cron";
   const isWebhook = triggerType === "webhook";
   const webhookUrl = buildWebhookUrl(data.config?.webhookId);
@@ -341,6 +321,34 @@ function TriggerEditor({
             onChange={(e) => setConfig({ address: e.target.value })}
           />
         </NodeField>
+      )}
+
+      {isBalanceChange && (
+        <>
+          <NodeField label="Min Change (lamports)">
+            <NodeInput
+              mono
+              type="number"
+              placeholder="900000000"
+              value={data.config?.minChange ?? ""}
+              onChange={(e) =>
+                setConfig({
+                  minChange: e.target.value ? Number(e.target.value) : undefined,
+                })
+              }
+            />
+          </NodeField>
+          <NodeField label="Change Type">
+            <NodeSelect
+              value={data.config?.changeType || "any"}
+              onChange={(e) => setConfig({ changeType: e.target.value })}
+            >
+              <option value="any">Any</option>
+              <option value="increase">Increase</option>
+              <option value="decrease">Decrease</option>
+            </NodeSelect>
+          </NodeField>
+        </>
       )}
 
       {triggerType === "program_log" && (

@@ -2,6 +2,7 @@
 
 import { WorkflowBuilderContent } from "@/components/workflow-builder/WorkflowBuilderWithSave";
 import { useCreateWorkflow, useUpdateWorkflow, useWorkflow } from "@/lib/hooks/use-workflows";
+import { getWorkflowTemplate } from "@/lib/workflow-templates";
 import { validateWorkflowGraphForBuilder } from "@repo/types";
 import { log } from "utils";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -34,18 +35,25 @@ export default function WorkflowBuilderClientPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
+  const templateId = searchParams.get("template");
+  const workflowTemplate = editId ? null : getWorkflowTemplate(templateId);
 
   const createWorkflow = useCreateWorkflow();
   const updateWorkflow = useUpdateWorkflow();
   const { data: existingWorkflow, isLoading: isLoadingWorkflow } = useWorkflow(editId || "");
 
   const builderRef = useRef<any>(null);
+  const loadedTemplateIdRef = useRef<string | null>(null);
   const [workflowName, setWorkflowName] = useState(() =>
     editId
       ? ""
+      : workflowTemplate
+        ? workflowTemplate.name
       : WORKFLOW_NAMES[Math.floor(Math.random() * WORKFLOW_NAMES.length)]!
   );
-  const [workflowDescription, setWorkflowDescription] = useState("");
+  const [workflowDescription, setWorkflowDescription] = useState(
+    () => workflowTemplate?.description ?? ""
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [showErrors, setShowErrors] = useState(false);
@@ -61,6 +69,15 @@ export default function WorkflowBuilderClientPage() {
       }
     }
   }, [existingWorkflow]);
+
+  useEffect(() => {
+    if (!workflowTemplate || editId || loadedTemplateIdRef.current === workflowTemplate.id) {
+      return;
+    }
+
+    builderRef.current?.loadWorkflow(workflowTemplate.graph);
+    loadedTemplateIdRef.current = workflowTemplate.id;
+  }, [editId, workflowTemplate]);
 
   const handleSave = async () => {
     setIsSaving(true);
