@@ -150,14 +150,17 @@ export default function HomePage() {
         walletAddress={walletAddress}
       />
       <main className="flex min-h-screen flex-col">
-        <div className="grid h-16 w-full grid-cols-[4rem_minmax(0,1fr)_4rem]">
+        <div className="grid h-4 w-full grid-cols-[0.5rem_0.5rem_minmax(0,1fr)_0.5rem_0.5rem] sm:h-16 sm:grid-cols-[1rem_3rem_minmax(0,1fr)_3rem_1rem] lg:grid-cols-[1.5rem_4.5rem_minmax(0,1fr)_4.5rem_1.5rem]">
           <div></div>
+          <div className="border-l border-dashed border-black/20 dark:border-white/20"></div>
           <div className="border-x dark:border-white/20 border-black/20 border-dashed"></div>
+          <div className="border-r border-dashed border-black/20 dark:border-white/20"></div>
           <div></div>
         </div>
-        <div className="grid w-full flex-1 grid-cols-[4rem_minmax(0,1fr)_4rem]">
-          <div className="min-h-16 border-y dark:border-white/20 border-black/20 border-dashed"></div>
-          <section className="flex min-h-[calc(100svh-10rem)] min-w-0 flex-col overflow-hidden border border-black/20 bg-white dark:border-white/20 dark:bg-black">
+        <div className="grid w-full flex-1 grid-cols-[0.5rem_0.5rem_minmax(0,1fr)_0.5rem_0.5rem] sm:grid-cols-[1rem_3rem_minmax(0,1fr)_3rem_1rem] lg:grid-cols-[1.5rem_4.5rem_minmax(0,1fr)_4.5rem_1.5rem]">
+          <div className="min-h-4 border-y border-dashed border-black/20 dark:border-white/20 sm:min-h-16"></div>
+          <div className="min-h-4 border-y border-l border-dashed border-black/20 dark:border-white/20 sm:min-h-16"></div>
+          <section className="flex min-h-[calc(100svh-2rem)] min-w-0 flex-col overflow-hidden border border-black/20 bg-white dark:border-white/20 dark:bg-black sm:min-h-[calc(100svh-8rem)]">
             <div className="relative z-10 grid flex-1 items-center gap-10 px-6 pb-8 pt-4 sm:px-10 sm:pb-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-4 lg:px-16 lg:pb-12 xl:px-24">
               <div className="max-w-3xl pt-8 lg:pt-0">
                 <h1 className="max-w-[720px] text-5xl font-bold leading-none tracking-normal text-black dark:text-white sm:text-6xl lg:text-7xl xl:text-[5.2rem]">
@@ -203,11 +206,14 @@ export default function HomePage() {
               <OrbitShowcase />
             </div>
           </section>
-          <div className="min-h-16 border-y dark:border-white/20 border-black/20 border-dashed"></div>
+          <div className="min-h-4 border-y border-r border-dashed border-black/20 dark:border-white/20 sm:min-h-16"></div>
+          <div className="min-h-4 border-y border-dashed border-black/20 dark:border-white/20 sm:min-h-16"></div>
         </div>
-        <div className="grid h-16 w-full grid-cols-[4rem_minmax(0,1fr)_4rem]">
+        <div className="grid h-4 w-full grid-cols-[0.5rem_0.5rem_minmax(0,1fr)_0.5rem_0.5rem] sm:h-16 sm:grid-cols-[1rem_3rem_minmax(0,1fr)_3rem_1rem] lg:grid-cols-[1.5rem_4.5rem_minmax(0,1fr)_4.5rem_1.5rem]">
           <div></div>
+          <div className="border-l border-dashed border-black/20 dark:border-white/20"></div>
           <div className="border-x dark:border-white/20 border-black/20 border-dashed"></div>
+          <div className="border-r border-dashed border-black/20 dark:border-white/20"></div>
           <div></div>
         </div>
       </main>
@@ -271,7 +277,7 @@ function LandingNav({ authenticated, login, logout, ready, walletAddress }: Land
             className="flex items-center gap-3 transition-opacity duration-300"
             style={{ opacity: ready ? 1 : 0 }}
           >
-            <Button variant="default" size="sm" className="h-auto px-4 py-2">
+            <Button onClick={login} variant="default" size="sm" className="h-auto px-4 py-2">
               Connect wallet
             </Button>
           </div>
