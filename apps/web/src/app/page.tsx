@@ -175,7 +175,7 @@ export default function HomePage() {
                   <span className="block">Automation</span>
                   <span className="block">Workflows</span>
                   <span className="block">
-                    for <span className="text-black dark:text-[#14f195]">AI Agents</span>
+                    for <span className="text-[#078C5A] dark:text-[#14f195]">AI Agents</span>
                   </span>
                 </h1>
 
@@ -222,7 +222,7 @@ interface LandingNavProps {
 
 function LandingNav({ authenticated, login, logout, ready, walletAddress }: LandingNavProps) {
   return (
-    <nav className="relative z-20  h-14 flex items-center justify-between px-4 sm:px-6 border border-black/20 dark:border-white/20">
+    <nav className="relative z-20  h-14 flex items-center justify-between px-4 sm:px-6 border-b border-black/20 dark:border-white/20">
       <Link href="/" className="flex items-center gap-2 text-black dark:text-white">
         <Image
           src="/logo.jpg"
@@ -232,7 +232,7 @@ function LandingNav({ authenticated, login, logout, ready, walletAddress }: Land
           className="h-9 w-9 rounded-xl object-cover"
           priority
         />
-        <span className="hidden text-lg font-medium tracking-normal min-[390px]:inline">
+        <span className="hidden text-lg font-medium tracking-normal sm:inline-block">
           dolphinflow
         </span>
       </Link>
@@ -281,26 +281,26 @@ function LandingNav({ authenticated, login, logout, ready, walletAddress }: Land
 function OrbitShowcase() {
   return (
     <div className="relative mx-auto flex aspect-square w-full max-w-[720px] items-center justify-center lg:mr-0 lg:max-w-[min(640px,calc(100svh-15rem))] xl:max-w-[min(720px,calc(100svh-15rem))]">
-      <div className="absolute inset-[7%] rounded-full border border-[#9945ff]/28 orbit-ring-glow dark:border-white/20" />
-      <div className="absolute inset-[18%] rounded-full border border-[#14f195]/30 orbit-ring-glow [animation-delay:-2s] dark:border-white/24" />
-      <div className="absolute inset-[30%] rounded-full border border-[#29d3ff]/30 orbit-ring-glow [animation-delay:-4s] dark:border-white/28" />
-      <div className="absolute inset-[4%] rounded-full bg-black/5 dark:bg-white/[0.02]" />
+      <div className="absolute inset-[7%] rounded-full border border-black/20 orbit-ring-glow dark:border-white/16" />
+      <div className="absolute inset-[18%] rounded-full border border-black/22 orbit-ring-glow [animation-delay:-2s] dark:border-white/18" />
+      <div className="absolute inset-[30%] rounded-full border border-black/24 orbit-ring-glow [animation-delay:-4s] dark:border-white/20" />
+      <div className="absolute inset-[4%] rounded-full bg-black/[0.075] dark:bg-white/[0.02]" />
 
       <svg
-        className="pointer-events-none absolute inset-0 z-[1] h-full w-full"
+        className="orbit-beams pointer-events-none absolute inset-0 z-[1] h-full w-full"
         viewBox="0 0 100 100"
         aria-hidden="true"
       >
         <defs>
           <linearGradient id="orbitBeamA" x1="0" x2="1" y1="0" y2="1">
-            <stop stopColor="#14F195" stopOpacity="0" />
-            <stop offset="0.5" stopColor="#14F195" stopOpacity="0.58" />
-            <stop offset="1" stopColor="#29D3FF" stopOpacity="0" />
+            <stop stopColor="var(--orbit-beam-warm)" stopOpacity="0" />
+            <stop offset="0.5" stopColor="var(--orbit-beam-warm)" stopOpacity="0.55" />
+            <stop offset="1" stopColor="var(--orbit-beam-cool)" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="orbitBeamB" x1="1" x2="0" y1="0" y2="1">
-            <stop stopColor="#29D3FF" stopOpacity="0" />
-            <stop offset="0.5" stopColor="#9B7CFF" stopOpacity="0.5" />
-            <stop offset="1" stopColor="#FF8BC2" stopOpacity="0" />
+            <stop stopColor="var(--orbit-beam-cool)" stopOpacity="0" />
+            <stop offset="0.5" stopColor="var(--orbit-beam-muted)" stopOpacity="0.48" />
+            <stop offset="1" stopColor="var(--orbit-beam-warm)" stopOpacity="0" />
           </linearGradient>
         </defs>
         <OrbitBeamPath d="M12 35 L50 50" delay="-0.2s" gradient="orbitBeamA" />
@@ -312,7 +312,7 @@ function OrbitShowcase() {
         <OrbitBeamPath d="M50 50 L81 83" delay="-6.2s" gradient="orbitBeamA" />
       </svg>
 
-      <div className="relative z-10 flex h-36 w-36 items-center justify-center rounded-full border border-[#14f195]/40 bg-white text-center backdrop-blur-md dark:border-[#14f195]/28 dark:bg-black/62 sm:h-56 sm:w-56">
+      <div className="relative z-10 flex h-36 w-36 items-center justify-center rounded-full border border-black/22 bg-white text-center backdrop-blur-md dark:border-white/16 dark:bg-black/62 sm:h-56 sm:w-56">
         <SolanaLogo className="h-20 w-20 sm:h-32 sm:w-32" />
       </div>
 
@@ -352,7 +352,8 @@ function OrbitIconBadge({ icon }: { icon: OrbitIcon }) {
     <div className="absolute z-20 -translate-x-1/2 -translate-y-1/2" style={positionStyle}>
       <div
         aria-label={icon.name}
-        className={`orbit-product flex items-center justify-center border border-white/12 bg-black/80 text-white backdrop-blur-xl ${sizeClass}`}
+        data-orbit-kind={icon.kind}
+        className={`orbit-product flex items-center justify-center border border-black/18 bg-white/96 text-[#303030] backdrop-blur-xl dark:border-white/12 dark:bg-black/80 dark:text-white ${sizeClass}`}
       >
         <IconRenderer kind={icon.kind} />
       </div>
@@ -377,14 +378,15 @@ function IconRenderer({ kind }: { kind: OrbitIconKind }) {
         <svg width="34" height="34" viewBox="0 0 34 34" fill="none" aria-hidden="true">
           <path
             d="M17 3.8L27 7.3V15.2C27 21.5 23 27.1 17 30.2C11 27.1 7 21.5 7 15.2V7.3L17 3.8Z"
-            fill="#FF5EA8"
-            fillOpacity="0.22"
-            stroke="#FF8BC2"
+            fill="currentColor"
+            fillOpacity="0.2"
+            stroke="currentColor"
             strokeWidth="2"
           />
           <path
+            className="orbit-icon-detail"
             d="M12.2 17.2L15.4 20.4L22.1 13.7"
-            stroke="#F8F4FF"
+            stroke="currentColor"
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth="2.4"
@@ -396,13 +398,13 @@ function IconRenderer({ kind }: { kind: OrbitIconKind }) {
         <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
           <path
             d="M7 24.5C15.7 7.8 27.4 6 34 8.2C27.5 11.6 23.5 15.6 21.9 20.2C19.2 20.5 16.4 21.7 13.5 24H28.9C25.1 29.6 18 32.3 7 24.5Z"
-            fill="#29D3FF"
-            fillOpacity="0.3"
-            stroke="#8FEAFF"
+            fill="currentColor"
+            fillOpacity="0.2"
+            stroke="currentColor"
             strokeLinejoin="round"
             strokeWidth="2"
           />
-          <path d="M15 24L24.5 16.2" stroke="#F8F4FF" strokeLinecap="round" strokeWidth="2.2" />
+          <path className="orbit-icon-detail" d="M15 24L24.5 16.2" stroke="currentColor" strokeLinecap="round" strokeWidth="2.2" />
         </svg>
       );
     case "wallet":
@@ -414,18 +416,18 @@ function IconRenderer({ kind }: { kind: OrbitIconKind }) {
             width="24"
             height="18"
             rx="5"
-            fill="#F3D9AC"
+            fill="currentColor"
             fillOpacity="0.2"
-            stroke="#FFE4AC"
+            stroke="currentColor"
             strokeWidth="2"
           />
           <path
             d="M10 10V8.8C10 6.9 11.7 5.5 13.6 5.9L24.3 8.1C25.6 8.4 26.5 9.5 26.5 10.8"
-            stroke="#FFE4AC"
+            stroke="currentColor"
             strokeLinecap="round"
             strokeWidth="2"
           />
-          <circle cx="25" cy="19" r="2" fill="#F8F4FF" />
+          <circle className="orbit-icon-detail" cx="25" cy="19" r="2" fill="currentColor" />
         </svg>
       );
     case "cron":
@@ -435,19 +437,20 @@ function IconRenderer({ kind }: { kind: OrbitIconKind }) {
             cx="18"
             cy="18"
             r="12"
-            fill="#F3D9AC"
-            fillOpacity="0.18"
-            stroke="#FFE4AC"
+            fill="currentColor"
+            fillOpacity="0.2"
+            stroke="currentColor"
             strokeWidth="2"
           />
           <path
+            className="orbit-icon-detail"
             d="M18 11V18L23 21"
-            stroke="#F8F4FF"
+            stroke="currentColor"
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth="2.4"
           />
-          <path d="M10 7L7 10M26 7L29 10" stroke="#FFE4AC" strokeLinecap="round" strokeWidth="2" />
+          <path d="M10 7L7 10M26 7L29 10" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
         </svg>
       );
     case "webhook":
@@ -457,32 +460,33 @@ function IconRenderer({ kind }: { kind: OrbitIconKind }) {
             cx="11"
             cy="12"
             r="4"
-            fill="#9A65F2"
-            fillOpacity="0.34"
-            stroke="#C9AAFF"
+            fill="currentColor"
+            fillOpacity="0.22"
+            stroke="currentColor"
             strokeWidth="2"
           />
           <circle
             cx="25"
             cy="12"
             r="4"
-            fill="#9A65F2"
-            fillOpacity="0.34"
-            stroke="#C9AAFF"
+            fill="currentColor"
+            fillOpacity="0.22"
+            stroke="currentColor"
             strokeWidth="2"
           />
           <circle
             cx="18"
             cy="25"
             r="4"
-            fill="#9A65F2"
-            fillOpacity="0.34"
-            stroke="#C9AAFF"
+            fill="currentColor"
+            fillOpacity="0.22"
+            stroke="currentColor"
             strokeWidth="2"
           />
           <path
+            className="orbit-icon-detail"
             d="M15 12H21M13.5 15.3L16.2 21.4M22.5 15.3L19.8 21.4"
-            stroke="#F8F4FF"
+            stroke="currentColor"
             strokeLinecap="round"
             strokeWidth="2"
           />
@@ -502,7 +506,7 @@ function DiscordLogo({ className }: { className?: string }) {
     <svg role="img" viewBox="0 0 24 24" className={className} xmlns="http://www.w3.org/2000/svg">
       <title>Discord</title>
       <path
-        fill="#C9AAFF"
+        fill="currentColor"
         d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"
       />
     </svg>
@@ -514,7 +518,7 @@ function TelegramLogo({ className }: { className?: string }) {
     <svg role="img" viewBox="0 0 24 24" className={className} xmlns="http://www.w3.org/2000/svg">
       <title>Telegram</title>
       <path
-        fill="#29D3FF"
+        fill="currentColor"
         d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"
       />
     </svg>

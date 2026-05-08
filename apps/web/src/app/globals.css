@@ -276,13 +276,87 @@ html {
 }
 
 .orbit-product {
+  --orbit-icon-detail: #1d2329;
+  color: #3d4650;
   animation: orbitProductFloat 7s ease-in-out infinite;
   animation-delay: var(--delay, 0s);
   will-change: transform;
 }
 
+.orbit-product[data-orbit-kind="risk"] {
+  --orbit-icon-detail: #7f2945;
+  color: #b84a6a;
+}
+
+.orbit-product[data-orbit-kind="hermes"],
+.orbit-product[data-orbit-kind="telegram"] {
+  --orbit-icon-detail: #15516a;
+  color: #22718f;
+}
+
+.orbit-product[data-orbit-kind="wallet"],
+.orbit-product[data-orbit-kind="cron"] {
+  --orbit-icon-detail: #5b431a;
+  color: #8a6a2f;
+}
+
+.orbit-product[data-orbit-kind="webhook"],
+.orbit-product[data-orbit-kind="discord"] {
+  --orbit-icon-detail: #40346c;
+  color: #5f5390;
+}
+
+.dark .orbit-product {
+  --orbit-icon-detail: #f8f4ff;
+}
+
+.dark .orbit-product[data-orbit-kind="risk"] {
+  color: #ff8bb8;
+}
+
+.dark .orbit-product[data-orbit-kind="hermes"],
+.dark .orbit-product[data-orbit-kind="telegram"] {
+  color: #8feaff;
+}
+
+.dark .orbit-product[data-orbit-kind="wallet"],
+.dark .orbit-product[data-orbit-kind="cron"] {
+  color: #ffe4ac;
+}
+
+.dark .orbit-product[data-orbit-kind="webhook"],
+.dark .orbit-product[data-orbit-kind="discord"] {
+  color: #c9aaff;
+}
+
+.orbit-icon-detail {
+  color: var(--orbit-icon-detail);
+}
+
+.orbit-product img {
+  filter: grayscale(0.06) saturate(0.95) brightness(0.9) contrast(1.08);
+}
+
+.dark .orbit-product img {
+  filter: grayscale(0.45) saturate(0.42) brightness(1.08);
+}
+
 .orbit-ring-glow {
   animation: orbitRingGlow 8s ease-in-out infinite;
+}
+
+.orbit-beams {
+  --orbit-beam-cool: #3f4a52;
+  --orbit-beam-muted: #51485e;
+  --orbit-beam-track: rgba(0, 0, 0, 0.18);
+  --orbit-beam-warm: #5d5445;
+}
+
+.dark .orbit-beams {
+  --orbit-beam-cool: #d8e1e8;
+  --orbit-beam-muted: #dcd8e8;
+  --orbit-beam-track: rgba(255, 255, 255, 0.1);
+  --orbit-beam-warm: #e6e0d2;
 }
 
 .orbit-beam-track,
@@ -292,7 +366,7 @@ html {
 }
 
 .orbit-beam-track {
-  stroke: rgba(255, 255, 255, 0.1);
+  stroke: var(--orbit-beam-track);
   stroke-width: 0.22;
 }
 
