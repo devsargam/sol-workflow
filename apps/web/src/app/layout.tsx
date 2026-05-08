@@ -36,7 +36,7 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies();
   const initialWalletSession = decodeWalletSession(
-    cookieStore.get(WALLET_SESSION_COOKIE_NAME)?.value,
+    cookieStore.get(WALLET_SESSION_COOKIE_NAME)?.value
   );
 
   return (

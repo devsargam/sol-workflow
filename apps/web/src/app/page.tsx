@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useWalletAuth } from "@/components/providers/wallet-auth-provider";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Button } from "@/components/ui/button";
 
 type OrbitIconKind =
   | "openclaw"
@@ -140,64 +141,77 @@ export default function HomePage() {
   }, [ready, authenticated, router]);
 
   return (
-    <main className="min-h-screen overflow-hidden bg-background text-foreground">
-      <div className="relative min-h-screen overflow-hidden bg-white px-3 py-4 dark:bg-black sm:px-6 sm:py-8 lg:px-10">
-        <section className="relative mx-auto flex min-h-[calc(100svh-2rem)] max-w-[1740px] flex-col overflow-hidden rounded-[2rem] border border-black/10 bg-white shadow-[0_34px_100px_rgba(0,0,0,0.12)] dark:border-white/12 dark:bg-black dark:shadow-[0_34px_100px_rgba(0,0,0,0.72)] sm:min-h-[calc(100svh-4rem)] sm:rounded-[2.6rem]">
-          <LandingNav
-            authenticated={authenticated}
-            login={login}
-            logout={logout}
-            ready={ready}
-            walletAddress={walletAddress}
-          />
+    <>
+      <LandingNav
+        authenticated={authenticated}
+        login={login}
+        logout={logout}
+        ready={ready}
+        walletAddress={walletAddress}
+      />
+      <main className="flex min-h-screen flex-col">
+        <div className="grid h-16 w-full grid-cols-[4rem_minmax(0,1fr)_4rem]">
+          <div></div>
+          <div className="border-x dark:border-white/20 border-black/20 border-dashed"></div>
+          <div></div>
+        </div>
+        <div className="grid w-full flex-1 grid-cols-[4rem_minmax(0,1fr)_4rem]">
+          <div className="min-h-16 border-y dark:border-white/20 border-black/20 border-dashed"></div>
+          <section className="flex min-h-[calc(100svh-10rem)] min-w-0 flex-col overflow-hidden border border-black/20 bg-white dark:border-white/20 dark:bg-black">
+            <div className="relative z-10 grid flex-1 items-center gap-10 px-6 pb-8 pt-4 sm:px-10 sm:pb-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-4 lg:px-16 lg:pb-12 xl:px-24">
+              <div className="max-w-3xl pt-8 lg:pt-0">
+                <h1 className="max-w-[720px] text-5xl font-bold leading-none tracking-normal text-black dark:text-white sm:text-6xl lg:text-7xl xl:text-[5.2rem]">
+                  <span className="block">Onchain</span>
+                  <span className="block">Automation Workflows for</span>
+                  <span className="block text-black dark:text-[#14f195]">AI Agents</span>
+                </h1>
 
-          <div className="relative z-10 grid flex-1 items-center gap-10 px-6 pb-8 pt-4 sm:px-10 sm:pb-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-4 lg:px-16 lg:pb-12 xl:px-24">
-            <div className="max-w-3xl pt-8 lg:pt-0">
-              <h1 className="max-w-[720px] text-5xl font-bold leading-none tracking-normal text-black dark:text-white sm:text-6xl lg:text-7xl xl:text-[5.2rem]">
-                <span className="block">Onchain</span>
-                <span className="block">Automation Workflows for</span>
-                <span className="block text-black dark:text-[#14f195]">AI Agents</span>
-              </h1>
+                <p className="mt-6 max-w-[34rem] text-base leading-7 text-black/70 dark:text-white/82 sm:text-lg">
+                  React to on-chain events, run actions, and coordinate notifications in real time.
+                </p>
 
-              <p className="mt-6 max-w-[34rem] text-base leading-7 text-black/70 dark:text-white/82 sm:text-lg">
-                React to on-chain events, run actions, and coordinate notifications in real time.
-              </p>
+                <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={login}
+                    className="group inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-white px-7 text-sm font-semibold text-black shadow-[0_0_0_1px_rgba(0,0,0,0.12),0_14px_34px_rgba(6,6,18,0.18)] transition hover:-translate-y-0.5 hover:bg-white/86 dark:bg-[#05050a] dark:text-white dark:shadow-[0_0_0_1px_rgba(255,255,255,0.18),0_14px_34px_rgba(6,6,18,0.38)] dark:hover:bg-black"
+                  >
+                    Start project
+                    <span className="transition group-hover:translate-x-1">-&gt;</span>
+                  </button>
+                  <Link
+                    href="/docs"
+                    className="inline-flex min-h-12 items-center justify-center rounded-full border border-black/16 bg-black/8 px-7 text-sm font-semibold text-black backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/12 dark:border-white/20 dark:bg-white/12 dark:text-white dark:hover:bg-white/18"
+                  >
+                    Read docs
+                  </Link>
+                </div>
 
-              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-                <button
-                  type="button"
-                  onClick={login}
-                  className="group inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-white px-7 text-sm font-semibold text-black shadow-[0_0_0_1px_rgba(0,0,0,0.12),0_14px_34px_rgba(6,6,18,0.18)] transition hover:-translate-y-0.5 hover:bg-white/86 dark:bg-[#05050a] dark:text-white dark:shadow-[0_0_0_1px_rgba(255,255,255,0.18),0_14px_34px_rgba(6,6,18,0.38)] dark:hover:bg-black"
-                >
-                  Start project
-                  <span className="transition group-hover:translate-x-1">-&gt;</span>
-                </button>
-                <Link
-                  href="/docs"
-                  className="inline-flex min-h-12 items-center justify-center rounded-full border border-black/16 bg-black/8 px-7 text-sm font-semibold text-black backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/12 dark:border-white/20 dark:bg-white/12 dark:text-white dark:hover:bg-white/18"
-                >
-                  Read docs
-                </Link>
+                <div className="mt-8 flex flex-wrap gap-3 text-xs font-medium text-black/68 dark:text-white/72">
+                  <span className="rounded-full border border-black/14 bg-black/8 px-3 py-1.5 dark:border-white/14 dark:bg-white/20">
+                    No glue code
+                  </span>
+                  <span className="rounded-full border border-black/14 bg-black/8 px-3 py-1.5 dark:border-white/14 dark:bg-white/20">
+                    Wallet-native
+                  </span>
+                  <span className="rounded-full border border-black/14 bg-black/8 px-3 py-1.5 dark:border-white/14 dark:bg-white/20">
+                    Runs 24/7
+                  </span>
+                </div>
               </div>
 
-              <div className="mt-8 flex flex-wrap gap-3 text-xs font-medium text-black/68 dark:text-white/72">
-                <span className="rounded-full border border-black/14 bg-black/8 px-3 py-1.5 dark:border-white/14 dark:bg-white/10">
-                  No glue code
-                </span>
-                <span className="rounded-full border border-black/14 bg-black/8 px-3 py-1.5 dark:border-white/14 dark:bg-white/10">
-                  Wallet-native
-                </span>
-                <span className="rounded-full border border-black/14 bg-black/8 px-3 py-1.5 dark:border-white/14 dark:bg-white/10">
-                  Runs 24/7
-                </span>
-              </div>
+              <OrbitShowcase />
             </div>
-
-            <OrbitShowcase />
-          </div>
-        </section>
-      </div>
-    </main>
+          </section>
+          <div className="min-h-16 border-y dark:border-white/20 border-black/20 border-dashed"></div>
+        </div>
+        <div className="grid h-16 w-full grid-cols-[4rem_minmax(0,1fr)_4rem]">
+          <div></div>
+          <div className="border-x dark:border-white/20 border-black/20 border-dashed"></div>
+          <div></div>
+        </div>
+      </main>
+    </>
   );
 }
 
@@ -211,8 +225,8 @@ interface LandingNavProps {
 
 function LandingNav({ authenticated, login, logout, ready, walletAddress }: LandingNavProps) {
   return (
-    <nav className="relative z-20 flex items-center justify-between px-6 py-5 sm:px-10 sm:py-7 lg:px-16 xl:px-24">
-      <Link href="/" className="flex items-center gap-3 text-black dark:text-white">
+    <nav className="relative z-20  h-14 flex items-center justify-between px-4 sm:px-6 border border-black/20 dark:border-white/20">
+      <Link href="/" className="flex items-center gap-2 text-black dark:text-white">
         <Image
           src="/logo.jpg"
           alt="Dolphinflow logo"
@@ -221,20 +235,22 @@ function LandingNav({ authenticated, login, logout, ready, walletAddress }: Land
           className="h-9 w-9 rounded-xl object-cover"
           priority
         />
-        <span className="hidden text-lg font-bold tracking-normal min-[390px]:inline">
-          Dolphinflow
+        <span className="hidden text-lg font-medium tracking-normal min-[390px]:inline">
+          dolphinflow
         </span>
       </Link>
 
       <div className="flex items-center gap-2 sm:gap-4">
         <Link
           href="/usecases"
-          className="hidden rounded-full border border-black/14 bg-black/6 px-4 py-2 text-sm font-semibold text-black/76 backdrop-blur-md transition hover:bg-black/10 hover:text-black dark:border-white/14 dark:bg-white/8 dark:text-white/78 dark:hover:bg-white/12 dark:hover:text-white sm:inline-flex"
+          // className="hidden rounded-full border border-black/14 bg-black/6 px-4 py-2 text-sm font-semibold text-black/76 backdrop-blur-md transition hover:bg-black/20 hover:text-black dark:border-white/14 dark:bg-white/8 dark:text-white/78 dark:hover:bg-white/12 dark:hover:text-white sm:inline-flex"
+          className="text-sm/6 dark:text-white text-gray-900 underline-offset-2 underline"
         >
           Use cases
         </Link>
-
-        <ThemeToggle className="hidden h-10 w-10 items-center justify-center rounded-2xl border border-black/18 bg-white/24 text-black backdrop-blur-md transition hover:bg-white/36 dark:border-white/18 dark:bg-black/16 dark:text-white dark:hover:bg-black/24 min-[360px]:flex" />
+        <ThemeToggle
+        // className="hidden h-10 w-10 items-center justify-center rounded-2xl border border-black/18 bg-white/24 text-black backdrop-blur-md transition hover:bg-white/36 dark:border-white/18 dark:bg-black/16 dark:text-white dark:hover:bg-black/24 min-[360px]:flex"
+        />
 
         {authenticated ? (
           <div className="flex items-center gap-3">
@@ -255,12 +271,9 @@ function LandingNav({ authenticated, login, logout, ready, walletAddress }: Land
             className="flex items-center gap-3 transition-opacity duration-300"
             style={{ opacity: ready ? 1 : 0 }}
           >
-            <button
-              onClick={login}
-              className="whitespace-nowrap rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-black shadow-[0_0_0_1px_rgba(0,0,0,0.14),0_0_34px_rgba(155,124,255,0.2)] transition hover:bg-white/86 dark:bg-black/86 dark:text-white dark:shadow-[0_0_0_1px_rgba(255,255,255,0.15),0_0_34px_rgba(155,124,255,0.45)] dark:hover:bg-black sm:px-6"
-            >
+            <Button variant="default" size="sm" className="h-auto px-4 py-2">
               Connect wallet
-            </button>
+            </Button>
           </div>
         )}
       </div>
