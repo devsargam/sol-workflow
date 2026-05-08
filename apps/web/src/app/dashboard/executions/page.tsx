@@ -33,8 +33,8 @@ import { useWorkflows } from "@/lib/hooks/use-workflows"
 export default function DashboardExecutionsPage() {
   const { data: workflowsData, isLoading: workflowsLoading } = useWorkflows()
   const workflows = workflowsData?.workflows ?? []
-  const [selectedWorkflowId, setSelectedWorkflowId] = useState<string>("")
-  const effectiveWorkflowId = selectedWorkflowId || workflows[0]?.id || ""
+  const [selectedWorkflowId, setSelectedWorkflowId] = useState<string>("all")
+  const effectiveWorkflowId = selectedWorkflowId === "all" ? "" : selectedWorkflowId
   const selectedWorkflow = workflows.find((workflow) => workflow.id === effectiveWorkflowId)
 
   const {
@@ -81,7 +81,7 @@ export default function DashboardExecutionsPage() {
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Select
-            value={effectiveWorkflowId}
+            value={selectedWorkflowId}
             onValueChange={setSelectedWorkflowId}
             disabled={workflowsLoading || workflows.length === 0}
           >
@@ -89,6 +89,7 @@ export default function DashboardExecutionsPage() {
               <SelectValue placeholder="Select workflow" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all">All workflows</SelectItem>
               {workflows.map((workflow) => (
                 <SelectItem key={workflow.id} value={workflow.id}>
                   {workflow.name}
@@ -109,7 +110,7 @@ export default function DashboardExecutionsPage() {
         <SummaryCard
           title="Total runs"
           value={executionsLoading ? "—" : String(executions.length)}
-          description={selectedWorkflow?.name ?? "Select a workflow"}
+          description={selectedWorkflow?.name ?? "All workflows"}
           icon={<Activity className="size-4" />}
         />
         <SummaryCard
@@ -132,7 +133,7 @@ export default function DashboardExecutionsPage() {
           <CardDescription>
             {selectedWorkflow
               ? `Showing runs for ${selectedWorkflow.name}`
-              : "Choose a workflow to inspect its runs"}
+              : "Showing runs for all workflows"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -155,8 +156,8 @@ export default function DashboardExecutionsPage() {
             <EmptyState
               title="No executions for this workflow"
               description="Runs will appear here after the workflow is triggered."
-              href={`/workflows/${effectiveWorkflowId}`}
-              cta="Open workflow"
+              href={effectiveWorkflowId ? `/workflows/${effectiveWorkflowId}` : "/dashboard/workflows"}
+              cta={effectiveWorkflowId ? "Open workflow" : "Open workflows"}
             />
           ) : (
             <Table>

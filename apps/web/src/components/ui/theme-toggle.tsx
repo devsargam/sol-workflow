@@ -2,7 +2,7 @@
 
 import { useTheme } from "next-themes";
 import { MoonIcon, SunIcon } from "@phosphor-icons/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type ViewTransition = {
   ready: Promise<void>;
@@ -12,19 +12,22 @@ type DocumentWithViewTransition = Document & {
   startViewTransition?: (callback: () => void) => ViewTransition;
 };
 
-export function ThemeToggle({ className }: { className?: string }) {
+export function useThemeToggle() {
   const { resolvedTheme, setTheme, theme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
-  if (!mounted) return <div className="h-8 w-8" />;
-
   const currentTheme = (theme === "system" ? resolvedTheme : theme) ?? resolvedTheme ?? "dark";
   const isDark = currentTheme === "dark";
   const nextTheme = isDark ? "light" : "dark";
+  const label = isDark ? "Switch to light mode" : "Switch to dark mode";
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
+    if (!mounted || typeof window === "undefined") {
+      return;
+    }
+
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const documentWithTransition = document as DocumentWithViewTransition;
 
@@ -45,28 +48,39 @@ export function ThemeToggle({ className }: { className?: string }) {
             duration: 600,
             easing: "cubic-bezier(0.22, 1, 0.36, 1)",
             pseudoElement: "::view-transition-new(root)",
-          },
+          }
         );
       })
       .catch(() => {
         setTheme(nextTheme);
       });
+  }, [mounted, nextTheme, setTheme]);
+
+  return {
+    currentTheme,
+    isDark,
+    label,
+    mounted,
+    nextTheme,
+    toggleTheme,
   };
+}
+
+export function ThemeToggle({ className }: { className?: string }) {
+  const { isDark, label, mounted, toggleTheme } = useThemeToggle();
+
+  if (!mounted) return <div className="h-8 w-8" />;
 
   return (
     <button
       type="button"
-      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={label}
       aria-pressed={isDark}
       onClick={toggleTheme}
-      title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      title={label}
       className={className}
     >
-      {isDark ? (
-        <SunIcon size={15} weight="regular" />
-      ) : (
-        <MoonIcon size={15} weight="regular" />
-      )}
+      {isDark ? <SunIcon size={15} weight="regular" /> : <MoonIcon size={15} weight="regular" />}
     </button>
   );
 }

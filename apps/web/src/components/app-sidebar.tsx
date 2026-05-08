@@ -1,8 +1,9 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import * as React from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Sidebar,
   SidebarContent,
@@ -14,10 +15,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import { NavUser } from "@/components/nav-user"
-import { Workflow, PlugZap, Webhook, Zap } from "lucide-react"
-import { useWalletAuth } from "@/components/providers/wallet-auth-provider"
+} from "@/components/ui/sidebar";
+import { NavUser } from "@/components/nav-user";
+import { Workflow, PlugZap, Webhook } from "lucide-react";
+import { useWalletAuth } from "@/components/providers/wallet-auth-provider";
 
 const navItems = [
   {
@@ -35,33 +36,37 @@ const navItems = [
     url: "/dashboard/api-keys",
     icon: Webhook,
   },
-]
+];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const pathname = usePathname()
-  const { walletAddress, logout } = useWalletAuth()
+  const pathname = usePathname();
+  const { walletAddress, logout } = useWalletAuth();
 
   const shortAddress = walletAddress
     ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`
-    : null
+    : null;
 
   const user = {
     name: shortAddress ?? "Wallet",
     email: walletAddress ?? "",
     avatar: "",
-  }
+  };
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:p-1.5!"
-            >
+            <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:p-1.5!">
               <Link href="/dashboard">
-                <Zap className="size-5! text-[#9945ff]" />
+                <Image
+                  src="/logo.jpg"
+                  alt="dolphinflow logo"
+                  width={24}
+                  height={24}
+                  className="size-6 rounded-full object-cover"
+                  priority
+                />
                 <span className="text-base font-semibold">Dolphinflow</span>
               </Link>
             </SidebarMenuButton>
@@ -75,8 +80,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarGroupLabel>Workspace</SidebarGroupLabel>
             <SidebarMenu>
               {navItems.map((item) => {
-                const isActive =
-                  pathname === item.url || pathname.startsWith(item.url + "/")
+                const isActive = pathname === item.url || pathname.startsWith(item.url + "/");
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
@@ -91,7 +95,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                )
+                );
               })}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -102,5 +106,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {walletAddress ? <NavUser user={user} onLogout={logout} /> : null}
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

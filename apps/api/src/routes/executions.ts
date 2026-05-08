@@ -1,5 +1,5 @@
 import { Hono, Context } from "hono";
-import { db, executions as executionsTable, workflows as workflowsTable, eq, and } from "@repo/db";
+import { db, executions as executionsTable, workflows as workflowsTable, eq, and, desc } from "@repo/db";
 import { authMiddleware, AuthenticatedContext } from "../middleware/auth";
 
 const executions = new Hono();
@@ -47,7 +47,7 @@ executions.get("/", async (c: Context) => {
         .select()
         .from(executionsTable)
         .where(eq(executionsTable.workflowId, workflowId))
-        .orderBy(executionsTable.startedAt)
+        .orderBy(desc(executionsTable.startedAt))
         .limit(limit)
         .offset(offset);
 
@@ -65,7 +65,7 @@ executions.get("/", async (c: Context) => {
         .from(executionsTable)
         .innerJoin(workflowsTable, eq(executionsTable.workflowId, workflowsTable.id))
         .where(eq(workflowsTable.userId, userId))
-        .orderBy(executionsTable.startedAt)
+        .orderBy(desc(executionsTable.startedAt))
         .limit(limit)
         .offset(offset);
 
