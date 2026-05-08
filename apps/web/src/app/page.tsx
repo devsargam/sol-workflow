@@ -353,7 +353,7 @@ function OrbitIconBadge({ icon }: { icon: OrbitIcon }) {
       <div
         aria-label={icon.name}
         data-orbit-kind={icon.kind}
-        className={`orbit-product flex items-center justify-center border border-black/18 bg-white/96 text-[#303030] backdrop-blur-xl dark:border-white/12 dark:bg-black/80 dark:text-white ${sizeClass}`}
+        className={`orbit-product flex items-center justify-center border border-black/18 bg-white/96 backdrop-blur-xl dark:border-white/12 dark:bg-black/80 ${sizeClass}`}
       >
         <IconRenderer kind={icon.kind} />
       </div>
