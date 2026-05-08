@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useWalletAuth } from "@/components/providers/wallet-auth-provider";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 type OrbitIconKind =
   | "openclaw"
@@ -31,12 +32,18 @@ type OrbitIcon = {
   y: number;
 };
 
+type OrbitBeamPathProps = {
+  d: string;
+  delay: string;
+  gradient: "orbitBeamA" | "orbitBeamB";
+};
+
 const orbitIcons: OrbitIcon[] = [
   {
     name: "OpenClaw",
     kind: "openclaw",
-    x: 23,
-    y: 38,
+    x: 12,
+    y: 35,
     size: "large",
     floatX: "10px",
     floatY: "-12px",
@@ -48,7 +55,7 @@ const orbitIcons: OrbitIcon[] = [
     name: "Risk approval",
     kind: "risk",
     x: 54,
-    y: 18,
+    y: 7,
     size: "standard",
     floatX: "-10px",
     floatY: "-9px",
@@ -59,8 +66,8 @@ const orbitIcons: OrbitIcon[] = [
   {
     name: "Hermes execution",
     kind: "hermes",
-    x: 81,
-    y: 35,
+    x: 90,
+    y: 33,
     size: "large",
     floatX: "-8px",
     floatY: "14px",
@@ -71,8 +78,8 @@ const orbitIcons: OrbitIcon[] = [
   {
     name: "Wallet signal",
     kind: "wallet",
-    x: 26,
-    y: 62,
+    x: 13,
+    y: 80,
     size: "standard",
     floatX: "-8px",
     floatY: "12px",
@@ -83,8 +90,8 @@ const orbitIcons: OrbitIcon[] = [
   {
     name: "Cron scheduler",
     kind: "cron",
-    x: 86,
-    y: 58,
+    x: 93,
+    y: 59,
     size: "standard",
     floatX: "12px",
     floatY: "9px",
@@ -95,8 +102,8 @@ const orbitIcons: OrbitIcon[] = [
   {
     name: "Webhook trigger",
     kind: "webhook",
-    x: 47,
-    y: 78,
+    x: 49,
+    y: 93,
     size: "standard",
     floatX: "13px",
     floatY: "-7px",
@@ -107,8 +114,8 @@ const orbitIcons: OrbitIcon[] = [
   {
     name: "Telegram notification",
     kind: "telegram",
-    x: 73,
-    y: 69,
+    x: 81,
+    y: 83,
     size: "standard",
     floatX: "-11px",
     floatY: "-12px",
@@ -119,8 +126,8 @@ const orbitIcons: OrbitIcon[] = [
   {
     name: "Discord notification",
     kind: "discord",
-    x: 32,
-    y: 50,
+    x: 7,
+    y: 57,
     size: "standard",
     floatX: "9px",
     floatY: "11px",
@@ -149,19 +156,19 @@ export default function HomePage() {
         ready={ready}
         walletAddress={walletAddress}
       />
-      <main className="flex min-h-screen flex-col">
-        <div className="grid h-4 w-full grid-cols-[0.5rem_0.5rem_minmax(0,1fr)_0.5rem_0.5rem] sm:h-16 sm:grid-cols-[1rem_3rem_minmax(0,1fr)_3rem_1rem] lg:grid-cols-[1.5rem_4.5rem_minmax(0,1fr)_4.5rem_1.5rem]">
+      <main className="flex min-h-screen flex-col lg:h-[calc(100svh-3.5rem)] lg:min-h-0 lg:overflow-hidden">
+        <div className="grid h-4 w-full shrink-0 grid-cols-[0.5rem_0.5rem_minmax(0,1fr)_0.5rem_0.5rem] sm:h-16 sm:grid-cols-[1rem_3rem_minmax(0,1fr)_3rem_1rem] lg:h-12 lg:grid-cols-[1.5rem_4.5rem_minmax(0,1fr)_4.5rem_1.5rem]">
           <div></div>
           <div className="border-l border-dashed border-black/20 dark:border-white/20"></div>
           <div className="border-x dark:border-white/20 border-black/20 border-dashed"></div>
           <div className="border-r border-dashed border-black/20 dark:border-white/20"></div>
           <div></div>
         </div>
-        <div className="grid w-full flex-1 grid-cols-[0.5rem_0.5rem_minmax(0,1fr)_0.5rem_0.5rem] sm:grid-cols-[1rem_3rem_minmax(0,1fr)_3rem_1rem] lg:grid-cols-[1.5rem_4.5rem_minmax(0,1fr)_4.5rem_1.5rem]">
+        <div className="grid w-full flex-1 grid-cols-[0.5rem_0.5rem_minmax(0,1fr)_0.5rem_0.5rem] sm:grid-cols-[1rem_3rem_minmax(0,1fr)_3rem_1rem] lg:min-h-0 lg:grid-cols-[1.5rem_4.5rem_minmax(0,1fr)_4.5rem_1.5rem]">
           <div className="min-h-4 border-y border-dashed border-black/20 dark:border-white/20 sm:min-h-16"></div>
           <div className="min-h-4 border-y border-l border-dashed border-black/20 dark:border-white/20 sm:min-h-16"></div>
-          <section className="flex min-h-[calc(100svh-2rem)] min-w-0 flex-col overflow-hidden border border-black/20 bg-white dark:border-white/20 dark:bg-black sm:min-h-[calc(100svh-8rem)]">
-            <div className="relative z-10 grid flex-1 items-center gap-10 px-6 pb-8 pt-4 sm:px-10 sm:pb-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-4 lg:px-16 lg:pb-12 xl:px-24">
+          <section className="flex min-h-[calc(100svh-2rem)] min-w-0 flex-col overflow-hidden border border-black/20 bg-white dark:border-white/20 dark:bg-black sm:min-h-[calc(100svh-8rem)] lg:min-h-0">
+            <div className="relative z-10 grid flex-1 items-center gap-10 px-6 pb-8 pt-4 sm:px-10 sm:pb-10 lg:min-h-0 lg:grid-cols-[0.9fr_1.1fr] lg:gap-4 lg:px-14 lg:py-8 xl:px-20">
               <div className="max-w-3xl pt-8 lg:pt-0">
                 <h1 className="max-w-[720px] text-5xl font-bold leading-none tracking-normal text-black dark:text-white sm:text-6xl lg:text-7xl xl:text-[5.2rem]">
                   <span className="block">Onchain</span>
@@ -174,32 +181,13 @@ export default function HomePage() {
                 </p>
 
                 <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-                  <button
-                    type="button"
-                    onClick={login}
-                    className="group inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-white px-7 text-sm font-semibold text-black shadow-[0_0_0_1px_rgba(0,0,0,0.12),0_14px_34px_rgba(6,6,18,0.18)] transition hover:-translate-y-0.5 hover:bg-white/86 dark:bg-[#05050a] dark:text-white dark:shadow-[0_0_0_1px_rgba(255,255,255,0.18),0_14px_34px_rgba(6,6,18,0.38)] dark:hover:bg-black"
-                  >
-                    Start project
-                    <span className="transition group-hover:translate-x-1">-&gt;</span>
-                  </button>
-                  <Link
-                    href="/docs"
-                    className="inline-flex min-h-12 items-center justify-center rounded-full border border-black/16 bg-black/8 px-7 text-sm font-semibold text-black backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/12 dark:border-white/20 dark:bg-white/12 dark:text-white dark:hover:bg-white/18"
-                  >
-                    Read docs
-                  </Link>
-                </div>
-
-                <div className="mt-8 flex flex-wrap gap-3 text-xs font-medium text-black/68 dark:text-white/72">
-                  <span className="rounded-full border border-black/14 bg-black/8 px-3 py-1.5 dark:border-white/14 dark:bg-white/20">
-                    No glue code
-                  </span>
-                  <span className="rounded-full border border-black/14 bg-black/8 px-3 py-1.5 dark:border-white/14 dark:bg-white/20">
-                    Wallet-native
-                  </span>
-                  <span className="rounded-full border border-black/14 bg-black/8 px-3 py-1.5 dark:border-white/14 dark:bg-white/20">
-                    Runs 24/7
-                  </span>
+                  <Button variant="default" size="lg" onClick={login}>
+                    Start building
+                    <ArrowRight />
+                  </Button>
+                  <Button variant="outline" size="lg" asChild>
+                    <Link href="/docs">Read docs</Link>
+                  </Button>
                 </div>
               </div>
 
@@ -209,7 +197,7 @@ export default function HomePage() {
           <div className="min-h-4 border-y border-r border-dashed border-black/20 dark:border-white/20 sm:min-h-16"></div>
           <div className="min-h-4 border-y border-dashed border-black/20 dark:border-white/20 sm:min-h-16"></div>
         </div>
-        <div className="grid h-4 w-full grid-cols-[0.5rem_0.5rem_minmax(0,1fr)_0.5rem_0.5rem] sm:h-16 sm:grid-cols-[1rem_3rem_minmax(0,1fr)_3rem_1rem] lg:grid-cols-[1.5rem_4.5rem_minmax(0,1fr)_4.5rem_1.5rem]">
+        <div className="grid h-4 w-full shrink-0 grid-cols-[0.5rem_0.5rem_minmax(0,1fr)_0.5rem_0.5rem] sm:h-16 sm:grid-cols-[1rem_3rem_minmax(0,1fr)_3rem_1rem] lg:h-12 lg:grid-cols-[1.5rem_4.5rem_minmax(0,1fr)_4.5rem_1.5rem]">
           <div></div>
           <div className="border-l border-dashed border-black/20 dark:border-white/20"></div>
           <div className="border-x dark:border-white/20 border-black/20 border-dashed"></div>
@@ -289,20 +277,55 @@ function LandingNav({ authenticated, login, logout, ready, walletAddress }: Land
 
 function OrbitShowcase() {
   return (
-    <div className="relative mx-auto flex aspect-square w-full max-w-[720px] items-center justify-center lg:mr-0">
-      <div className="absolute inset-[7%] rounded-full border border-[#9945ff]/28 shadow-[0_0_42px_rgba(153,69,255,0.12)] orbit-ring-glow dark:border-white/20 dark:shadow-none" />
-      <div className="absolute inset-[18%] rounded-full border border-[#14f195]/30 shadow-[0_0_42px_rgba(20,241,149,0.12)] orbit-ring-glow [animation-delay:-2s] dark:border-white/24 dark:shadow-none" />
-      <div className="absolute inset-[30%] rounded-full border border-[#29d3ff]/30 shadow-[0_0_42px_rgba(41,211,255,0.12)] orbit-ring-glow [animation-delay:-4s] dark:border-white/28 dark:shadow-none" />
+    <div className="relative mx-auto flex aspect-square w-full max-w-[720px] items-center justify-center lg:mr-0 lg:max-w-[min(640px,calc(100svh-15rem))] xl:max-w-[min(720px,calc(100svh-15rem))]">
+      <div className="absolute inset-[7%] rounded-full border border-[#9945ff]/28 orbit-ring-glow dark:border-white/20" />
+      <div className="absolute inset-[18%] rounded-full border border-[#14f195]/30 orbit-ring-glow [animation-delay:-2s] dark:border-white/24" />
+      <div className="absolute inset-[30%] rounded-full border border-[#29d3ff]/30 orbit-ring-glow [animation-delay:-4s] dark:border-white/28" />
       <div className="absolute inset-[4%] rounded-full bg-black/5 dark:bg-white/[0.02]" />
 
-      <div className="relative z-10 flex h-36 w-36 items-center justify-center rounded-full border border-[#14f195]/40 bg-white text-center shadow-[inset_0_0_42px_rgba(20,241,149,0.08),0_0_72px_rgba(20,241,149,0.16),0_26px_72px_rgba(5,6,11,0.12)] backdrop-blur-md dark:border-[#14f195]/28 dark:bg-black/62 dark:shadow-[inset_0_0_42px_rgba(20,241,149,0.12),0_0_72px_rgba(20,241,149,0.18),0_26px_72px_rgba(5,6,11,0.38)] sm:h-56 sm:w-56">
-        <SolanaLogo className="h-20 w-20 drop-shadow-[0_0_24px_rgba(153,101,255,0.38)] sm:h-32 sm:w-32" />
+      <svg
+        className="pointer-events-none absolute inset-0 z-[1] h-full w-full"
+        viewBox="0 0 100 100"
+        aria-hidden="true"
+      >
+        <defs>
+          <linearGradient id="orbitBeamA" x1="0" x2="1" y1="0" y2="1">
+            <stop stopColor="#14F195" stopOpacity="0" />
+            <stop offset="0.5" stopColor="#14F195" stopOpacity="0.58" />
+            <stop offset="1" stopColor="#29D3FF" stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="orbitBeamB" x1="1" x2="0" y1="0" y2="1">
+            <stop stopColor="#29D3FF" stopOpacity="0" />
+            <stop offset="0.5" stopColor="#9B7CFF" stopOpacity="0.5" />
+            <stop offset="1" stopColor="#FF8BC2" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <OrbitBeamPath d="M12 35 L50 50" delay="-0.2s" gradient="orbitBeamA" />
+        <OrbitBeamPath d="M7 57 L50 50" delay="-1.2s" gradient="orbitBeamB" />
+        <OrbitBeamPath d="M13 80 L50 50" delay="-2.2s" gradient="orbitBeamA" />
+        <OrbitBeamPath d="M50 50 L54 7" delay="-3.2s" gradient="orbitBeamB" />
+        <OrbitBeamPath d="M50 50 L90 33" delay="-4.2s" gradient="orbitBeamA" />
+        <OrbitBeamPath d="M50 50 L93 59" delay="-5.2s" gradient="orbitBeamB" />
+        <OrbitBeamPath d="M50 50 L81 83" delay="-6.2s" gradient="orbitBeamA" />
+      </svg>
+
+      <div className="relative z-10 flex h-36 w-36 items-center justify-center rounded-full border border-[#14f195]/40 bg-white text-center backdrop-blur-md dark:border-[#14f195]/28 dark:bg-black/62 sm:h-56 sm:w-56">
+        <SolanaLogo className="h-20 w-20 sm:h-32 sm:w-32" />
       </div>
 
       {orbitIcons.map((icon) => (
         <OrbitIconBadge key={icon.name} icon={icon} />
       ))}
     </div>
+  );
+}
+
+function OrbitBeamPath({ d, delay, gradient }: OrbitBeamPathProps) {
+  return (
+    <g style={{ "--beam-delay": delay } as CSSProperties}>
+      <path className="orbit-beam-track" d={d} pathLength="100" />
+      <path className="orbit-beam-packet" d={d} pathLength="100" stroke={`url(#${gradient})`} />
+    </g>
   );
 }
 
@@ -319,14 +342,14 @@ function OrbitIconBadge({ icon }: { icon: OrbitIcon }) {
 
   const sizeClass =
     icon.size === "large"
-      ? "h-20 w-20 sm:h-[4.75rem] sm:w-[4.75rem]"
-      : "h-16 w-16 sm:h-[4.35rem] sm:w-[4.35rem]";
+      ? "h-14 w-14 rounded-[1rem] sm:h-[4.75rem] sm:w-[4.75rem] sm:rounded-[1.4rem]"
+      : "h-12 w-12 rounded-[0.9rem] sm:h-[4.35rem] sm:w-[4.35rem] sm:rounded-[1.4rem]";
 
   return (
     <div className="absolute z-20 -translate-x-1/2 -translate-y-1/2" style={positionStyle}>
       <div
         aria-label={icon.name}
-        className={`orbit-product flex items-center justify-center rounded-[1.4rem] border border-white/12 bg-black/80 text-white shadow-[0_18px_50px_var(--glow)] backdrop-blur-xl ${sizeClass}`}
+        className={`orbit-product flex items-center justify-center border border-white/12 bg-black/80 text-white backdrop-blur-xl ${sizeClass}`}
       >
         <IconRenderer kind={icon.kind} />
       </div>
@@ -343,7 +366,7 @@ function IconRenderer({ kind }: { kind: OrbitIconKind }) {
           alt="OpenClaw icon"
           width={44}
           height={44}
-          className="h-11 w-11 object-contain"
+          className="h-8 w-8 object-contain sm:h-11 sm:w-11"
         />
       );
     case "risk":
@@ -463,9 +486,9 @@ function IconRenderer({ kind }: { kind: OrbitIconKind }) {
         </svg>
       );
     case "telegram":
-      return <TelegramLogo className="h-9 w-9" />;
+      return <TelegramLogo className="h-7 w-7 sm:h-9 sm:w-9" />;
     case "discord":
-      return <DiscordLogo className="h-9 w-9" />;
+      return <DiscordLogo className="h-7 w-7 sm:h-9 sm:w-9" />;
     default:
       return null;
   }

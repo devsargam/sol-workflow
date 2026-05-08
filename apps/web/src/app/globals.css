@@ -260,6 +260,21 @@ html {
   }
 }
 
+@keyframes orbitBeamPacketTravel {
+  0% {
+    opacity: 0;
+    stroke-dashoffset: 112;
+  }
+  10%,
+  62% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    stroke-dashoffset: -18;
+  }
+}
+
 .orbit-product {
   animation: orbitProductFloat 7s ease-in-out infinite;
   animation-delay: var(--delay, 0s);
@@ -270,10 +285,48 @@ html {
   animation: orbitRingGlow 8s ease-in-out infinite;
 }
 
+.orbit-beam-track,
+.orbit-beam-packet {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.orbit-beam-track {
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 0.22;
+}
+
+.orbit-beam-packet {
+  stroke-width: 0.72;
+  stroke-dasharray: 9 103;
+  stroke-dashoffset: 112;
+  opacity: 0;
+  animation: orbitBeamPacketTravel 4.8s cubic-bezier(0.645, 0.045, 0.355, 1) infinite;
+  animation-delay: var(--beam-delay, 0s);
+  will-change: stroke-dashoffset, opacity;
+}
+
+.orbit-product svg {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+@media (min-width: 640px) {
+  .orbit-product svg {
+    width: revert-layer;
+    height: revert-layer;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .orbit-product,
-  .orbit-ring-glow {
+  .orbit-ring-glow,
+  .orbit-beam-packet {
     animation: none !important;
+  }
+
+  .orbit-beam-packet {
+    opacity: 0;
   }
 }
 
