@@ -172,8 +172,11 @@ export default function HomePage() {
               <div className="max-w-3xl pt-8 lg:pt-0">
                 <h1 className="max-w-[720px] text-5xl font-bold leading-none tracking-normal text-black dark:text-white sm:text-6xl lg:text-7xl xl:text-[5.2rem]">
                   <span className="block">Onchain</span>
-                  <span className="block">Automation Workflows for</span>
-                  <span className="block text-black dark:text-[#14f195]">AI Agents</span>
+                  <span className="block">Automation</span>
+                  <span className="block">Workflows</span>
+                  <span className="block">
+                    for <span className="text-black dark:text-[#14f195]">AI Agents</span>
+                  </span>
                 </h1>
 
                 <p className="mt-6 max-w-[34rem] text-base leading-7 text-black/70 dark:text-white/82 sm:text-lg">
