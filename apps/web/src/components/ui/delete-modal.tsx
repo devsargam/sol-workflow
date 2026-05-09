@@ -1,5 +1,18 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
 interface DeleteModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -17,38 +30,39 @@ export function DeleteModal({
   description,
   isLoading = false,
 }: DeleteModalProps) {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        className="w-[calc(100vw-2rem)] max-w-md overflow-hidden"
+        showCloseButton={!isLoading}
+      >
+        <DialogHeader className="min-w-0">
+          <DialogTitle className="min-w-0 max-w-[calc(100%-2.5rem)] truncate">
+            {title}
+          </DialogTitle>
+          {description ? (
+            <DialogDescription>{description}</DialogDescription>
+          ) : null}
+        </DialogHeader>
 
-      <div className="relative bg-white rounded-xl border border-neutral-200 shadow-xl max-w-md w-full mx-4">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold mb-2">{title}</h3>
-          {description && <p className="text-sm text-neutral-600 mb-6">{description}</p>}
-
-          <div className="flex items-center justify-end gap-3">
-            <button
-              onClick={onClose}
-              disabled={isLoading}
-              className="px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors disabled:opacity-50"
-            >
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button disabled={isLoading} type="button" variant="outline">
               Cancel
-            </button>
-            <button
-              onClick={onConfirm}
-              disabled={isLoading}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {isLoading && (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              )}
-              Delete
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+            </Button>
+          </DialogClose>
+          <Button
+            className="bg-destructive text-white hover:bg-destructive/90 dark:bg-destructive dark:text-white dark:hover:bg-destructive/90"
+            disabled={isLoading}
+            onClick={onConfirm}
+            type="button"
+            variant="destructive"
+          >
+            {isLoading ? <Loader2 className="animate-spin" /> : null}
+            Delete
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

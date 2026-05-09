@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import {
   DefaultChatTransport,
@@ -37,6 +37,7 @@ const placeholderSuggestions = [
 ];
 
 export default function DashboardPage() {
+  const promptTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const { error, messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
       api: `${getPublicApiBaseUrl()}/chat`,
@@ -51,6 +52,47 @@ export default function DashboardPage() {
   const typewriterPlaceholder = useTypewriterPlaceholder(placeholderSuggestions);
   const hasMessages = messages.length > 0;
   const placeholder = hasMessages ? placeholderSuggestions[0] : typewriterPlaceholder;
+
+  useEffect(() => {
+    const focusPromptOnTyping = (event: KeyboardEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey ||
+        event.key.length !== 1
+      ) {
+        return;
+      }
+
+      const target = event.target as HTMLElement | null;
+      const isEditableTarget =
+        target?.isContentEditable ||
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        target?.tagName === "SELECT";
+
+      if (isEditableTarget || document.querySelector("[data-slot='dialog-content']")) {
+        return;
+      }
+
+      const textarea = promptTextareaRef.current;
+      if (!textarea) {
+        return;
+      }
+
+      event.preventDefault();
+      textarea.focus();
+
+      const cursorPosition = textarea.value.length;
+      textarea.setSelectionRange(cursorPosition, cursorPosition);
+      textarea.setRangeText(event.key, cursorPosition, cursorPosition, "end");
+      textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    };
+
+    document.addEventListener("keydown", focusPromptOnTyping);
+    return () => document.removeEventListener("keydown", focusPromptOnTyping);
+  }, []);
 
   const submitMessage = (message: PromptInputMessage) => {
     const text = message.text.trim();
@@ -100,6 +142,7 @@ export default function DashboardPage() {
                 <PromptInputTextarea
                   className="max-h-40 min-h-9 border-0 bg-transparent px-4 py-1.5 text-lg leading-6 text-black shadow-none placeholder:text-black/40 focus-visible:ring-0 dark:text-white dark:placeholder:text-white/44"
                   placeholder={placeholder}
+                  ref={promptTextareaRef}
                 />
               </PromptInputBody>
 
