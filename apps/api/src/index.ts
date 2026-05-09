@@ -25,8 +25,25 @@ function normalizeOrigin(origin: string) {
   return origin.trim().replace(/\/+$/, "");
 }
 
-const allowedCorsOrigins = (
-  process.env.CORS_ORIGIN?.split(",") ?? [ENV_DEFAULTS.CORS_ORIGIN]
+function getOriginHostname(origin: string) {
+  try {
+    return new URL(origin).hostname;
+  } catch {
+    return null;
+  }
+}
+
+const defaultCorsOrigins = [
+  ENV_DEFAULTS.CORS_ORIGIN,
+  "http://127.0.0.1:3000",
+  "https://dolphinflow.xyz",
+  "https://www.dolphinflow.xyz",
+  "https://app.dolphinflow.xyz",
+  "https://*.dolphinflow.xyz",
+];
+
+const allowedCorsOrigins = Array.from(
+  new Set([...defaultCorsOrigins, ...(process.env.CORS_ORIGIN?.split(",") ?? [])])
 )
   .map(normalizeOrigin)
   .filter(Boolean);
@@ -39,6 +56,27 @@ function resolveCorsOrigin(requestOrigin?: string) {
   const normalizedRequestOrigin = normalizeOrigin(requestOrigin);
 
   if (allowedCorsOrigins.includes(normalizedRequestOrigin)) {
+    return requestOrigin;
+  }
+
+  const requestHostname = getOriginHostname(normalizedRequestOrigin);
+
+  if (
+    requestHostname &&
+    allowedCorsOrigins.some((allowedOrigin) => {
+      if (!allowedOrigin.includes("*")) {
+        return false;
+      }
+
+      const allowedHostname = getOriginHostname(allowedOrigin.replace("*.", "placeholder."));
+      const allowedDomain = allowedHostname?.replace(/^placeholder\./, "");
+
+      return Boolean(
+        allowedDomain &&
+          (requestHostname === allowedDomain || requestHostname.endsWith(`.${allowedDomain}`))
+      );
+    })
+  ) {
     return requestOrigin;
   }
 
@@ -63,6 +101,9 @@ app.use(
   cors({
     origin: resolveCorsOrigin,
     credentials: true,
+    allowHeaders: ["Authorization", "Content-Type"],
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    maxAge: 86400,
   })
 );
 
