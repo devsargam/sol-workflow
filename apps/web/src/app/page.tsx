@@ -404,7 +404,13 @@ function IconRenderer({ kind }: { kind: OrbitIconKind }) {
             strokeLinejoin="round"
             strokeWidth="2"
           />
-          <path className="orbit-icon-detail" d="M15 24L24.5 16.2" stroke="currentColor" strokeLinecap="round" strokeWidth="2.2" />
+          <path
+            className="orbit-icon-detail"
+            d="M15 24L24.5 16.2"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="2.2"
+          />
         </svg>
       );
     case "wallet":
@@ -450,7 +456,12 @@ function IconRenderer({ kind }: { kind: OrbitIconKind }) {
             strokeLinejoin="round"
             strokeWidth="2.4"
           />
-          <path d="M10 7L7 10M26 7L29 10" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+          <path
+            d="M10 7L7 10M26 7L29 10"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="2"
+          />
         </svg>
       );
     case "webhook":

@@ -1,8 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useChat } from "@ai-sdk/react";
+import {
+  DefaultChatTransport,
+  isToolUIPart,
+  type DynamicToolUIPart,
+  type ToolUIPart,
+  type UIMessage,
+} from "ai";
 import { ArrowUp } from "lucide-react";
 
+import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
+import {
+  Tool,
+  ToolContent,
+  ToolHeader,
+  ToolInput,
+  ToolOutput,
+} from "@/components/ai-elements/tool";
 import {
   PromptInput,
   PromptInputBody,
@@ -10,6 +26,8 @@ import {
   PromptInputTextarea,
   type PromptInputMessage,
 } from "@/components/ai-elements/prompt-input";
+import { getPublicApiBaseUrl } from "@/lib/api";
+import { getStoredWalletSession } from "@/lib/auth-storage";
 
 const placeholderSuggestions = [
   "Imagine a workflow",
@@ -19,29 +37,31 @@ const placeholderSuggestions = [
 ];
 
 export default function DashboardPage() {
-  const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>(
-    []
-  );
-  const placeholder = useTypewriterPlaceholder(placeholderSuggestions);
+  const { error, messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({
+      api: `${getPublicApiBaseUrl()}/chat`,
+      headers: () => {
+        const token = getStoredWalletSession()?.token;
+        const headers: Record<string, string> = {};
+        if (token) headers.Authorization = `Bearer ${token}`;
+        return headers;
+      },
+    }),
+  });
+  const typewriterPlaceholder = useTypewriterPlaceholder(placeholderSuggestions);
   const hasMessages = messages.length > 0;
+  const placeholder = hasMessages ? placeholderSuggestions[0] : typewriterPlaceholder;
 
   const submitMessage = (message: PromptInputMessage) => {
     const text = message.text.trim();
 
     if (!text) return;
 
-    setMessages([
-      { role: "user", content: text },
-      {
-        role: "assistant",
-        content:
-          "I can turn that into a workflow draft. Start with the trigger, add any checks, then choose where the action should go.",
-      },
-    ]);
+    return sendMessage({ text });
   };
 
   return (
-    <div className="flex min-h-[calc(100svh-3rem)] flex-1 flex-col bg-[#f8f8f6] text-[#171717] dark:bg-[#070707] dark:text-white">
+    <div className="flex min-h-[calc(100svh-4rem)] rounded-b-xl flex-1 flex-col bg-[#f8f8f6] text-[#171717] dark:bg-[#070707] dark:text-white">
       <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pb-6 pt-5 sm:px-6 lg:px-8">
         <div
           className={
@@ -57,23 +77,17 @@ export default function DashboardPage() {
               </h1>
             </div>
           ) : (
-            <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-end space-y-5 py-6">
+            <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col space-y-5 py-6">
               {messages.map((message, index) => (
-                <div
-                  key={`${message.role}-${index}`}
-                  className={message.role === "user" ? "flex justify-end" : "flex justify-start"}
-                >
-                  <div
-                    className={
-                      message.role === "user"
-                        ? "max-w-[82%] rounded-3xl bg-[#303030] px-4 py-3 text-sm leading-6 text-white dark:bg-white dark:text-black"
-                        : "max-w-[82%] rounded-3xl border border-black/8 bg-white px-4 py-3 text-sm leading-6 text-black/72 dark:border-white/10 dark:bg-white/[0.06] dark:text-white/72"
-                    }
-                  >
-                    {message.content}
-                  </div>
-                </div>
+                <ChatMessage key={`${message.role}-${index}`} message={message} />
               ))}
+              {error ? (
+                <Message from="assistant" className="max-w-full">
+                  <MessageContent className="max-w-[82%] rounded-3xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm leading-6 text-destructive">
+                    <MessageResponse>{error.message}</MessageResponse>
+                  </MessageContent>
+                </Message>
+              ) : null}
             </div>
           )}
 
@@ -89,7 +103,10 @@ export default function DashboardPage() {
                 />
               </PromptInputBody>
 
-              <PromptInputSubmit className="size-8 shrink-0 self-center rounded-full bg-[#078c5a] text-white hover:bg-[#067a4f] dark:bg-white dark:text-black dark:hover:bg-white/90">
+              <PromptInputSubmit
+                className="size-8 shrink-0 self-center rounded-full bg-[#078c5a] text-white hover:bg-[#067a4f] dark:bg-white dark:text-black dark:hover:bg-white/90"
+                status={status}
+              >
                 <ArrowUp className="size-5" />
               </PromptInputSubmit>
             </PromptInput>
@@ -98,6 +115,111 @@ export default function DashboardPage() {
       </section>
     </div>
   );
+}
+
+function ChatMessage({ message }: { message: UIMessage }) {
+  const textParts = message.parts.filter((part) => part.type === "text");
+  const toolParts = message.parts.filter(isToolUIPart);
+
+  return (
+    <Message from={message.role} className="max-w-full gap-3">
+      {textParts.length > 0 ? (
+        <MessageContent
+          className={
+            message.role === "user"
+              ? "max-w-[82%] rounded-3xl bg-[#303030] px-4 py-3 text-sm leading-6 text-white dark:bg-white dark:text-black"
+              : "max-w-[82%] rounded-3xl border border-black/8 bg-white px-4 py-3 text-sm leading-6 text-black/72 dark:border-white/10 dark:bg-white/[0.06] dark:text-white/72"
+          }
+        >
+          <div className="flex flex-col gap-3">
+            {textParts.map((part, index) => (
+              <MessageResponse key={`text-${index}`}>{part.text}</MessageResponse>
+            ))}
+          </div>
+        </MessageContent>
+      ) : null}
+
+      {toolParts.length > 0 ? (
+        <div className="w-full space-y-3">
+          {toolParts.map((part, index) => (
+            <WorkflowToolPart key={`${part.type}-${index}`} part={part} />
+          ))}
+        </div>
+      ) : null}
+    </Message>
+  );
+}
+
+function WorkflowToolPart({ part }: { part: ToolUIPart<any> | DynamicToolUIPart }) {
+  const headerProps =
+    part.type === "dynamic-tool"
+      ? { type: part.type, state: part.state, toolName: part.toolName }
+      : { type: part.type, state: part.state };
+
+  return (
+    <Tool defaultOpen={part.state !== "output-available"} className="mb-0 bg-background/60">
+      <ToolHeader {...headerProps} />
+      <ToolContent>
+        <ToolInput input={part.input} />
+        <ToolOutput
+          output={<MessageResponse>{formatToolOutput(part.output)}</MessageResponse>}
+          errorText={part.errorText}
+        />
+      </ToolContent>
+    </Tool>
+  );
+}
+
+function formatToolOutput(output: unknown) {
+  if (!output) return "";
+
+  if (typeof output !== "object") {
+    return String(output);
+  }
+
+  const result = output as {
+    created?: boolean;
+    valid?: boolean;
+    reason?: string;
+    errors?: string[];
+    workflow?: {
+      name?: string;
+      id?: string;
+      editPath?: string;
+    } | null;
+    summary?: {
+      nodeCount?: number;
+      edgeCount?: number;
+    };
+  };
+
+  if (result.created && result.workflow) {
+    return [
+      `**Workflow created:** ${result.workflow.name ?? "Untitled workflow"}`,
+      result.workflow.id ? `**ID:** ${result.workflow.id}` : null,
+      result.workflow.editPath ? `**Edit:** ${result.workflow.editPath}` : null,
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+  }
+
+  if (result.valid !== undefined) {
+    const lines = [`**Validation:** ${result.valid ? "Passed" : "Failed"}`];
+
+    if (result.reason) lines.push(result.reason);
+    if (result.errors?.length) {
+      lines.push(result.errors.map((error) => `- ${error}`).join("\n"));
+    }
+    if (result.summary) {
+      lines.push(
+        `Nodes: ${result.summary.nodeCount ?? 0}, edges: ${result.summary.edgeCount ?? 0}`
+      );
+    }
+
+    return lines.join("\n\n");
+  }
+
+  return `\`\`\`json\n${JSON.stringify(output, null, 2)}\n\`\`\``;
 }
 
 function useTypewriterPlaceholder(items: string[]) {

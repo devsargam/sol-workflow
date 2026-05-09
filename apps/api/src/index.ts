@@ -13,6 +13,7 @@ import authRoutes from "./routes/auth";
 import telegramRoutes from "./routes/telegram";
 import demoRoutes from "./routes/demo";
 import apiKeysRoutes from "./routes/api-keys";
+import chatRoutes from "./routes/chat";
 import { createWebhookRoutes } from "./routes/webhooks";
 import { getCronScheduler, initCronScheduler } from "./cron";
 import { db, workflows as workflowsTable } from "@repo/db";
@@ -75,6 +76,8 @@ app.route(API.ROUTES.EXECUTIONS, executionRoutes);
 app.route(API.ROUTES.SOLANA, solanaRoutes);
 app.route(API.ROUTES.API_KEYS, apiKeysRoutes);
 app.route(`/api${API.ROUTES.API_KEYS}`, apiKeysRoutes);
+app.route("/chat", chatRoutes);
+app.route("/api/chat", chatRoutes);
 app.route("/demo", demoRoutes);
 
 // Health check endpoint with comprehensive stats
