@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowUp } from "lucide-react";
 
 import {
@@ -11,10 +11,18 @@ import {
   type PromptInputMessage,
 } from "@/components/ai-elements/prompt-input";
 
+const placeholderSuggestions = [
+  "Imagine a workflow",
+  "Monitor wallet activity",
+  "Send alerts from onchain events",
+  "Trigger actions with agents",
+];
+
 export default function DashboardPage() {
   const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>(
     []
   );
+  const placeholder = useTypewriterPlaceholder(placeholderSuggestions);
   const hasMessages = messages.length > 0;
 
   const submitMessage = (message: PromptInputMessage) => {
@@ -77,7 +85,7 @@ export default function DashboardPage() {
               <PromptInputBody>
                 <PromptInputTextarea
                   className="max-h-40 min-h-9 border-0 bg-transparent px-4 py-1.5 text-lg leading-6 text-black shadow-none placeholder:text-black/40 focus-visible:ring-0 dark:text-white dark:placeholder:text-white/44"
-                  placeholder="Imagine a workflow"
+                  placeholder={placeholder}
                 />
               </PromptInputBody>
 
@@ -90,4 +98,56 @@ export default function DashboardPage() {
       </section>
     </div>
   );
+}
+
+function useTypewriterPlaceholder(items: string[]) {
+  const first = items[0] ?? "";
+  const [text, setText] = useState(first);
+
+  useEffect(() => {
+    if (!first) return;
+
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    if (mediaQuery.matches) {
+      setText(first);
+      return;
+    }
+
+    let itemIndex = 0;
+    let charIndex = first.length;
+    let deleting = false;
+    let timeoutId: number;
+
+    const tick = () => {
+      const current = items[itemIndex] ?? first;
+
+      if (deleting) {
+        charIndex -= 1;
+        setText(current.slice(0, charIndex));
+
+        if (charIndex <= 0) {
+          deleting = false;
+          itemIndex = (itemIndex + 1) % items.length;
+        }
+      } else {
+        charIndex += 1;
+        setText(current.slice(0, charIndex));
+
+        if (charIndex >= current.length) {
+          deleting = true;
+          timeoutId = window.setTimeout(tick, 1300);
+          return;
+        }
+      }
+
+      timeoutId = window.setTimeout(tick, deleting ? 24 : 38);
+    };
+
+    timeoutId = window.setTimeout(tick, 900);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [first, items]);
+
+  return text;
 }
