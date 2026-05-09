@@ -116,13 +116,31 @@ export type ToolInputProps = ComponentProps<"div"> & {
   input: ToolPart["input"];
 };
 
+function formatToolValue(value: unknown) {
+  if (value === undefined) {
+    return "";
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  return JSON.stringify(value, null, 2) ?? "";
+}
+
 export const ToolInput = ({ className, input, ...props }: ToolInputProps) => (
   <div className={cn("space-y-2 overflow-hidden", className)} {...props}>
     <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
       Parameters
     </h4>
     <div className="rounded-md bg-muted/50">
-      <CodeBlock code={JSON.stringify(input, null, 2)} language="json" />
+      {input === undefined ? (
+        <div className="px-4 py-3 text-muted-foreground text-xs">
+          Waiting for parameters…
+        </div>
+      ) : (
+        <CodeBlock code={formatToolValue(input)} language="json" />
+      )}
     </div>
   </div>
 );
@@ -145,9 +163,7 @@ export const ToolOutput = ({
   let Output = <div>{output as ReactNode}</div>;
 
   if (typeof output === "object" && !isValidElement(output)) {
-    Output = (
-      <CodeBlock code={JSON.stringify(output, null, 2)} language="json" />
-    );
+    Output = <CodeBlock code={formatToolValue(output)} language="json" />;
   } else if (typeof output === "string") {
     Output = <CodeBlock code={output} language="json" />;
   }
