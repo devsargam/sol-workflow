@@ -1,40 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { ArrowUp, Bot, Clock3, Paperclip, Plus, Sparkles, Workflow } from "lucide-react";
+import { useState } from "react";
+import { ArrowUp } from "lucide-react";
 
 import {
   PromptInput,
   PromptInputBody,
-  PromptInputButton,
-  PromptInputFooter,
   PromptInputSubmit,
   PromptInputTextarea,
-  PromptInputTools,
   type PromptInputMessage,
 } from "@/components/ai-elements/prompt-input";
-
-const suggestions = [
-  "Monitor a wallet and alert me on large transfers",
-  "Create a workflow for token listing notifications",
-  "Watch whale activity and send Telegram updates",
-  "Trigger a webhook when an onchain event happens",
-];
-
-const quickActions = [
-  {
-    icon: Workflow,
-    label: "Build workflow",
-  },
-  {
-    icon: Clock3,
-    label: "Schedule checks",
-  },
-  {
-    icon: Bot,
-    label: "Agent actions",
-  },
-];
 
 export default function DashboardPage() {
   const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>(
@@ -64,31 +39,14 @@ export default function DashboardPage() {
           className={
             hasMessages
               ? "flex flex-1 flex-col"
-              : "flex flex-1 flex-col items-center justify-center"
+              : "flex flex-1 flex-col items-center justify-center gap-8"
           }
         >
           {!hasMessages ? (
             <div className="w-full max-w-3xl text-center">
-              <h1 className="text-3xl font-semibold tracking-normal sm:text-5xl">
-                what are we automating?
+              <h1 className="text-3xl font-normal tracking-normal sm:text-5xl">
+                Imagine a workflow
               </h1>
-              <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-black/58 dark:text-white/58">
-                Describe an onchain event, an agent decision, or a notification flow. Dolphinflow
-                can help shape it into a workflow.
-              </p>
-
-              <div className="mt-8 grid gap-2 sm:grid-cols-2">
-                {suggestions.map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-left text-sm leading-5 text-black/72 transition hover:border-black/18 hover:bg-black/[0.03] dark:border-white/10 dark:bg-white/[0.06] dark:text-white/72 dark:hover:border-white/18 dark:hover:bg-white/[0.09]"
-                    onClick={() => submitMessage({ text: suggestion, files: [] })}
-                    type="button"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
             </div>
           ) : (
             <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-end space-y-5 py-6">
@@ -110,42 +68,24 @@ export default function DashboardPage() {
               ))}
             </div>
           )}
-        </div>
 
-        <div className="mx-auto mt-6 w-full max-w-3xl">
-          <PromptInput accept="image/*,.pdf,.txt,.md" multiple onSubmit={submitMessage}>
-            <PromptInputBody>
-              <PromptInputTextarea
-                className="min-h-20 resize-none border-0 bg-transparent px-4 pt-4 text-base shadow-none focus-visible:ring-0"
-                placeholder="What workflow do you want to build?"
-              />
-            </PromptInputBody>
+          <div className={`mx-auto w-full max-w-3xl ${hasMessages ? "mt-6" : ""}`}>
+            <PromptInput
+              className="**:data-[slot=input-group]:h-auto **:data-[slot=input-group]:min-h-12 **:data-[slot=input-group]:items-center **:data-[slot=input-group]:rounded-[2rem] **:data-[slot=input-group]:border-black/8 **:data-[slot=input-group]:bg-white **:data-[slot=input-group]:px-3 **:data-[slot=input-group]:py-2 **:data-[slot=input-group]:shadow-[0_18px_60px_rgba(0,0,0,0.08)] dark:**:data-[slot=input-group]:border-white/8 dark:**:data-[slot=input-group]:bg-[#232323] dark:**:data-[slot=input-group]:shadow-none"
+              onSubmit={submitMessage}
+            >
+              <PromptInputBody>
+                <PromptInputTextarea
+                  className="max-h-40 min-h-9 border-0 bg-transparent px-4 py-1.5 text-lg leading-6 text-black shadow-none placeholder:text-black/40 focus-visible:ring-0 dark:text-white dark:placeholder:text-white/44"
+                  placeholder="Imagine a workflow"
+                />
+              </PromptInputBody>
 
-            <PromptInputFooter className="border-t border-black/6 px-3 py-2 dark:border-white/8">
-              <PromptInputTools>
-                <PromptInputButton tooltip="New workflow">
-                  <Plus className="size-4" />
-                </PromptInputButton>
-                <PromptInputButton tooltip="Attach context">
-                  <Paperclip className="size-4" />
-                </PromptInputButton>
-                {quickActions.map((action) => (
-                  <PromptInputButton
-                    className="hidden gap-1.5 rounded-full px-2.5 text-xs sm:inline-flex"
-                    key={action.label}
-                    tooltip={action.label}
-                  >
-                    <action.icon className="size-3.5" />
-                    {action.label}
-                  </PromptInputButton>
-                ))}
-              </PromptInputTools>
-
-              <PromptInputSubmit className="rounded-full bg-[#078c5a] text-white hover:bg-[#067a4f] dark:bg-[#14f195] dark:text-black dark:hover:bg-[#46f5aa]">
-                <ArrowUp className="size-4" />
+              <PromptInputSubmit className="size-8 shrink-0 self-center rounded-full bg-[#078c5a] text-white hover:bg-[#067a4f] dark:bg-white dark:text-black dark:hover:bg-white/90">
+                <ArrowUp className="size-5" />
               </PromptInputSubmit>
-            </PromptInputFooter>
-          </PromptInput>
+            </PromptInput>
+          </div>
         </div>
       </section>
     </div>
