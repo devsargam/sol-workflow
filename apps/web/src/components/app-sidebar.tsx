@@ -17,10 +17,15 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { NavUser } from "@/components/nav-user";
-import { Workflow, PlugZap, Webhook } from "lucide-react";
+import { Home, PlugZap, Webhook, Workflow } from "lucide-react";
 import { useWalletAuth } from "@/components/providers/wallet-auth-provider";
 
 const navItems = [
+  {
+    title: "Home",
+    url: "/dashboard",
+    icon: Home,
+  },
   {
     title: "Workflows",
     url: "/dashboard/workflows",
@@ -80,7 +85,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarGroupLabel>Workspace</SidebarGroupLabel>
             <SidebarMenu>
               {navItems.map((item) => {
-                const isActive = pathname === item.url || pathname.startsWith(item.url + "/");
+                const isActive =
+                  item.url === "/dashboard"
+                    ? pathname === item.url
+                    : pathname === item.url || pathname.startsWith(item.url + "/");
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton

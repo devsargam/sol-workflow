@@ -1,212 +1,153 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useQuery } from "@tanstack/react-query"
-import { Workflow, Book, PlugZap, ArrowRight } from "lucide-react"
+import { useMemo, useState } from "react";
+import { ArrowUp, Bot, Clock3, Paperclip, Plus, Sparkles, Workflow } from "lucide-react";
+
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { useWalletAuth } from "@/components/providers/wallet-auth-provider"
-import { fetchWorkflows, fetchExecutions } from "@/lib/api"
+  PromptInput,
+  PromptInputBody,
+  PromptInputButton,
+  PromptInputFooter,
+  PromptInputSubmit,
+  PromptInputTextarea,
+  PromptInputTools,
+  type PromptInputMessage,
+} from "@/components/ai-elements/prompt-input";
+
+const suggestions = [
+  "Monitor a wallet and alert me on large transfers",
+  "Create a workflow for token listing notifications",
+  "Watch whale activity and send Telegram updates",
+  "Trigger a webhook when an onchain event happens",
+];
+
+const quickActions = [
+  {
+    icon: Workflow,
+    label: "Build workflow",
+  },
+  {
+    icon: Clock3,
+    label: "Schedule checks",
+  },
+  {
+    icon: Bot,
+    label: "Agent actions",
+  },
+];
 
 export default function DashboardPage() {
-  const { walletAddress } = useWalletAuth()
+  const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>(
+    []
+  );
+  const hasMessages = messages.length > 0;
 
-  const workflowsQuery = useQuery({
-    queryKey: ["workflows"],
-    queryFn: fetchWorkflows,
-  })
+  const submitMessage = (message: PromptInputMessage) => {
+    const text = message.text.trim();
 
-  const executionsQuery = useQuery({
-    queryKey: ["executions"],
-    queryFn: () => fetchExecutions(),
-  })
+    if (!text) return;
 
-  const workflows = workflowsQuery.data?.workflows ?? []
-  const executions = executionsQuery.data?.executions ?? []
-  const activeWorkflows = workflows.filter((w) => w.enabled).length
-  const recentExecutions = executions.slice(0, 5)
-  const successCount = executions.filter((e) => e.status === "success").length
-  const successRate =
-    executions.length > 0
-      ? `${Math.round((successCount / executions.length) * 100)}%`
-      : "—"
+    setMessages([
+      { role: "user", content: text },
+      {
+        role: "assistant",
+        content:
+          "I can turn that into a workflow draft. Start with the trigger, add any checks, then choose where the action should go.",
+      },
+    ]);
+  };
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {walletAddress
-            ? `Connected as ${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`
-            : "Manage your onchain workflows."}
-        </p>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard
-          title="Workflows"
-          value={workflowsQuery.isLoading ? "—" : String(workflows.length)}
-          description={`${activeWorkflows} active`}
-          icon={<Workflow className="size-4" />}
-        />
-        <StatCard
-          title="Executions"
-          value={
-            executionsQuery.isLoading ? "—" : String(executions.length)
+    <div className="flex min-h-[calc(100svh-3rem)] flex-1 flex-col bg-[#f8f8f6] text-[#171717] dark:bg-[#070707] dark:text-white">
+      <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pb-6 pt-5 sm:px-6 lg:px-8">
+        <div
+          className={
+            hasMessages
+              ? "flex flex-1 flex-col"
+              : "flex flex-1 flex-col items-center justify-center"
           }
-          description="Total runs"
-          icon={<PlugZap className="size-4" />}
-        />
-        <StatCard
-          title="Success rate"
-          value={executionsQuery.isLoading ? "—" : successRate}
-          description={`${successCount} of ${executions.length}`}
-          icon={<Book className="size-4" />}
-        />
-      </div>
+        >
+          {!hasMessages ? (
+            <div className="w-full max-w-3xl text-center">
+              <h1 className="text-3xl font-semibold tracking-normal sm:text-5xl">
+                what are we automating?
+              </h1>
+              <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-black/58 dark:text-white/58">
+                Describe an onchain event, an agent decision, or a notification flow. Dolphinflow
+                can help shape it into a workflow.
+              </p>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Workflows</CardTitle>
-              <CardDescription>Your latest automations</CardDescription>
+              <div className="mt-8 grid gap-2 sm:grid-cols-2">
+                {suggestions.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-left text-sm leading-5 text-black/72 transition hover:border-black/18 hover:bg-black/[0.03] dark:border-white/10 dark:bg-white/[0.06] dark:text-white/72 dark:hover:border-white/18 dark:hover:bg-white/[0.09]"
+                    onClick={() => submitMessage({ text: suggestion, files: [] })}
+                    type="button"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
             </div>
-            <Link
-              href="/dashboard/workflows"
-              className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
-            >
-              View all <ArrowRight className="size-3" />
-            </Link>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-2">
-            {workflowsQuery.isLoading ? (
-              <p className="text-sm text-muted-foreground">Loading…</p>
-            ) : workflows.length === 0 ? (
-              <EmptyState
-                label="No workflows yet"
-                href="/dashboard/workflows"
-                cta="Create one"
-              />
-            ) : (
-              workflows.slice(0, 5).map((w) => (
-                <Link
-                  key={w.id}
-                  href={`/workflows/${w.id}`}
-                  className="flex items-center justify-between rounded-md border px-3 py-2 text-sm transition hover:bg-accent"
-                >
-                  <span className="truncate">{w.name}</span>
-                  <Badge variant={w.enabled ? "default" : "secondary"}>
-                    {w.enabled ? "Active" : "Paused"}
-                  </Badge>
-                </Link>
-              ))
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Recent executions</CardTitle>
-              <CardDescription>Last 5 runs</CardDescription>
-            </div>
-            <Link
-              href="/dashboard/executions"
-              className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
-            >
-              View all <ArrowRight className="size-3" />
-            </Link>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-2">
-            {executionsQuery.isLoading ? (
-              <p className="text-sm text-muted-foreground">Loading…</p>
-            ) : recentExecutions.length === 0 ? (
-              <EmptyState
-                label="No executions yet"
-                href="/dashboard/workflows"
-                cta="Run a workflow"
-              />
-            ) : (
-              recentExecutions.map((e) => (
+          ) : (
+            <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-end space-y-5 py-6">
+              {messages.map((message, index) => (
                 <div
-                  key={e.id}
-                  className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
+                  key={`${message.role}-${index}`}
+                  className={message.role === "user" ? "flex justify-end" : "flex justify-start"}
                 >
-                  <span className="truncate font-mono text-xs">
-                    {e.executionId.slice(0, 12)}
-                  </span>
-                  <Badge variant={statusVariant(e.status)}>{e.status}</Badge>
+                  <div
+                    className={
+                      message.role === "user"
+                        ? "max-w-[82%] rounded-3xl bg-[#303030] px-4 py-3 text-sm leading-6 text-white dark:bg-white dark:text-black"
+                        : "max-w-[82%] rounded-3xl border border-black/8 bg-white px-4 py-3 text-sm leading-6 text-black/72 dark:border-white/10 dark:bg-white/[0.06] dark:text-white/72"
+                    }
+                  >
+                    {message.content}
+                  </div>
                 </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="mx-auto mt-6 w-full max-w-3xl">
+          <PromptInput accept="image/*,.pdf,.txt,.md" multiple onSubmit={submitMessage}>
+            <PromptInputBody>
+              <PromptInputTextarea
+                className="min-h-20 resize-none border-0 bg-transparent px-4 pt-4 text-base shadow-none focus-visible:ring-0"
+                placeholder="What workflow do you want to build?"
+              />
+            </PromptInputBody>
+
+            <PromptInputFooter className="border-t border-black/6 px-3 py-2 dark:border-white/8">
+              <PromptInputTools>
+                <PromptInputButton tooltip="New workflow">
+                  <Plus className="size-4" />
+                </PromptInputButton>
+                <PromptInputButton tooltip="Attach context">
+                  <Paperclip className="size-4" />
+                </PromptInputButton>
+                {quickActions.map((action) => (
+                  <PromptInputButton
+                    className="hidden gap-1.5 rounded-full px-2.5 text-xs sm:inline-flex"
+                    key={action.label}
+                    tooltip={action.label}
+                  >
+                    <action.icon className="size-3.5" />
+                    {action.label}
+                  </PromptInputButton>
+                ))}
+              </PromptInputTools>
+
+              <PromptInputSubmit className="rounded-full bg-[#078c5a] text-white hover:bg-[#067a4f] dark:bg-[#14f195] dark:text-black dark:hover:bg-[#46f5aa]">
+                <ArrowUp className="size-4" />
+              </PromptInputSubmit>
+            </PromptInputFooter>
+          </PromptInput>
+        </div>
+      </section>
     </div>
-  )
-}
-
-function StatCard({
-  title,
-  value,
-  description,
-  icon,
-}: {
-  title: string
-  value: string
-  description: string
-  icon: React.ReactNode
-}) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
-        <span className="text-muted-foreground">{icon}</span>
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
-  )
-}
-
-function EmptyState({
-  label,
-  href,
-  cta,
-}: {
-  label: string
-  href: string
-  cta: string
-}) {
-  return (
-    <div className="flex items-center justify-between rounded-md border border-dashed px-3 py-4 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <Link
-        href={href}
-        className="text-xs font-medium text-foreground hover:underline"
-      >
-        {cta} →
-      </Link>
-    </div>
-  )
-}
-
-function statusVariant(
-  status: string,
-): "default" | "secondary" | "destructive" | "outline" {
-  if (status === "success") return "default"
-  if (status === "failed" || status === "error") return "destructive"
-  if (status === "running" || status === "pending") return "secondary"
-  return "outline"
+  );
 }
