@@ -163,3 +163,26 @@ trigger.input
 trigger.rawBody
 trigger.auth
 ```
+
+## x402 Paid Webhook
+
+Use `x402_payment` to require an x402 payment before an HTTP request can queue a workflow execution.
+
+Config fields:
+
+- `webhookId`: generated endpoint id.
+- `payTo`: Solana recipient wallet.
+- `price`: price string such as `$0.001`.
+- `network`: fixed to Solana devnet in the first implementation.
+- `description`: optional payment description.
+- `inputFormat`: optional documented fields for expected request input.
+
+Runtime payload fields include all webhook fields plus:
+
+```ts
+trigger.payment.price
+trigger.payment.network
+trigger.payment.payTo
+trigger.payment.facilitatorUrl
+trigger.payment.settlement
+```

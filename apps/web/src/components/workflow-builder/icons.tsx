@@ -30,7 +30,8 @@ export type TriggerType =
   | "program_log"
   | "new_token_listing"
   | "cron"
-  | "webhook";
+  | "webhook"
+  | "x402_payment";
 
 export const NOTIFICATION_ICONS: Record<NotificationType, ComponentType<{ className?: string }>> = {
   discord: MessageCircleIcon,
@@ -55,6 +56,7 @@ export const TRIGGER_ICONS: Record<TriggerType, ComponentType<{ className?: stri
   new_token_listing: CoinsIcon,
   cron: BellIconAlias,
   webhook: WebhooksLogoIcon,
+  x402_payment: BanknoteIcon,
 };
 
 export const DEFAULT_ICONS = {

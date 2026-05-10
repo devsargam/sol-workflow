@@ -66,12 +66,14 @@ function summarizeNode(node: WorkflowNode) {
       position: node.position,
       configKeys: Object.keys(triggerData.config ?? {}),
       webhook:
-        triggerType === "webhook" && webhookId
+        (triggerType === "webhook" || triggerType === "x402_payment") && webhookId
           ? {
               webhookId,
               genericPath: `${API.ROUTES.WEBHOOKS}/${webhookId}`,
               scopedPath: `${API.ROUTES.WEBHOOKS}/{workflowId}/${node.id}/${webhookId}`,
-              authEnabled: Boolean(triggerData.config?.authEnabled),
+              authEnabled:
+                triggerType === "webhook" ? Boolean(triggerData.config?.authEnabled) : false,
+              paymentRequired: triggerType === "x402_payment",
               inputFields: triggerData.config?.inputFormat ?? [],
             }
           : undefined,
@@ -302,6 +304,12 @@ export function buildAgentWorkflowCapabilities() {
             optionalConfig: ["authEnabled", "authHeaderName", "authHeaderValue", "inputFormat"],
             notes:
               "inputFormat documents expected webhook fields for agents and users; webhookId becomes the public trigger path.",
+          },
+          x402_payment: {
+            requiredConfig: ["webhookId", "payTo", "price"],
+            optionalConfig: ["description", "inputFormat"],
+            notes:
+              "Paid webhook trigger. The caller must satisfy an x402 payment before the workflow is queued. Initial network is Solana devnet.",
           },
         },
       },

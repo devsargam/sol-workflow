@@ -10,6 +10,7 @@ export const TriggerTypeEnum = z.enum([
   "new_token_listing",
   "cron",
   "webhook",
+  "x402_payment",
 ]);
 
 export type TriggerType = z.infer<typeof TriggerTypeEnum>;
@@ -82,15 +83,51 @@ export const CronTriggerConfigSchema = z.object({
 
 export type CronTriggerConfig = z.infer<typeof CronTriggerConfigSchema>;
 
-// Webhook Trigger (HTTP endpoint)
-export const WebhookTriggerConfigSchema = z.object({
-  webhookId: z.string().min(1),
-  authEnabled: z.boolean().default(false),
-  authHeaderName: z.string().min(1).optional(),
-  authHeaderValue: z.string().min(1).optional(),
+export const TriggerInputFieldSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1),
+  type: z.enum(["string", "number", "boolean", "object"]),
+  description: z.string().optional(),
+  value: z.string().optional(),
 });
 
+export const TriggerInputFormatSchema = z.array(TriggerInputFieldSchema);
+
+// Webhook Trigger (HTTP endpoint)
+export const WebhookTriggerConfigSchema = z
+  .object({
+    webhookId: z.string().trim().min(1),
+    authEnabled: z.boolean().default(false),
+    authHeaderName: z.string().trim().min(1).default("Authorization"),
+    authHeaderValue: z.string().trim().min(1).optional(),
+    inputFormat: TriggerInputFormatSchema.optional(),
+  })
+  .superRefine((config, ctx) => {
+    if (config.authEnabled && !config.authHeaderValue) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["authHeaderValue"],
+        message: "Auth header value is required when auth is enabled",
+      });
+    }
+  });
+
 export type WebhookTriggerConfig = z.infer<typeof WebhookTriggerConfigSchema>;
+
+export const X402_DEVNET_NETWORK = "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1" as const;
+export const X402_DEFAULT_PRICE = "$0.001" as const;
+
+// x402 Paid Webhook Trigger (HTTP endpoint gated by x402 payment)
+export const X402PaymentTriggerConfigSchema = z.object({
+  webhookId: z.string().trim().min(1),
+  payTo: z.string().trim().min(32).max(44),
+  price: z.string().trim().min(1).default(X402_DEFAULT_PRICE),
+  network: z.literal(X402_DEVNET_NETWORK).default(X402_DEVNET_NETWORK),
+  description: z.string().trim().optional(),
+  inputFormat: TriggerInputFormatSchema.optional(),
+});
+
+export type X402PaymentTriggerConfig = z.infer<typeof X402PaymentTriggerConfigSchema>;
 
 // Union schema for all trigger configs
 export const TriggerConfigSchema = z.union([
@@ -101,6 +138,7 @@ export const TriggerConfigSchema = z.union([
   ProgramLogTriggerConfigSchema,
   NewTokenListingTriggerConfigSchema,
   CronTriggerConfigSchema,
+  X402PaymentTriggerConfigSchema,
   WebhookTriggerConfigSchema,
 ]);
 

@@ -159,6 +159,7 @@ export enum TriggerType {
   NEW_TOKEN_LISTING = "new_token_listing",
   CRON = "cron",
   WEBHOOK = "webhook",
+  X402_PAYMENT = "x402_payment",
 }
 
 // ============================================================================

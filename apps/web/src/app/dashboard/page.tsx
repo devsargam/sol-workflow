@@ -31,9 +31,9 @@ import { getPublicApiBaseUrl } from "@/lib/api";
 import { getStoredWalletSession } from "@/lib/auth-storage";
 
 const placeholderSuggestions = [
-  "Monitor wallet activity",
-  "Send alerts from onchain events",
-  "Trigger actions with agents",
+  "Create a wallet trigger for wallet address",
+  "Send new token listing alerts",
+  "Run a workflow that runs at 9am",
 ];
 
 export default function DashboardPage() {
@@ -194,14 +194,25 @@ function ChatMessage({ message }: { message: UIMessage }) {
         <MessageContent
           className={
             message.role === "user"
-              ? "max-w-[82%] rounded-3xl bg-[#303030] px-4 py-3 text-sm leading-6 text-white dark:bg-white dark:text-black"
+              ? "max-w-[82%] rounded-3xl bg-white px-4 py-3 text-sm leading-6 text-black shadow-sm ring-1 ring-black/8 [overflow-wrap:anywhere] [&_a]:font-medium [&_a]:!text-black [&_a]:underline [&_a]:decoration-black/70 [&_a]:decoration-1 [&_a]:underline-offset-4 dark:bg-white dark:text-black dark:ring-white/10"
               : "max-w-[82%] rounded-3xl border border-black/8 bg-white px-4 py-3 text-sm leading-6 text-black/72 dark:border-white/10 dark:bg-white/[0.06] dark:text-white/72"
           }
         >
           <div className="flex flex-col gap-3">
-            {textParts.map((part, index) => (
-              <MessageResponse key={`text-${index}`}>{part.text}</MessageResponse>
-            ))}
+            {textParts.map((part, index) =>
+              message.role === "user" ? (
+                <div
+                  className="whitespace-pre-wrap [overflow-wrap:anywhere] [&_a]:font-medium [&_a]:!text-black [&_a]:underline [&_a]:decoration-black [&_a]:underline-offset-4"
+                  key={`text-${index}`}
+                >
+                  {renderUserMessageText(part.text)}
+                </div>
+              ) : (
+                <MessageResponse className="[overflow-wrap:anywhere]" key={`text-${index}`}>
+                  {part.text}
+                </MessageResponse>
+              )
+            )}
           </div>
         </MessageContent>
       ) : null}
@@ -215,6 +226,23 @@ function ChatMessage({ message }: { message: UIMessage }) {
       ) : null}
     </Message>
   );
+}
+
+function renderUserMessageText(text: string) {
+  const urlPattern = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlPattern);
+
+  return parts.map((part, index) => {
+    if (!part.match(urlPattern)) {
+      return part;
+    }
+
+    return (
+      <a href={part} key={`${part}-${index}`} rel="noreferrer" target="_blank">
+        {part}
+      </a>
+    );
+  });
 }
 
 function WorkflowToolPart({ part }: { part: ToolUIPart<any> | DynamicToolUIPart }) {

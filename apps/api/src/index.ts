@@ -101,7 +101,15 @@ app.use(
   cors({
     origin: resolveCorsOrigin,
     credentials: true,
-    allowHeaders: ["Authorization", "Content-Type"],
+    allowHeaders: [
+      "Authorization",
+      "Content-Type",
+      "Payment-Signature",
+      "X-Payment",
+      "X-Idempotency-Key",
+      "X-Request-Id",
+    ],
+    exposeHeaders: ["PAYMENT-REQUIRED", "PAYMENT-RESPONSE"],
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     maxAge: 86400,
   })

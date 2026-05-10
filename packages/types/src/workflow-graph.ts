@@ -24,6 +24,7 @@ export const TriggerNodeDataSchema = z.object({
     "new_token_listing",
     "cron",
     "webhook",
+    "x402_payment",
   ]),
   config: z.object({
     inputFormat: z
@@ -81,6 +82,12 @@ export const TriggerNodeDataSchema = z.object({
     authEnabled: z.boolean().optional(),
     authHeaderName: z.string().optional(),
     authHeaderValue: z.string().optional(),
+
+    // x402 paid webhook trigger specific
+    payTo: z.string().optional(),
+    price: z.string().optional(),
+    network: z.string().optional(),
+    description: z.string().optional(),
   }),
 });
 
