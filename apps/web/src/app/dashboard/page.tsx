@@ -31,9 +31,9 @@ import { getPublicApiBaseUrl } from "@/lib/api";
 import { getStoredWalletSession } from "@/lib/auth-storage";
 
 const placeholderSuggestions = [
-  "Monitor wallet activity",
-  "Send alerts from onchain events",
-  "Trigger actions with agents",
+  "Create a wallet trigger for wallet address",
+  "Send new token listing alerts",
+  "Run a workflow that runs at 9am",
 ];
 
 export default function DashboardPage() {
@@ -208,10 +208,7 @@ function ChatMessage({ message }: { message: UIMessage }) {
                   {renderUserMessageText(part.text)}
                 </div>
               ) : (
-                <MessageResponse
-                  className="[overflow-wrap:anywhere]"
-                  key={`text-${index}`}
-                >
+                <MessageResponse className="[overflow-wrap:anywhere]" key={`text-${index}`}>
                   {part.text}
                 </MessageResponse>
               )
@@ -241,12 +238,7 @@ function renderUserMessageText(text: string) {
     }
 
     return (
-      <a
-        href={part}
-        key={`${part}-${index}`}
-        rel="noreferrer"
-        target="_blank"
-      >
+      <a href={part} key={`${part}-${index}`} rel="noreferrer" target="_blank">
         {part}
       </a>
     );
