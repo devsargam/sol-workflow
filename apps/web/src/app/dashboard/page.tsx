@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useChat } from "@ai-sdk/react";
 import {
   DefaultChatTransport,
@@ -12,6 +12,7 @@ import {
 import { ArrowUp } from "lucide-react";
 
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
+import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import {
   Tool,
   ToolContent,
@@ -30,7 +31,6 @@ import { getPublicApiBaseUrl } from "@/lib/api";
 import { getStoredWalletSession } from "@/lib/auth-storage";
 
 const placeholderSuggestions = [
-  "Imagine a workflow",
   "Monitor wallet activity",
   "Send alerts from onchain events",
   "Trigger actions with agents",
@@ -49,9 +49,8 @@ export default function DashboardPage() {
       },
     }),
   });
-  const typewriterPlaceholder = useTypewriterPlaceholder(placeholderSuggestions);
   const hasMessages = messages.length > 0;
-  const placeholder = hasMessages ? placeholderSuggestions[0] : typewriterPlaceholder;
+  const placeholder = placeholderSuggestions[0];
 
   useEffect(() => {
     const focusPromptOnTyping = (event: KeyboardEvent) => {
@@ -102,6 +101,18 @@ export default function DashboardPage() {
     return sendMessage({ text });
   };
 
+  const applySuggestion = (suggestion: string) => {
+    const textarea = promptTextareaRef.current;
+    if (!textarea) return;
+
+    textarea.focus();
+    textarea.value = suggestion;
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+
+    const cursorPosition = suggestion.length;
+    textarea.setSelectionRange(cursorPosition, cursorPosition);
+  };
+
   return (
     <div className="flex min-h-[calc(100svh-4rem)] rounded-b-xl flex-1 flex-col bg-[#f8f8f6] text-[#171717] dark:bg-[#070707] dark:text-white">
       <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pb-6 pt-5 sm:px-6 lg:px-8">
@@ -134,6 +145,19 @@ export default function DashboardPage() {
           )}
 
           <div className={`mx-auto w-full max-w-3xl ${hasMessages ? "mt-6" : ""}`}>
+            {!hasMessages ? (
+              <Suggestions className="mx-auto mb-4">
+                {placeholderSuggestions.map((suggestion) => (
+                  <Suggestion
+                    className="border-black/8 bg-white/80 text-black/70 shadow-sm hover:bg-white dark:border-white/10 dark:bg-white/[0.06] dark:text-white/72 dark:hover:bg-white/[0.1]"
+                    key={suggestion}
+                    onClick={applySuggestion}
+                    suggestion={suggestion}
+                  />
+                ))}
+              </Suggestions>
+            ) : null}
+
             <PromptInput
               className="**:data-[slot=input-group]:h-auto **:data-[slot=input-group]:min-h-12 **:data-[slot=input-group]:items-center **:data-[slot=input-group]:rounded-[2rem] **:data-[slot=input-group]:border-black/8 **:data-[slot=input-group]:bg-white **:data-[slot=input-group]:px-3 **:data-[slot=input-group]:py-2 **:data-[slot=input-group]:shadow-[0_18px_60px_rgba(0,0,0,0.08)] dark:**:data-[slot=input-group]:border-white/8 dark:**:data-[slot=input-group]:bg-[#232323] dark:**:data-[slot=input-group]:shadow-none"
               onSubmit={submitMessage}
@@ -263,56 +287,4 @@ function formatToolOutput(output: unknown) {
   }
 
   return `\`\`\`json\n${JSON.stringify(output, null, 2)}\n\`\`\``;
-}
-
-function useTypewriterPlaceholder(items: string[]) {
-  const first = items[0] ?? "";
-  const [text, setText] = useState(first);
-
-  useEffect(() => {
-    if (!first) return;
-
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-
-    if (mediaQuery.matches) {
-      setText(first);
-      return;
-    }
-
-    let itemIndex = 0;
-    let charIndex = first.length;
-    let deleting = false;
-    let timeoutId: number;
-
-    const tick = () => {
-      const current = items[itemIndex] ?? first;
-
-      if (deleting) {
-        charIndex -= 1;
-        setText(current.slice(0, charIndex));
-
-        if (charIndex <= 0) {
-          deleting = false;
-          itemIndex = (itemIndex + 1) % items.length;
-        }
-      } else {
-        charIndex += 1;
-        setText(current.slice(0, charIndex));
-
-        if (charIndex >= current.length) {
-          deleting = true;
-          timeoutId = window.setTimeout(tick, 1300);
-          return;
-        }
-      }
-
-      timeoutId = window.setTimeout(tick, deleting ? 24 : 38);
-    };
-
-    timeoutId = window.setTimeout(tick, 900);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [first, items]);
-
-  return text;
 }
