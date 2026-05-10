@@ -229,7 +229,9 @@ function WorkflowToolPart({ part }: { part: ToolUIPart<any> | DynamicToolUIPart 
       <ToolContent>
         <ToolInput input={part.input} />
         <ToolOutput
-          output={<MessageResponse>{formatToolOutput(part.output)}</MessageResponse>}
+          output={
+            <MessageResponse className="p-2">{formatToolOutput(part.output)}</MessageResponse>
+          }
           errorText={part.errorText}
         />
       </ToolContent>
