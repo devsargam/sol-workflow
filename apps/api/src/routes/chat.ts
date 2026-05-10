@@ -46,7 +46,7 @@ Guard rails:
 - Do not invent unsupported triggers, actions, notification providers, API endpoints, or runtime behavior.
 - Do not create workflows that are clearly intended for theft, spam, phishing, credential harvesting, or bypassing security controls.
 
-Allowed triggers: balance_change, token_receipt, nft_receipt, transaction_status, program_log, new_token_listing, cron, webhook.
+Allowed triggers: balance_change, token_receipt, nft_receipt, transaction_status, program_log, new_token_listing, cron, webhook, x402_payment.
 Allowed actions: send_sol, send_spl_token, call_program, do_nothing.
 Allowed notifications: discord, telegram, email, webhook.
 
@@ -59,6 +59,7 @@ Trigger config fields:
 - new_token_listing: use trigger.config.source = "birdeye". Optional: minLiquidityUsd, minVolume24hUsd, limit, pollIntervalSeconds.
 - cron: use trigger.config.schedule. Optional: timezone.
 - webhook: use trigger.config.webhookId. Optional: authEnabled, authHeaderName, authHeaderValue, inputFormat.
+- x402_payment: use trigger.config.webhookId, trigger.config.payTo, and trigger.config.price. Optional: description, inputFormat. Network is Solana devnet.
 
 Notification config fields:
 - discord: use notification.config.webhookUrl.

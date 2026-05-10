@@ -61,6 +61,21 @@ curl -X POST "$DOLPHINFLOW_WEBHOOK_URL" \
   -d '{"source":"agent"}'
 ```
 
+## x402 Paid Webhooks
+
+`x402_payment` triggers use the same endpoint shapes, but unpaid requests return `402 Payment Required` and are not queued.
+
+Config fields:
+
+- `webhookId`: generated endpoint id.
+- `payTo`: Solana recipient wallet.
+- `price`: price string such as `$0.001`.
+- `network`: Solana devnet for the first implementation.
+- `description`: optional payment description.
+- `inputFormat`: optional documented fields for expected request input.
+
+Successful paid requests expose x402 data at `trigger.payment`, including `price`, `network`, `payTo`, `facilitatorUrl`, and `settlement`.
+
 ## Accepted Response
 
 Successful webhook requests enqueue a workflow execution and return:

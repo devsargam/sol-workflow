@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { getPublicApiBaseUrl } from "@/lib/api";
+import { X402_DEFAULT_PRICE, X402_DEVNET_NETWORK } from "@repo/types";
 import { useReactFlow, type Edge, type Node } from "@xyflow/react";
 import { API } from "utils";
 import {
@@ -249,6 +250,8 @@ function TriggerEditor({
   const isBalanceChange = triggerType === "balance_change";
   const isCron = triggerType === "cron";
   const isWebhook = triggerType === "webhook";
+  const isX402Payment = triggerType === "x402_payment";
+  const isHttpWebhook = isWebhook || isX402Payment;
   const isNewTokenListing = triggerType === "new_token_listing";
   const webhookUrl = buildWebhookUrl(data.config?.webhookId);
   const webhookInputFormat = data.config?.inputFormat || [];
@@ -259,10 +262,17 @@ function TriggerEditor({
         const current = n.data as TriggerNodeData;
         const nextConfig = { ...(current.config || {}) };
 
-        if (type === "webhook") {
+        if (type === "webhook" || type === "x402_payment") {
           nextConfig.webhookId ||= crypto.randomUUID();
-          nextConfig.authEnabled ??= false;
-          nextConfig.authHeaderName ||= "Authorization";
+          if (type === "webhook") {
+            nextConfig.authEnabled ??= false;
+            nextConfig.authHeaderName ||= "Authorization";
+          }
+          if (type === "x402_payment") {
+            nextConfig.price ||= X402_DEFAULT_PRICE;
+            nextConfig.network ||= X402_DEVNET_NETWORK;
+            nextConfig.description ||= "Dolphinflow paid webhook trigger";
+          }
         }
 
         if (type === "new_token_listing") {
@@ -285,21 +295,44 @@ function TriggerEditor({
   );
 
   useEffect(() => {
-    if (!isWebhook) return;
+    if (!isHttpWebhook) return;
 
     if (!data.config?.webhookId) {
-      setConfig({ webhookId: crypto.randomUUID(), authEnabled: data.config?.authEnabled ?? false });
+      setConfig({
+        webhookId: crypto.randomUUID(),
+        ...(isWebhook ? { authEnabled: data.config?.authEnabled ?? false } : {}),
+        ...(isX402Payment
+          ? {
+              price: data.config?.price || X402_DEFAULT_PRICE,
+              network: data.config?.network || X402_DEVNET_NETWORK,
+              description: data.config?.description || "Dolphinflow paid webhook trigger",
+            }
+          : {}),
+      });
       return;
     }
 
-    if (data.config?.authEnabled && !data.config?.authHeaderName) {
+    if (isX402Payment && (!data.config?.price || !data.config?.network)) {
+      setConfig({
+        price: data.config?.price || X402_DEFAULT_PRICE,
+        network: data.config?.network || X402_DEVNET_NETWORK,
+      });
+      return;
+    }
+
+    if (isWebhook && data.config?.authEnabled && !data.config?.authHeaderName) {
       setConfig({ authHeaderName: "Authorization" });
     }
   }, [
     data.config?.authEnabled,
     data.config?.authHeaderName,
+    data.config?.description,
+    data.config?.network,
+    data.config?.price,
     data.config?.webhookId,
+    isHttpWebhook,
     isWebhook,
+    isX402Payment,
     setConfig,
   ]);
 
@@ -318,10 +351,11 @@ function TriggerEditor({
           <option value="new_token_listing">New Token Listing</option>
           <option value="cron">Scheduled (Cron)</option>
           <option value="webhook">Webhook</option>
+          <option value="x402_payment">x402 Paid Webhook</option>
         </NodeSelect>
       </NodeField>
 
-      {!isCron && !isWebhook && !isNewTokenListing && (
+      {!isCron && !isHttpWebhook && !isNewTokenListing && (
         <NodeField label="Address">
           <NodeInput
             mono
@@ -471,7 +505,7 @@ function TriggerEditor({
         </>
       )}
 
-      {isWebhook && (
+      {isHttpWebhook && (
         <>
           <NodeField label="Webhook URL">
             <NodeInput mono readOnly value={webhookUrl} />
@@ -480,9 +514,42 @@ function TriggerEditor({
           <div className="flex items-center gap-2 rounded-md border border-[var(--node-border)] bg-[var(--surface-3)] px-2.5 py-2">
             <WebhooksLogoIcon className="h-4 w-4 text-[var(--text-muted)]" />
             <p className="text-[11px] text-[var(--text-secondary)]">
-              Request data becomes available later as `trigger.input`, `trigger.body`, `trigger.query`, and `trigger.headers`.
+              {isX402Payment
+                ? "Paid request data becomes available as `trigger.input`, and payment details as `trigger.payment`."
+                : "Request data becomes available later as `trigger.input`, `trigger.body`, `trigger.query`, and `trigger.headers`."}
             </p>
           </div>
+
+          {isX402Payment && (
+            <>
+              <NodeField label="Price">
+                <NodeInput
+                  mono
+                  placeholder="$0.001"
+                  value={data.config?.price || X402_DEFAULT_PRICE}
+                  onChange={(e) => setConfig({ price: e.target.value })}
+                />
+              </NodeField>
+              <NodeField label="Pay-To Wallet">
+                <NodeInput
+                  mono
+                  placeholder="Solana recipient wallet..."
+                  value={data.config?.payTo || ""}
+                  onChange={(e) => setConfig({ payTo: e.target.value })}
+                />
+              </NodeField>
+              <NodeField label="Network">
+                <NodeInput mono readOnly value={data.config?.network || X402_DEVNET_NETWORK} />
+              </NodeField>
+              <NodeField label="Payment Description">
+                <NodeInput
+                  placeholder="Dolphinflow paid webhook trigger"
+                  value={data.config?.description || ""}
+                  onChange={(e) => setConfig({ description: e.target.value })}
+                />
+              </NodeField>
+            </>
+          )}
 
           <NodeField label="Input Format">
             <WebhookInputFormatEditor
@@ -491,22 +558,24 @@ function TriggerEditor({
             />
           </NodeField>
 
-          <div className="flex items-center justify-between rounded-md border border-[var(--node-border)] bg-[var(--surface-3)] px-2.5 py-2">
-            <div>
-              <p className="text-[12px] text-[var(--text-primary)]">Require auth header</p>
-              <p className="text-[10px] text-[var(--text-muted)]">
-                Validates a header before the workflow runs
-              </p>
+          {isWebhook && (
+            <div className="flex items-center justify-between rounded-md border border-[var(--node-border)] bg-[var(--surface-3)] px-2.5 py-2">
+              <div>
+                <p className="text-[12px] text-[var(--text-primary)]">Require auth header</p>
+                <p className="text-[10px] text-[var(--text-muted)]">
+                  Validates a header before the workflow runs
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={Boolean(data.config?.authEnabled)}
+                onChange={(e) => setConfig({ authEnabled: e.target.checked })}
+                className="h-4 w-4"
+              />
             </div>
-            <input
-              type="checkbox"
-              checked={Boolean(data.config?.authEnabled)}
-              onChange={(e) => setConfig({ authEnabled: e.target.checked })}
-              className="h-4 w-4"
-            />
-          </div>
+          )}
 
-          {data.config?.authEnabled && (
+          {isWebhook && data.config?.authEnabled && (
             <>
               <NodeField label="Auth Header Name">
                 <NodeInput
@@ -594,6 +663,22 @@ const TRIGGER_REFERENCE_FIELDS: Record<string, string[]> = {
     "headers",
     "rawBody",
   ],
+  x402_payment: [
+    "type",
+    "firedAt",
+    "method",
+    "requestId",
+    "input",
+    "body",
+    "query",
+    "headers",
+    "rawBody",
+    "payment",
+    "payment.price",
+    "payment.network",
+    "payment.payTo",
+    "payment.settlement",
+  ],
 };
 
 const STEP_OUTPUT_FIELDS: Record<string, string[]> = {
@@ -659,7 +744,10 @@ function buildReferenceSuggestions(currentNodeId: string, nodes: Node[], edges: 
         });
       }
 
-      if (triggerType === "webhook" && triggerData.config?.inputFormat?.length) {
+      if (
+        (triggerType === "webhook" || triggerType === "x402_payment") &&
+        triggerData.config?.inputFormat?.length
+      ) {
         for (const inputField of triggerData.config.inputFormat) {
           const fieldName = inputField.name?.trim();
           if (!fieldName) continue;

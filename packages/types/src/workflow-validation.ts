@@ -5,10 +5,31 @@ import type {
   ActionNodeData,
   NotifyNodeData,
 } from "./workflow-graph";
+import { WebhookTriggerConfigSchema, X402PaymentTriggerConfigSchema } from "./triggers";
 
 export type ValidationError = string;
 
 type NodeValidator = (node: WorkflowNode) => ValidationError[];
+type TriggerConfigValidatorSchema =
+  | typeof WebhookTriggerConfigSchema
+  | typeof X402PaymentTriggerConfigSchema;
+
+function validateTriggerConfigWithSchema(
+  node: WorkflowNode,
+  schema: TriggerConfigValidatorSchema
+): ValidationError[] {
+  const data = node.data as TriggerNodeData;
+  const result = schema.safeParse(data?.config ?? {});
+
+  if (result.success) {
+    return [];
+  }
+
+  return result.error.issues.map((issue) => {
+    const path = issue.path.length > 0 ? issue.path.join(".") : "config";
+    return `Trigger node ${node.id}: ${path}: ${issue.message}`;
+  });
+}
 
 const triggerValidators: Record<string, NodeValidator> = {
   balance_change: (node) => {
@@ -51,47 +72,8 @@ const triggerValidators: Record<string, NodeValidator> = {
 
     return errors;
   },
-  webhook: (node) => {
-    const data = node.data as TriggerNodeData;
-    const config = data?.config || {};
-    const errors: ValidationError[] = [];
-
-    if (
-      !config.webhookId ||
-      typeof config.webhookId !== "string" ||
-      config.webhookId.trim().length === 0
-    ) {
-      errors.push(`Trigger node ${node.id}: Webhook endpoint is not initialized`);
-    }
-
-    if (config.authEnabled) {
-      if (
-        !config.authHeaderName ||
-        typeof config.authHeaderName !== "string" ||
-        config.authHeaderName.trim().length === 0
-      ) {
-        errors.push(`Trigger node ${node.id}: Auth header name is required`);
-      }
-
-      if (
-        !config.authHeaderValue ||
-        typeof config.authHeaderValue !== "string" ||
-        config.authHeaderValue.trim().length === 0
-      ) {
-        errors.push(`Trigger node ${node.id}: Auth header value is required`);
-      }
-    }
-
-    if (Array.isArray(config.inputFormat)) {
-      config.inputFormat.forEach((field: any, index: number) => {
-        if (!field?.name || typeof field.name !== "string" || field.name.trim().length === 0) {
-          errors.push(`Trigger node ${node.id}: Input format field ${index + 1} must have a name`);
-        }
-      });
-    }
-
-    return errors;
-  },
+  webhook: (node) => validateTriggerConfigWithSchema(node, WebhookTriggerConfigSchema),
+  x402_payment: (node) => validateTriggerConfigWithSchema(node, X402PaymentTriggerConfigSchema),
   // Add more trigger validators here as needed:
 };
 

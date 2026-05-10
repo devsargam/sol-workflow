@@ -2,8 +2,10 @@ import { zValidator } from "@hono/zod-validator";
 import { db, workflows as workflowsTable, eq } from "@repo/db";
 import { WORKFLOW_METADATA } from "utils";
 import {
+  WebhookTriggerConfigSchema,
   WorkflowGraphSchema,
   WorkflowMetadataSchema,
+  X402PaymentTriggerConfigSchema,
   isExecutableGraph,
   validateWorkflowGraph,
   validateWorkflowGraphForBuilder,
@@ -61,27 +63,25 @@ function validateWebhookTriggerConfigs(graph: WorkflowGraph) {
 
     const triggerData = node.data as {
       triggerType?: string;
-      config?: {
-        webhookId?: string;
-        authEnabled?: boolean;
-        authHeaderName?: string;
-        authHeaderValue?: string;
-      };
+      config?: unknown;
     };
 
-    if (triggerData.triggerType !== "webhook") continue;
+    const schema =
+      triggerData.triggerType === "webhook"
+        ? WebhookTriggerConfigSchema
+        : triggerData.triggerType === "x402_payment"
+          ? X402PaymentTriggerConfigSchema
+          : null;
 
-    if (!triggerData.config?.webhookId?.trim()) {
-      errors.push(`Trigger node ${node.id}: Webhook endpoint is not initialized`);
+    if (!schema) {
+      continue;
     }
 
-    if (triggerData.config?.authEnabled) {
-      if (!triggerData.config.authHeaderName?.trim()) {
-        errors.push(`Trigger node ${node.id}: Auth header name is required`);
-      }
-
-      if (!triggerData.config.authHeaderValue?.trim()) {
-        errors.push(`Trigger node ${node.id}: Auth header value is required`);
+    const result = schema.safeParse(triggerData.config ?? {});
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        const path = issue.path.length > 0 ? issue.path.join(".") : "config";
+        errors.push(`Trigger node ${node.id}: ${path}: ${issue.message}`);
       }
     }
   }

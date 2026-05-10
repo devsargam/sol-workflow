@@ -60,6 +60,10 @@ const AgentTriggerTypeSchema = z.preprocess(
       scheduled: "cron",
       time: "cron",
       http: "webhook",
+      paid_webhook: "x402_payment",
+      x402: "x402_payment",
+      x402_webhook: "x402_payment",
+      x402_payment: "x402_payment",
     }),
   TriggerTypeEnum
 );
@@ -233,9 +237,17 @@ function normalizeTriggerConfig(trigger: AgentWorkflowDraft["trigger"]) {
       config.programId ?? getConfigValue(config, ["program", "program_id", "PROGRAM_ID"]);
   }
 
-  if (trigger.type === "webhook") {
+  if (trigger.type === "webhook" || trigger.type === "x402_payment") {
     config.webhookId =
       config.webhookId ?? getConfigValue(config, ["webhook", "webhook_id", "WEBHOOK_ID", "id"]);
+  }
+
+  if (trigger.type === "x402_payment") {
+    config.payTo =
+      config.payTo ??
+      getConfigValue(config, ["payTo", "pay_to", "recipient", "recipientWallet", "wallet"]);
+    config.price = config.price ?? getConfigValue(config, ["price", "amount", "cost"]);
+    config.network = config.network ?? "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1";
   }
 
   return config;

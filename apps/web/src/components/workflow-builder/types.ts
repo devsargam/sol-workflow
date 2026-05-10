@@ -36,6 +36,10 @@ export interface TriggerNodeData {
     authEnabled?: boolean;
     authHeaderName?: string;
     authHeaderValue?: string;
+    payTo?: string;
+    price?: string;
+    network?: string;
+    description?: string;
   };
 }
 

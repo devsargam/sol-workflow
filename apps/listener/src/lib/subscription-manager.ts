@@ -221,6 +221,7 @@ export class SubscriptionManager {
           break;
         case TriggerType.CRON:
         case TriggerType.WEBHOOK:
+        case TriggerType.X402_PAYMENT:
           log.debug(`Trigger type ${triggerType} does not require a listener subscription`, {
             service: "listener",
             workflowId: workflow.id,

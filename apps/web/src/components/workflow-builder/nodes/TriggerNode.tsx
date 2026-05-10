@@ -29,6 +29,7 @@ const TRIGGER_CONFIG: Record<
   new_token_listing: { label: "New Token Listing", Icon: CoinsIcon },
   cron: { label: "Scheduled", Icon: ClockIcon },
   webhook: { label: "Webhook", Icon: WebhooksLogoIcon },
+  x402_payment: { label: "x402 Paid Webhook", Icon: BanknoteIcon },
 };
 
 const ACCENT = "#9945FF";
