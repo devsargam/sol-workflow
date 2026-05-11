@@ -53,7 +53,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { walletAddress, logout } = useWalletAuth();
   const { data: chatHistory, isLoading: isChatHistoryLoading } = useChatSessions();
   const { data: workflowHistory, isLoading: isWorkflowHistoryLoading } = useWorkflows();
-  const activeChatId = searchParams.get("chat");
+  const activeChatId = searchParams.get("chat") ?? searchParams.get("id");
   const activeWorkflowId = searchParams.get("edit");
   const isWorkflowsActive =
     pathname === "/dashboard/workflows" || pathname.startsWith("/dashboard/workflows/");

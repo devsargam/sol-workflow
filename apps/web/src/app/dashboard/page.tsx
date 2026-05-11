@@ -10,7 +10,7 @@ import {
   type ToolUIPart,
   type UIMessage,
 } from "ai";
-import { ArrowUp } from "lucide-react";
+import { ArrowUp, Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
@@ -45,7 +45,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const chatId = searchParams.get("chat");
+  const chatId = searchParams.get("chat") ?? searchParams.get("id");
   const [newChatId, setNewChatId] = useState(() => crypto.randomUUID());
   const activeChatId = chatId ?? newChatId;
   const selectedChat = useChatSession(chatId);
@@ -68,6 +68,12 @@ export default function DashboardPage() {
     },
   });
   const hasMessages = messages.length > 0;
+  const isRestoringChat =
+    Boolean(chatId) &&
+    messages.length === 0 &&
+    (selectedChat.isLoading ||
+      selectedChat.isFetching ||
+      (selectedChat.isSuccess && restoredChatRef.current !== chatId));
   const placeholder = placeholderSuggestions[0];
 
   useEffect(() => {
@@ -170,7 +176,14 @@ export default function DashboardPage() {
               : "flex flex-1 flex-col items-center justify-center gap-8"
           }
         >
-          {!hasMessages ? (
+          {isRestoringChat ? (
+            <div className="flex w-full max-w-3xl flex-1 items-center justify-center">
+              <div className="inline-flex items-center gap-2 rounded-full border border-black/8 bg-white px-4 py-2 text-sm text-black/60 shadow-sm dark:border-white/10 dark:bg-white/[0.06] dark:text-white/70">
+                <Loader2 className="size-4 animate-spin" />
+                <span>Loading chat...</span>
+              </div>
+            </div>
+          ) : !hasMessages ? (
             <div className="w-full max-w-3xl text-center">
               <h1 className="text-3xl font-normal tracking-normal sm:text-5xl">
                 Imagine a workflow
@@ -192,7 +205,7 @@ export default function DashboardPage() {
           )}
 
           <div className={`mx-auto w-full max-w-3xl ${hasMessages ? "mt-6" : ""}`}>
-            {!hasMessages ? (
+            {!hasMessages && !isRestoringChat ? (
               <Suggestions className="mx-auto mb-4">
                 {placeholderSuggestions.map((suggestion) => (
                   <Suggestion

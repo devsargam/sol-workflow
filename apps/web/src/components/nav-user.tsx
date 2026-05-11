@@ -17,7 +17,9 @@ export function NavUser({
   onLogout?: () => void;
 }) {
   const themeToggle = useThemeToggle();
-  const ThemeIcon = themeToggle.isDark ? SunIcon : MoonIcon;
+  const ThemeIcon = !themeToggle.mounted ? MoonIcon : themeToggle.isDark ? SunIcon : MoonIcon;
+  const themeLabel = themeToggle.mounted ? themeToggle.label : "Toggle theme";
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -25,8 +27,8 @@ export function NavUser({
           size="default"
           onClick={themeToggle.toggleTheme}
           disabled={!themeToggle.mounted}
-          aria-label={themeToggle.label}
-          title={themeToggle.label}
+          aria-label={themeLabel}
+          title={themeLabel}
           className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         >
           <ThemeIcon size={16} />
