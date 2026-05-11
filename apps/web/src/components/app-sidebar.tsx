@@ -157,9 +157,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </SidebarMenuItem>
               {isWorkflowHistoryLoading ? (
                 <>
-                  <SidebarMenuSkeleton showIcon />
-                  <SidebarMenuSkeleton showIcon />
-                  <SidebarMenuSkeleton showIcon />
+                  <SidebarMenuSkeleton />
+                  <SidebarMenuSkeleton />
+                  <SidebarMenuSkeleton />
                 </>
               ) : workflowHistory?.workflows.length ? (
                 workflowHistory.workflows.map((workflow) => {
@@ -204,9 +204,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenu>
               {isChatHistoryLoading ? (
                 <>
-                  <SidebarMenuSkeleton showIcon />
-                  <SidebarMenuSkeleton showIcon />
-                  <SidebarMenuSkeleton showIcon />
+                  <SidebarMenuSkeleton />
+                  <SidebarMenuSkeleton />
+                  <SidebarMenuSkeleton />
                 </>
               ) : chatHistory?.sessions.length ? (
                 chatHistory.sessions.map((session) => {

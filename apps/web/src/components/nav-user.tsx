@@ -24,7 +24,7 @@ export function NavUser({
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton
-          size="default"
+          size="sm"
           onClick={themeToggle.toggleTheme}
           disabled={!themeToggle.mounted}
           aria-label={themeLabel}
