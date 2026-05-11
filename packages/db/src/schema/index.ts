@@ -4,3 +4,4 @@ export * from "./trigger-subscriptions";
 export * from "./audit-logs";
 export * from "./users";
 export * from "./api-keys";
+export * from "./chat-sessions";

@@ -18,3 +18,4 @@ export type { TriggerSubscription, NewTriggerSubscription } from "./schema/trigg
 export type { AuditLog, NewAuditLog } from "./schema/audit-logs";
 export type { User, NewUser } from "./schema/users";
 export type { ApiKey, NewApiKey } from "./schema/api-keys";
+export type { ChatSession, NewChatSession } from "./schema/chat-sessions";

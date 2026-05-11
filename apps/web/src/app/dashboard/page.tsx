@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   DefaultChatTransport,
   isToolUIPart,
@@ -10,6 +11,7 @@ import {
   type UIMessage,
 } from "ai";
 import { ArrowUp } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
 import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
@@ -29,6 +31,7 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { getPublicApiBaseUrl } from "@/lib/api";
 import { getStoredWalletSession } from "@/lib/auth-storage";
+import { useChatSession } from "@/lib/hooks/use-chat-sessions";
 
 const placeholderSuggestions = [
   "Create a wallet trigger for wallet address",
@@ -38,7 +41,16 @@ const placeholderSuggestions = [
 
 export default function DashboardPage() {
   const promptTextareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const { error, messages, sendMessage, status } = useChat({
+  const restoredChatRef = useRef<string | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
+  const chatId = searchParams.get("chat");
+  const [newChatId, setNewChatId] = useState(() => crypto.randomUUID());
+  const activeChatId = chatId ?? newChatId;
+  const selectedChat = useChatSession(chatId);
+  const { error, id, messages, sendMessage, setMessages, status } = useChat({
+    id: activeChatId,
     transport: new DefaultChatTransport({
       api: `${getPublicApiBaseUrl()}/chat`,
       headers: () => {
@@ -48,9 +60,40 @@ export default function DashboardPage() {
         return headers;
       },
     }),
+    onFinish: () => {
+      queryClient.invalidateQueries({ queryKey: ["chat-sessions"] });
+      if (chatId) {
+        queryClient.invalidateQueries({ queryKey: ["chat-sessions", chatId] });
+      }
+    },
   });
   const hasMessages = messages.length > 0;
   const placeholder = placeholderSuggestions[0];
+
+  useEffect(() => {
+    if (!chatId) {
+      restoredChatRef.current = null;
+      setMessages([]);
+      setNewChatId(crypto.randomUUID());
+    }
+  }, [chatId, setMessages]);
+
+  useEffect(() => {
+    const session = selectedChat.data?.session;
+    if (
+      !chatId ||
+      !session ||
+      session.id !== chatId ||
+      restoredChatRef.current === chatId ||
+      status !== "ready" ||
+      messages.length > 0
+    ) {
+      return;
+    }
+
+    setMessages(session.messages);
+    restoredChatRef.current = chatId;
+  }, [chatId, messages.length, selectedChat.data?.session, setMessages, status]);
 
   useEffect(() => {
     const focusPromptOnTyping = (event: KeyboardEvent) => {
@@ -97,6 +140,10 @@ export default function DashboardPage() {
     const text = message.text.trim();
 
     if (!text) return;
+
+    if (!chatId) {
+      router.replace(`/dashboard?chat=${encodeURIComponent(id)}`);
+    }
 
     return sendMessage({ text });
   };

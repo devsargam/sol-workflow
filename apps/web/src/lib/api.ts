@@ -1,6 +1,7 @@
 // API client for graph-based workflows
 import { ENV_DEFAULTS, WORKFLOW_METADATA, API } from "utils";
 import { getStoredWalletSession } from "./auth-storage";
+import type { UIMessage } from "ai";
 
 function normalizeUrl(url: string) {
   return url.trim().replace(/\/+$/, "");
@@ -151,6 +152,18 @@ export interface ApiKey {
 
 export interface CreateApiKeyData {
   name: string;
+}
+
+export interface ChatSessionSummary {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChatSession extends ChatSessionSummary {
+  userId: string;
+  messages: UIMessage[];
 }
 
 function getErrorMessage(json: unknown, fallback: string) {
@@ -317,6 +330,33 @@ export async function revokeApiKey(id: string): Promise<{ success: true }> {
   }
 
   return json as { success: true };
+}
+
+export async function fetchChatSessions(): Promise<{ sessions: ChatSessionSummary[] }> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}${API.ROUTES.CHAT}/sessions`, { headers });
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    if (res.status === 401) throw new Error("Unauthorized - Please login");
+    throw new Error(getErrorMessage(json, "Failed to fetch chat history"));
+  }
+
+  return json as { sessions: ChatSessionSummary[] };
+}
+
+export async function fetchChatSession(id: string): Promise<{ session: ChatSession }> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}${API.ROUTES.CHAT}/sessions/${id}`, { headers });
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    if (res.status === 401) throw new Error("Unauthorized - Please login");
+    if (res.status === 404) throw new Error("Chat session not found");
+    throw new Error(getErrorMessage(json, "Failed to fetch chat"));
+  }
+
+  return json as { session: ChatSession };
 }
 
 export function buildBalanceMonitorGraph(walletAddress: string): WorkflowGraph {

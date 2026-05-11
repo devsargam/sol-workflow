@@ -60,6 +60,7 @@ export const API = {
     SOLANA: "/solana",
     WEBHOOKS: "/webhooks",
     API_KEYS: "/api-keys",
+    CHAT: "/chat",
   },
 } as const;
 

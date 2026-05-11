@@ -1,11 +1,14 @@
 import { openai } from "@ai-sdk/openai";
+import { convertToModelMessages, generateText, streamText, stepCountIs, type UIMessage } from "ai";
 import {
-  convertToModelMessages,
-  streamText,
-  stepCountIs,
-  type UIMessage,
-} from "ai";
-import { db, workflows as workflowsTable } from "@repo/db";
+  and,
+  chatSessions as chatSessionsTable,
+  db,
+  desc,
+  eq,
+  workflows as workflowsTable,
+} from "@repo/db";
+import { randomUUID } from "node:crypto";
 import {
   AgentWorkflowDraftSchema,
   type AgentWorkflowDraft,
@@ -22,6 +25,9 @@ import { buildAgentWorkflowCapabilities } from "../lib/agent-workflow-catalog";
 import { authMiddleware, type AuthenticatedContext } from "../middleware/auth";
 
 const chat = new Hono();
+const MAX_CHAT_SESSIONS = 50;
+const MAX_CHAT_TITLE_LENGTH = 32;
+const MAX_CHAT_TITLE_WORDS = 4;
 
 const SYSTEM_PROMPT = `You are Dolphinflow's workflow assistant.
 You create Solana onchain automation workflows inside Dolphinflow.
@@ -112,6 +118,60 @@ function getConversationText(messages: UIMessage[]) {
   return messages.map(getMessageText).join("\n");
 }
 
+function getFallbackChatTitle(messages: UIMessage[]) {
+  const firstUserText = messages.find((message) => message.role === "user");
+  const title = firstUserText
+    ? getMessageText(firstUserText).replace(/\s+/g, " ").trim()
+    : "";
+
+  if (!title) {
+    return "New chat";
+  }
+
+  const compactTitle = title.split(" ").slice(0, MAX_CHAT_TITLE_WORDS).join(" ");
+  return compactTitle.length > MAX_CHAT_TITLE_LENGTH
+    ? `${compactTitle.slice(0, MAX_CHAT_TITLE_LENGTH - 3).trim()}...`
+    : compactTitle;
+}
+
+async function generateChatTitle(messages: UIMessage[]) {
+  const fallbackTitle = getFallbackChatTitle(messages);
+  const firstExchange = messages
+    .slice(0, 4)
+    .map((message) => `${message.role}: ${getMessageText(message)}`)
+    .join("\n")
+    .trim();
+
+  if (!firstExchange || !process.env.OPENAI_API_KEY) {
+    return fallbackTitle;
+  }
+
+  try {
+    const result = await generateText({
+      model: openai("gpt-4o-mini"),
+      system:
+        "Create a tiny sidebar title for a Dolphinflow workflow automation chat. Return only the title, no quotes, no punctuation at the end, max 4 words and max 32 characters.",
+      prompt: firstExchange,
+    });
+
+    const title = result.text
+      .replace(/["'.]+$/g, "")
+      .replace(/^["']+/g, "")
+      .trim();
+    const compactTitle = title.split(" ").slice(0, MAX_CHAT_TITLE_WORDS).join(" ");
+    return compactTitle
+      ? compactTitle.length > MAX_CHAT_TITLE_LENGTH
+        ? `${compactTitle.slice(0, MAX_CHAT_TITLE_LENGTH - 3).trim()}...`
+        : compactTitle
+      : fallbackTitle;
+  } catch (error) {
+    logWorkflowTool("titleGenerationError", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return fallbackTitle;
+  }
+}
+
 function extractDiscordWebhookUrl(text: string) {
   return text.match(/https:\/\/discord\.com\/api\/webhooks\/[^\s)]+/)?.[0];
 }
@@ -124,10 +184,7 @@ function extractSolanaAddress(text: string) {
 function getDraftWalletAddress(draft: AgentWorkflowDraft, conversationText: string) {
   const config = draft.trigger.config ?? {};
   const directAddress =
-    config.address ??
-    config.walletAddress ??
-    config.wallet ??
-    config.WALLET_ADDRESS;
+    config.address ?? config.walletAddress ?? config.wallet ?? config.WALLET_ADDRESS;
 
   if (typeof directAddress === "string" && directAddress.trim()) {
     return directAddress;
@@ -194,6 +251,53 @@ function logWorkflowTool(event: string, data: Record<string, unknown>) {
 
 chat.use("*", authMiddleware);
 
+chat.get("/sessions", async (c: AuthenticatedContext) => {
+  const userId = c.user?.id;
+  if (!userId) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const limitParam = Number(c.req.query("limit"));
+  const limit = Number.isFinite(limitParam)
+    ? Math.min(Math.max(Math.trunc(limitParam), 1), MAX_CHAT_SESSIONS)
+    : MAX_CHAT_SESSIONS;
+
+  const sessions = await db
+    .select({
+      id: chatSessionsTable.id,
+      title: chatSessionsTable.title,
+      createdAt: chatSessionsTable.createdAt,
+      updatedAt: chatSessionsTable.updatedAt,
+    })
+    .from(chatSessionsTable)
+    .where(eq(chatSessionsTable.userId, userId))
+    .orderBy(desc(chatSessionsTable.updatedAt))
+    .limit(limit);
+
+  return c.json({ sessions });
+});
+
+chat.get("/sessions/:id", async (c: AuthenticatedContext) => {
+  const userId = c.user?.id;
+  const id = c.req.param("id");
+
+  if (!userId) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const [session] = await db
+    .select()
+    .from(chatSessionsTable)
+    .where(and(eq(chatSessionsTable.id, id), eq(chatSessionsTable.userId, userId)))
+    .limit(1);
+
+  if (!session) {
+    return c.json({ error: "Chat session not found" }, 404);
+  }
+
+  return c.json({ session });
+});
+
 chat.post("/", async (c: AuthenticatedContext) => {
   if (!process.env.OPENAI_API_KEY) {
     return c.json({ error: "OPENAI_API_KEY is not configured." }, 500);
@@ -204,7 +308,45 @@ chat.post("/", async (c: AuthenticatedContext) => {
     return c.json({ error: "Unauthorized" }, 401);
   }
 
-  const { messages }: { messages: UIMessage[] } = await c.req.json();
+  const body = (await c.req.json()) as { id?: unknown; messages?: unknown };
+  const chatId = typeof body.id === "string" && body.id.trim() ? body.id.trim() : randomUUID();
+  const messages = Array.isArray(body.messages) ? (body.messages as UIMessage[]) : null;
+
+  if (!messages) {
+    return c.json({ error: "Messages are required" }, 400);
+  }
+
+  const [existingSessionById] = await db
+    .select({
+      id: chatSessionsTable.id,
+      userId: chatSessionsTable.userId,
+      title: chatSessionsTable.title,
+    })
+    .from(chatSessionsTable)
+    .where(eq(chatSessionsTable.id, chatId))
+    .limit(1);
+
+  if (existingSessionById && existingSessionById.userId !== userId) {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+
+  await db
+    .insert(chatSessionsTable)
+    .values({
+      id: chatId,
+      userId,
+      title: existingSessionById?.title ?? getFallbackChatTitle(messages),
+      messages,
+      updatedAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: chatSessionsTable.id,
+      set: {
+        messages,
+        updatedAt: new Date(),
+      },
+    });
+
   const conversationText = getConversationText(messages);
   const tools = {
     getWorkflowCapabilities: {
@@ -361,7 +503,21 @@ chat.post("/", async (c: AuthenticatedContext) => {
     },
   });
 
-  return result.toUIMessageStreamResponse();
+  return result.toUIMessageStreamResponse({
+    originalMessages: messages,
+    onFinish: async ({ messages: finishedMessages }) => {
+      const title = existingSessionById?.title ?? (await generateChatTitle(finishedMessages));
+
+      await db
+        .update(chatSessionsTable)
+        .set({
+          title,
+          messages: finishedMessages,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(chatSessionsTable.id, chatId), eq(chatSessionsTable.userId, userId)));
+    },
+  });
 });
 
 export default chat;
