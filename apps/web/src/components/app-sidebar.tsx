@@ -55,7 +55,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: workflowHistory, isLoading: isWorkflowHistoryLoading } = useWorkflows();
   const activeChatId = searchParams.get("chat");
   const activeWorkflowId = searchParams.get("edit");
-  const isHomeActive = pathname === "/dashboard";
+  const isWorkflowsActive =
+    pathname === "/dashboard/workflows" || pathname.startsWith("/dashboard/workflows/");
+  const isHomeActive = pathname === "/dashboard" && !activeChatId;
 
   const shortAddress = walletAddress
     ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`
@@ -134,7 +136,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroupContent>
             <SidebarGroupLabel>Workflows</SidebarGroupLabel>
             <SidebarGroupAction asChild title="New workflow">
-              <Link href="/workflows/builder">
+              <Link href="/dashboard/workflows/builder">
                 <Plus />
                 <span className="sr-only">New workflow</span>
               </Link>
@@ -144,7 +146,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <SidebarMenuButton
                   asChild
                   size="sm"
-                  isActive={pathname === "/dashboard/workflows"}
+                  isActive={isWorkflowsActive && !activeWorkflowId}
                   className="data-active:bg-neutral-950 data-active:text-white data-active:hover:bg-neutral-950 data-active:hover:text-white dark:data-active:bg-white dark:data-active:text-black dark:data-active:hover:bg-white dark:data-active:hover:text-black [&_svg]:text-current"
                 >
                   <Link href="/dashboard/workflows">
@@ -171,7 +173,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         title={workflow.name}
                         className="data-active:bg-neutral-950 data-active:text-white data-active:hover:bg-neutral-950 data-active:hover:text-white dark:data-active:bg-white dark:data-active:text-black dark:data-active:hover:bg-white dark:data-active:hover:text-black [&_svg]:text-current"
                       >
-                        <Link href={`/workflows/builder?edit=${encodeURIComponent(workflow.id)}`}>
+                        <Link
+                          href={`/dashboard/workflows/builder?edit=${encodeURIComponent(workflow.id)}`}
+                        >
                           <span>{title}</span>
                         </Link>
                       </SidebarMenuButton>

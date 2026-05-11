@@ -43,7 +43,7 @@ const useCases: UseCase[] = [
     imageTitle: "Whale activity",
     imageTone: "from-[#14f195]/24 via-[#29d3ff]/16 to-[#9945ff]/22",
     accent: "#14f195",
-    templateHref: "/workflows/builder?template=whale-wallet-monitor",
+    templateHref: "/dashboard/workflows/builder?template=whale-wallet-monitor",
     reasons: ["Extremely understandable", "Feels real-time and alive", "Strong crypto relevance"],
   },
   {
@@ -72,7 +72,7 @@ const useCases: UseCase[] = [
     imageTitle: "New listing",
     imageTone: "from-[#29d3ff]/22 via-[#14f195]/14 to-[#f3d9ac]/20",
     accent: "#29d3ff",
-    templateHref: "/workflows/builder?template=token-listing-alerts",
+    templateHref: "/dashboard/workflows/builder?template=token-listing-alerts",
     reasons: [
       "Trading audience instantly understands",
       "High perceived value",

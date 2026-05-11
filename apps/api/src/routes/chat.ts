@@ -465,7 +465,7 @@ chat.post("/", async (c: AuthenticatedContext) => {
                 name: workflow.name,
                 description: workflow.description,
                 enabled: workflow.enabled,
-                editPath: `/workflows/builder?edit=${workflow.id}`,
+                editPath: `/dashboard/workflows/builder?edit=${workflow.id}`,
               }
             : null,
           ...validation,

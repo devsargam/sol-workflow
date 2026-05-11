@@ -151,7 +151,7 @@ export default function WorkflowBuilderClientPage() {
 
   if (editId && isLoadingWorkflow) {
     return (
-      <div className="h-screen flex items-center justify-center" style={{ background: "var(--canvas-bg)" }}>
+      <div className="flex min-h-0 flex-1 items-center justify-center" style={{ background: "var(--canvas-bg)" }}>
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-[var(--node-border)] border-t-[var(--brand)] rounded-full animate-spin" />
           <p className="text-sm text-[var(--text-muted)]">Loading workflow…</p>
@@ -161,7 +161,7 @@ export default function WorkflowBuilderClientPage() {
   }
 
   return (
-    <div className="h-screen overflow-hidden">
+    <div className="min-h-0 flex-1 overflow-hidden">
       <WorkflowBuilderContent
         ref={builderRef}
         workflowName={workflowName}

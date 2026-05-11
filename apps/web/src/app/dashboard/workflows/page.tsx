@@ -49,7 +49,7 @@ export default function DashboardWorkflowsPage() {
             {isLoading ? "Loading…" : `${workflows.length} total · ${activeCount} active`}
           </p>
         </div>
-        <Button onClick={() => router.push("/workflows/builder")}>
+        <Button onClick={() => router.push("/dashboard/workflows/builder")}>
           <Plus className="size-4" />
           New workflow
         </Button>
@@ -67,7 +67,7 @@ export default function DashboardWorkflowsPage() {
                 Create your first automation to get started.
               </p>
             </div>
-            <Button size="sm" onClick={() => router.push("/workflows/builder")}>
+            <Button size="sm" onClick={() => router.push("/dashboard/workflows/builder")}>
               <Plus className="size-4" />
               Create workflow
             </Button>
@@ -80,7 +80,7 @@ export default function DashboardWorkflowsPage() {
               <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
                 <div className="min-w-0 flex-1">
                   <CardTitle className="truncate text-base">
-                    <Link href={`/workflows/builder?edit=${w.id}`} className="hover:underline">
+                    <Link href={`/dashboard/workflows/builder?edit=${w.id}`} className="hover:underline">
                       {w.name}
                     </Link>
                   </CardTitle>
@@ -134,7 +134,7 @@ export default function DashboardWorkflowsPage() {
                   <Button
                     size="icon"
                     variant="ghost"
-                    onClick={() => router.push(`/workflows/builder?edit=${w.id}`)}
+                    onClick={() => router.push(`/dashboard/workflows/builder?edit=${w.id}`)}
                   >
                     <Pencil className="size-4" />
                   </Button>
