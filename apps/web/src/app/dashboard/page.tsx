@@ -254,7 +254,7 @@ function ChatMessage({ message }: { message: UIMessage }) {
         <MessageContent
           className={
             message.role === "user"
-              ? "max-w-[82%] rounded-3xl bg-white px-4 py-3 text-sm leading-6 text-black shadow-sm ring-1 ring-black/8 [overflow-wrap:anywhere] [&_a]:font-medium [&_a]:!text-black [&_a]:underline [&_a]:decoration-black/70 [&_a]:decoration-1 [&_a]:underline-offset-4 dark:bg-white dark:text-black dark:ring-white/10"
+              ? "max-w-[82%] !rounded-3xl bg-white px-4 py-3 text-sm leading-6 text-black shadow-sm ring-1 ring-black/8 [overflow-wrap:anywhere] [&_a]:font-medium [&_a]:!text-black [&_a]:underline [&_a]:decoration-black/70 [&_a]:decoration-1 [&_a]:underline-offset-4 dark:bg-white dark:text-black dark:ring-white/10"
               : "max-w-[82%] rounded-3xl border border-black/8 bg-white px-4 py-3 text-sm leading-6 text-black/72 dark:border-white/10 dark:bg-white/[0.06] dark:text-white/72"
           }
         >

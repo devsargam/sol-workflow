@@ -53,6 +53,14 @@ async function sendDiscordNotification(
     triggerData: context.triggerData,
   });
 
+  if (data.customMessage) {
+    await discordClient.send({
+      content: data.customMessage.substring(0, 2000),
+      embeds: [embed],
+    });
+    return;
+  }
+
   await discordClient.sendEmbed(embed);
 }
 

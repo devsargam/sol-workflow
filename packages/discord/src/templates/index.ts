@@ -18,6 +18,79 @@ const COLORS = {
   WARNING: 16776960, // #FFFF00 (yellow)
 };
 
+function truncate(value: string, maxLength: number): string {
+  return value.length > maxLength ? `${value.slice(0, maxLength - 1)}…` : value;
+}
+
+function formatTriggerType(triggerType: string): string {
+  return triggerType.replace(/_/g, " ").toUpperCase();
+}
+
+function formatPreview(value: unknown, maxLength = 900): string | null {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+
+  const formatted = typeof value === "string" ? value : JSON.stringify(value, null, 2);
+  if (!formatted) {
+    return null;
+  }
+
+  return truncate(formatted, maxLength);
+}
+
+function getTriggerMetadataFields(
+  context: TemplateContext
+): Array<{ name: string; value: string; inline?: boolean }> {
+  const triggerData = context.triggerData ?? {};
+  const fields: Array<{ name: string; value: string; inline?: boolean }> = [
+    {
+      name: "Execution",
+      value: `\`${context.executionId}\``,
+      inline: false,
+    },
+  ];
+
+  if (triggerData.firedAt) {
+    fields.push({
+      name: "Fired At",
+      value: String(triggerData.firedAt),
+      inline: true,
+    });
+  }
+
+  if (triggerData.method || triggerData.path || triggerData.requestId) {
+    const requestLines = [
+      triggerData.method || triggerData.path
+        ? [triggerData.method, triggerData.path].filter(Boolean).join(" ")
+        : null,
+      triggerData.requestId ? `Request ID: ${triggerData.requestId}` : null,
+      triggerData.webhookId ? `Webhook ID: ${triggerData.webhookId}` : null,
+    ].filter(Boolean);
+
+    fields.push({
+      name: "Request",
+      value: requestLines.join("\n"),
+      inline: false,
+    });
+  }
+
+  const bodyPreview =
+    formatPreview(triggerData.body) ??
+    formatPreview(triggerData.input) ??
+    formatPreview(triggerData.rawBody);
+
+  if (bodyPreview) {
+    fields.push({
+      name: "Body",
+      value: `\`\`\`json\n${bodyPreview}\n\`\`\``,
+      inline: false,
+    });
+  }
+
+  return fields;
+}
+
 export function getSuccessTemplate(context: TemplateContext): DiscordEmbed {
   const fields: Array<{ name: string; value: string; inline?: boolean }> = [
     {
@@ -32,10 +105,12 @@ export function getSuccessTemplate(context: TemplateContext): DiscordEmbed {
     },
     {
       name: "Trigger",
-      value: context.triggerType.replace("_", " ").toUpperCase(),
+      value: formatTriggerType(context.triggerType),
       inline: true,
     },
   ];
+
+  fields.push(...getTriggerMetadataFields(context));
 
   if (context.txSignature) {
     fields.push({
@@ -47,7 +122,7 @@ export function getSuccessTemplate(context: TemplateContext): DiscordEmbed {
 
   return {
     title: "🎉 Workflow Executed Successfully",
-    description: `Execution ID: \`${context.executionId}\``,
+    description: `Workflow **${context.workflowName}** completed successfully.`,
     color: COLORS.SUCCESS,
     fields,
     footer: {
@@ -71,10 +146,12 @@ export function getErrorTemplate(context: TemplateContext): DiscordEmbed {
     },
     {
       name: "Trigger",
-      value: context.triggerType.replace("_", " ").toUpperCase(),
+      value: formatTriggerType(context.triggerType),
       inline: true,
     },
   ];
+
+  fields.push(...getTriggerMetadataFields(context));
 
   if (context.error) {
     fields.push({
@@ -86,7 +163,7 @@ export function getErrorTemplate(context: TemplateContext): DiscordEmbed {
 
   return {
     title: "⚠️ Workflow Execution Failed",
-    description: `Execution ID: \`${context.executionId}\``,
+    description: `Workflow **${context.workflowName}** failed during execution.`,
     color: COLORS.ERROR,
     fields,
     footer: {
@@ -98,7 +175,9 @@ export function getErrorTemplate(context: TemplateContext): DiscordEmbed {
 
 export function getMinimalTemplate(context: TemplateContext): DiscordEmbed {
   return {
-    description: `Workflow **${context.workflowName}** executed ${context.status === "success" ? "✅" : "❌"}`,
+    description:
+      `Workflow **${context.workflowName}** executed ${context.status === "success" ? "✅" : "❌"}\n` +
+      `Execution: \`${context.executionId}\``,
     color: context.status === "success" ? COLORS.SUCCESS : COLORS.ERROR,
     timestamp: new Date().toISOString(),
   };
@@ -118,10 +197,12 @@ export function getDetailedTemplate(context: TemplateContext): DiscordEmbed {
     },
     {
       name: "Trigger",
-      value: context.triggerType.replace("_", " ").toUpperCase(),
+      value: formatTriggerType(context.triggerType),
       inline: true,
     },
   ];
+
+  fields.push(...getTriggerMetadataFields(context));
 
   if (context.txSignature) {
     fields.push({
@@ -149,7 +230,7 @@ export function getDetailedTemplate(context: TemplateContext): DiscordEmbed {
 
   return {
     title: context.status === "success" ? "🎉 Workflow Executed" : "⚠️ Workflow Failed",
-    description: `Execution ID: \`${context.executionId}\``,
+    description: `Workflow **${context.workflowName}** execution report.`,
     color: context.status === "success" ? COLORS.SUCCESS : COLORS.ERROR,
     fields,
     footer: {
