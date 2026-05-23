@@ -117,8 +117,7 @@ export function WorkflowChat({
       (selectedChat.isSuccess && restoredChatRef.current !== chatId));
   const placeholder = placeholderSuggestions[0];
   const isAwaitingQueuedPrompt = Boolean(pendingPrompt);
-  const submitDisabled =
-    isAwaitingQueuedPrompt || status === "submitted" || status === "streaming";
+  const submitDisabled = isAwaitingQueuedPrompt || status === "submitted" || status === "streaming";
 
   const submitAuthenticatedMessage = useCallback(
     (text: string) => {
@@ -297,9 +296,7 @@ export function WorkflowChat({
             </div>
           ) : !hasMessages ? (
             <div className="w-full max-w-3xl text-center">
-              <h1 className="text-3xl font-normal tracking-normal sm:text-5xl">
-                {emptyTitle}
-              </h1>
+              <h1 className="text-3xl font-normal tracking-normal sm:text-5xl">{emptyTitle}</h1>
             </div>
           ) : (
             <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col space-y-5 py-6">
@@ -316,44 +313,19 @@ export function WorkflowChat({
             </div>
           )}
 
-          <div className={`mx-auto w-full max-w-3xl ${hasMessages ? "mt-6" : ""}`}>
-            {!hasMessages && !isRestoringChat ? (
+          <div className={cn("mx-auto w-full max-w-3xl", hasMessages && "mt-6")}>
+            {/* {!hasMessages && !isRestoringChat ? (
               <Suggestions className="mx-auto mb-4">
                 {placeholderSuggestions.map((suggestion) => (
                   <Suggestion
-                    className="border-black/8 bg-white/80 text-black/70 shadow-sm hover:bg-white dark:border-white/10 dark:bg-white/[0.06] dark:text-white/72 dark:hover:bg-white/[0.1]"
+                    className="border-black/8 bg-white/80 text-black/70 shadow-sm hover:bg-white dark:border-white/10 dark:bg-white/6 dark:text-white/72 dark:hover:bg-white/10"
                     key={suggestion}
                     onClick={applySuggestion}
                     suggestion={suggestion}
                   />
                 ))}
               </Suggestions>
-            ) : null}
-
-            {pendingPrompt ? (
-              <div className="mb-3 flex flex-col gap-3 rounded-2xl border border-black/8 bg-white px-4 py-3 text-sm text-black/66 shadow-sm dark:border-white/10 dark:bg-white/[0.06] dark:text-white/72 sm:flex-row sm:items-center sm:justify-between">
-                <span>
-                  {authenticated
-                    ? "Starting your prompt..."
-                    : authenticating
-                      ? "Confirm the wallet signature to run your prompt."
-                      : ready
-                        ? "Connect your wallet to run that prompt."
-                        : "Checking your wallet session before running that prompt."}
-                </span>
-                {!authenticated ? (
-                  <Button
-                    className="h-8 shrink-0 rounded-full px-3 text-xs"
-                    disabled={!ready || authenticating}
-                    onClick={requestLoginForPendingPrompt}
-                    size="sm"
-                    type="button"
-                  >
-                    {authenticating ? "Signing..." : "Connect wallet"}
-                  </Button>
-                ) : null}
-              </div>
-            ) : null}
+            ) : null} */}
 
             <PromptInput
               className="**:data-[slot=input-group]:h-auto **:data-[slot=input-group]:min-h-12 **:data-[slot=input-group]:items-center **:data-[slot=input-group]:rounded-[2rem] **:data-[slot=input-group]:border-black/8 **:data-[slot=input-group]:bg-white **:data-[slot=input-group]:px-3 **:data-[slot=input-group]:py-2 **:data-[slot=input-group]:shadow-[0_18px_60px_rgba(0,0,0,0.08)] dark:**:data-[slot=input-group]:border-white/8 dark:**:data-[slot=input-group]:bg-[#232323] dark:**:data-[slot=input-group]:shadow-none"
