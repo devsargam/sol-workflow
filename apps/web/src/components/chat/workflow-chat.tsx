@@ -14,7 +14,6 @@ import { ArrowUp, Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
-import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import {
   Tool,
   ToolContent,
@@ -30,7 +29,6 @@ import {
   type PromptInputMessage,
 } from "@/components/ai-elements/prompt-input";
 import { useWalletAuth } from "@/components/providers/wallet-auth-provider";
-import { Button } from "@/components/ui/button";
 import { getPublicApiBaseUrl } from "@/lib/api";
 import { getStoredWalletSession } from "@/lib/auth-storage";
 import { useChatSession } from "@/lib/hooks/use-chat-sessions";
@@ -79,12 +77,13 @@ export function WorkflowChat({
   requireAuthBeforeSend = false,
 }: WorkflowChatProps) {
   const promptTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const seededPromptRef = useRef(false);
   const restoredChatRef = useRef<string | null>(null);
   const pendingLoginRequestedRef = useRef(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const { ready, authenticated, authenticating, login } = useWalletAuth();
+  const { ready, authenticated, login } = useWalletAuth();
   const chatId = searchParams.get("chat") ?? searchParams.get("id");
   const [newChatId, setNewChatId] = useState(() => crypto.randomUUID());
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
@@ -232,6 +231,25 @@ export function WorkflowChat({
     return () => document.removeEventListener("keydown", focusPromptOnTyping);
   }, []);
 
+  const seedPrompt = searchParams.get("prompt");
+
+  useEffect(() => {
+    if (seededPromptRef.current || !seedPrompt || chatId || hasMessages) {
+      return;
+    }
+
+    const textarea = promptTextareaRef.current;
+    if (!textarea) {
+      return;
+    }
+
+    seededPromptRef.current = true;
+    textarea.focus();
+    textarea.value = seedPrompt;
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    textarea.setSelectionRange(seedPrompt.length, seedPrompt.length);
+  }, [chatId, hasMessages, seedPrompt]);
+
   const submitMessage = useCallback(
     async (message: PromptInputMessage) => {
       const text = message.text.trim();
@@ -259,18 +277,6 @@ export function WorkflowChat({
       submitAuthenticatedMessage,
     ]
   );
-
-  const applySuggestion = (suggestion: string) => {
-    const textarea = promptTextareaRef.current;
-    if (!textarea) return;
-
-    textarea.focus();
-    textarea.value = suggestion;
-    textarea.dispatchEvent(new Event("input", { bubbles: true }));
-
-    const cursorPosition = suggestion.length;
-    textarea.setSelectionRange(cursorPosition, cursorPosition);
-  };
 
   return (
     <div

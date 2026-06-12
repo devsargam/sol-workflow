@@ -10,12 +10,13 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { DarkNav } from "@/components/layout/dark-nav";
+import { FeaturedAgentsPreview } from "@/components/landing/featured-agents-preview";
 import { UseTemplateButton } from "./use-template-button";
 
 export const metadata: Metadata = {
   title: "Use Cases | Dolphinflow",
   description:
-    "Automation templates for wallet monitoring, treasury approvals, token alerts, and validator operations.",
+    "Automation templates for wallet monitoring, copy trading, treasury approvals, token alerts, and validator operations.",
 };
 
 type UseCase = {
@@ -63,6 +64,23 @@ const useCases: UseCase[] = [
     ],
   },
   {
+    title: "Copy Trading",
+    trigger: "Signed trade signal webhook",
+    filter: "Lead wallet + size guardrails",
+    action: "Mirror approved swap",
+    copy: "Mirror trusted trader signals with configurable limits before any route executes.",
+    imageSrc: "/usecases/copy-trading.png",
+    imageTitle: "Copy signal",
+    imageTone: "from-[#14f195]/22 via-[#facc15]/14 to-[#29d3ff]/20",
+    accent: "#14f195",
+    templateHref: "/dashboard/workflows/builder?template=copy-trading",
+    reasons: [
+      "Clear trading monetization path",
+      "Built-in risk guardrails",
+      "Webhook friendly for strategy providers",
+    ],
+  },
+  {
     title: "Token Listing Alerts",
     trigger: "Birdeye new token listing",
     filter: "Liquidity > $10k",
@@ -93,11 +111,23 @@ export default function UseCasesPage() {
               Production-ready use cases.
             </h1>
             <p className="text-center mt-5 text-base leading-7 text-muted-foreground sm:text-lg">
-              Start from proven automation patterns for monitoring, approvals, trading alerts, and
-              validator operations.
+              Start from proven automation patterns for monitoring, approvals, copy trading,
+              trading alerts, and validator operations.
             </p>
           </div>
         </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-8 sm:pt-14">
+        <div className="mb-6">
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+            Featured agents
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
+            Browse live templates, preview the flow, and review the configuration before you deploy.
+          </p>
+        </div>
+        <FeaturedAgentsPreview />
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-8 sm:py-14">

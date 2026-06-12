@@ -237,6 +237,103 @@ html {
   .text-balance {
     text-wrap: balance;
   }
+
+  .flow-grid {
+    background-color: #000;
+    background-image: radial-gradient(rgb(255 255 255 / 0.16) 0.8px, transparent 0.8px);
+    background-size: 22px 22px;
+  }
+
+  .terminal-blueprint {
+    background-image:
+      linear-gradient(to right, rgb(240 240 240 / 0.08) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(240 240 240 / 0.08) 1px, transparent 1px);
+    background-size: 176px 176px;
+    mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+  }
+
+  .prompt-glow {
+    background: radial-gradient(ellipse at center, rgb(255 255 255 / 0.32), transparent 68%);
+    filter: blur(28px);
+  }
+
+  .sdp-atmosphere {
+    background:
+      radial-gradient(circle at 74% 30%, rgb(5 254 162 / 0.12), transparent 22%),
+      radial-gradient(circle at 30% 84%, rgb(5 254 162 / 0.07), transparent 28%),
+      radial-gradient(circle at 82% 22%, rgb(240 240 240 / 0.16), transparent 26%),
+      radial-gradient(circle at 66% 68%, rgb(64 64 64 / 0.2), transparent 30%),
+      radial-gradient(circle at 24% 78%, rgb(13 13 13 / 0.24), transparent 26%);
+    filter: blur(32px);
+  }
+
+  .agent-card-glow {
+    background:
+      linear-gradient(135deg, rgb(255 255 255 / 0.08), transparent 55%),
+      rgb(0 0 0 / 0.76);
+  }
+
+  .flow-label {
+    box-shadow: 3px 3px 0 rgb(0 0 0 / 0.32);
+  }
+
+  .workflow-marquee-shell {
+    mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  }
+
+  .workflow-marquee {
+    animation: workflow-marquee 38s linear infinite;
+  }
+
+  .workflow-marquee-reverse {
+    animation-direction: reverse;
+    animation-duration: 44s;
+  }
+
+  .flow-drift {
+    animation: flow-drift 6s ease-in-out infinite;
+  }
+
+  .flow-drift-slow {
+    animation: flow-drift 8s ease-in-out infinite reverse;
+  }
+
+  .typewriter-caret {
+    animation: typewriter-caret 0.8s steps(1, end) infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow-drift,
+  .flow-drift-slow,
+  .workflow-marquee {
+    animation: none;
+  }
+}
+
+@keyframes workflow-marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes flow-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -8px, 0);
+  }
+}
+
+@keyframes typewriter-caret {
+  50% {
+    opacity: 0;
+  }
 }
 
 @keyframes orbitProductFloat {

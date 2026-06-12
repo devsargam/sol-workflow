@@ -493,6 +493,138 @@ export function buildAgentWorkflowCapabilities() {
           ],
         },
       },
+      copyTradingWebhook: {
+        name: "Copy trading signal",
+        description:
+          "Receives an authenticated trade signal, enforces lead-wallet and risk guardrails, then mirrors the approved swap route.",
+        graph: {
+          nodes: [
+            {
+              id: "trigger-copy-signal",
+              type: "trigger",
+              position: { x: 0, y: 0 },
+              data: {
+                nodeType: "trigger",
+                triggerType: "webhook",
+                config: {
+                  webhookId: "copy-trade-signal",
+                  authEnabled: true,
+                  authHeaderName: "Authorization",
+                  authHeaderValue: "Bearer replace-before-enable",
+                  inputFormat: [
+                    {
+                      name: "leadWallet",
+                      type: "string",
+                      description: "Lead trader wallet or strategy identifier",
+                    },
+                    {
+                      name: "amountUsd",
+                      type: "number",
+                      description: "Requested mirrored trade notional",
+                    },
+                    {
+                      name: "confidence",
+                      type: "number",
+                      description: "Signal confidence from 0 to 1",
+                    },
+                    {
+                      name: "slippageBps",
+                      type: "number",
+                      description: "Maximum allowed slippage in basis points",
+                    },
+                    {
+                      name: "routePlan",
+                      type: "object",
+                      description: "Router quote or swap route metadata",
+                    },
+                  ],
+                },
+              },
+            },
+            {
+              id: "filter-copy-risk",
+              type: "filter",
+              position: { x: 340, y: 0 },
+              data: {
+                nodeType: "filter",
+                logic: "and",
+                conditions: [
+                  {
+                    field: "trigger.input.leadWallet",
+                    operator: "==",
+                    value: "LeadTraderWallet111111111111111111111111",
+                  },
+                  { field: "trigger.input.amountUsd", operator: "<=", value: 500 },
+                  { field: "trigger.input.confidence", operator: ">=", value: 0.8 },
+                  { field: "trigger.input.slippageBps", operator: "<=", value: 100 },
+                ],
+              },
+            },
+            {
+              id: "action-copy-swap",
+              type: "action",
+              position: { x: 680, y: 0 },
+              data: {
+                nodeType: "action",
+                actionType: "call_program",
+                config: {
+                  programId: "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+                  instruction: "swap",
+                  args: {
+                    routePlan: "trigger.input.routePlan",
+                    slippageBps: "trigger.input.slippageBps",
+                  },
+                },
+              },
+            },
+            {
+              id: "notify-copy-review",
+              type: "notify",
+              position: { x: 680, y: 220 },
+              data: {
+                nodeType: "notify",
+                notifications: [
+                  {
+                    notifyType: "telegram",
+                    template: "detailed",
+                    customMessage:
+                      "Copy trade was blocked or needs review before mirroring.",
+                  },
+                ],
+              },
+            },
+          ],
+          edges: [
+            {
+              id: "edge-copy-trigger-filter",
+              source: "trigger-copy-signal",
+              target: "filter-copy-risk",
+              type: "smoothstep",
+            },
+            {
+              id: "edge-copy-filter-action",
+              source: "filter-copy-risk",
+              sourceHandle: "if",
+              target: "action-copy-swap",
+              type: "smoothstep",
+            },
+            {
+              id: "edge-copy-filter-review",
+              source: "filter-copy-risk",
+              sourceHandle: "else",
+              target: "notify-copy-review",
+              type: "smoothstep",
+            },
+            {
+              id: "edge-copy-action-review",
+              source: "action-copy-swap",
+              sourceHandle: "error",
+              target: "notify-copy-review",
+              type: "smoothstep",
+            },
+          ],
+        },
+      },
     },
   };
 }
