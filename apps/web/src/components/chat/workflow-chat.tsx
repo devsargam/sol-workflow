@@ -10,7 +10,7 @@ import {
   type ToolUIPart,
   type UIMessage,
 } from "ai";
-import { ArrowUp, Loader2 } from "lucide-react";
+import { ArrowUp, Clock, Loader2, Repeat, TrendingDown, Wallet } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
@@ -34,10 +34,31 @@ import { getStoredWalletSession } from "@/lib/auth-storage";
 import { useChatSession } from "@/lib/hooks/use-chat-sessions";
 import { cn } from "@/lib/utils";
 
-const placeholderSuggestions = [
-  "Create a wallet trigger for wallet address",
-  "Send new token listing alerts",
-  "Run a workflow that runs at 9am",
+const promptRecommendations = [
+  {
+    title: "Price alert",
+    prompt: "If SOL drops below $150, send me a Telegram alert",
+    icon: TrendingDown,
+    iconClassName: "bg-[#9945FF]/12 text-[#9945FF]",
+  },
+  {
+    title: "Wallet watcher",
+    prompt: "Notify me when my wallet balance changes by more than 1 SOL",
+    icon: Wallet,
+    iconClassName: "bg-[#14F195]/12 text-[#0faf6e] dark:text-[#14F195]",
+  },
+  {
+    title: "Morning digest",
+    prompt: "Every day at 9am, send a summary of my wallet activity to Telegram",
+    icon: Clock,
+    iconClassName: "bg-[#FFB800]/14 text-[#b78300] dark:text-[#FFB800]",
+  },
+  {
+    title: "Copy trading",
+    prompt: "When a wallet I follow swaps tokens, mirror the trade within my limits",
+    icon: Repeat,
+    iconClassName: "bg-[#29d3ff]/12 text-[#0e9ac4] dark:text-[#29d3ff]",
+  },
 ];
 
 type WorkflowChatProps = {
@@ -115,7 +136,7 @@ export function WorkflowChat({
     (selectedChat.isLoading ||
       selectedChat.isFetching ||
       (selectedChat.isSuccess && restoredChatRef.current !== chatId));
-  const placeholder = placeholderSuggestions[0];
+  const placeholder = promptRecommendations[0]?.prompt;
   const isAwaitingQueuedPrompt = Boolean(pendingPrompt);
   const submitDisabled = isAwaitingQueuedPrompt || status === "submitted" || status === "streaming";
 
@@ -266,6 +287,18 @@ export function WorkflowChat({
     return () => cancelAnimationFrame(frame);
   }, [error?.message, hasMessages, isRestoringChat, messages, status]);
 
+  const applySuggestion = useCallback((prompt: string) => {
+    const textarea = promptTextareaRef.current;
+    if (!textarea) {
+      return;
+    }
+
+    textarea.focus();
+    textarea.value = prompt;
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    textarea.setSelectionRange(prompt.length, prompt.length);
+  }, []);
+
   const submitMessage = useCallback(
     async (message: PromptInputMessage) => {
       const text = message.text.trim();
@@ -317,8 +350,12 @@ export function WorkflowChat({
               </div>
             </div>
           ) : !hasMessages ? (
-            <div className="w-full max-w-3xl text-center">
+            <div className="w-full max-w-3xl animate-in fade-in slide-in-from-bottom-2 text-center duration-500">
               <h1 className="text-3xl font-normal tracking-normal sm:text-5xl">{emptyTitle}</h1>
+              <p className="mx-auto mt-3 max-w-md text-sm text-black/45 sm:text-base dark:text-white/45">
+                Describe a trigger, filter, and action — Dolphinflow turns it into a running
+                workflow.
+              </p>
             </div>
           ) : (
             <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col space-y-5 py-6">
@@ -336,19 +373,6 @@ export function WorkflowChat({
           )}
 
           <div className={cn("mx-auto w-full max-w-3xl", hasMessages && "mt-6")}>
-            {/* {!hasMessages && !isRestoringChat ? (
-              <Suggestions className="mx-auto mb-4">
-                {placeholderSuggestions.map((suggestion) => (
-                  <Suggestion
-                    className="border-black/8 bg-white/80 text-black/70 shadow-sm hover:bg-white dark:border-white/10 dark:bg-white/6 dark:text-white/72 dark:hover:bg-white/10"
-                    key={suggestion}
-                    onClick={applySuggestion}
-                    suggestion={suggestion}
-                  />
-                ))}
-              </Suggestions>
-            ) : null} */}
-
             <PromptInput
               className="**:data-[slot=input-group]:h-auto **:data-[slot=input-group]:min-h-12 **:data-[slot=input-group]:items-center **:data-[slot=input-group]:rounded-[2rem] **:data-[slot=input-group]:border-black/8 **:data-[slot=input-group]:bg-white **:data-[slot=input-group]:px-3 **:data-[slot=input-group]:py-2 **:data-[slot=input-group]:shadow-[0_18px_60px_rgba(0,0,0,0.08)] dark:**:data-[slot=input-group]:border-white/8 dark:**:data-[slot=input-group]:bg-[#232323] dark:**:data-[slot=input-group]:shadow-none"
               onSubmit={submitMessage}
@@ -373,6 +397,42 @@ export function WorkflowChat({
                 )}
               </PromptInputSubmit>
             </PromptInput>
+
+            {!hasMessages && !isRestoringChat ? (
+              <div className="mt-8">
+                <p className="text-center text-xs font-medium tracking-wide text-black/35 uppercase dark:text-white/35">
+                  Or start from an idea
+                </p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {promptRecommendations.map((recommendation, index) => (
+                    <button
+                      className="group animate-in fade-in slide-in-from-bottom-3 fill-mode-both flex cursor-pointer items-start gap-3 rounded-2xl border border-black/8 bg-white/80 p-4 text-left shadow-sm transition-all duration-500 hover:-translate-y-0.5 hover:bg-white hover:shadow-md dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-white/16 dark:hover:bg-white/[0.08]"
+                      key={recommendation.title}
+                      onClick={() => applySuggestion(recommendation.prompt)}
+                      style={{ animationDelay: `${120 + index * 70}ms` }}
+                      type="button"
+                    >
+                      <span
+                        className={cn(
+                          "flex size-9 shrink-0 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110",
+                          recommendation.iconClassName
+                        )}
+                      >
+                        <recommendation.icon className="size-4" />
+                      </span>
+                      <span className="flex min-w-0 flex-col gap-0.5">
+                        <span className="text-sm font-medium text-black/85 dark:text-white/90">
+                          {recommendation.title}
+                        </span>
+                        <span className="line-clamp-2 text-xs leading-5 text-black/50 dark:text-white/50">
+                          {recommendation.prompt}
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
           <div ref={chatBottomRef} className="h-8 shrink-0" aria-hidden="true" />
         </div>
