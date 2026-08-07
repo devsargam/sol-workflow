@@ -10,7 +10,14 @@ import {
   type ToolUIPart,
   type UIMessage,
 } from "ai";
-import { ArrowUp, Clock, Loader2, Repeat, TrendingDown, Wallet } from "lucide-react";
+import {
+  AnalyticsDownIcon,
+  Clock01Icon,
+  CoinsSwapIcon,
+  Wallet01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowUp, Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
@@ -38,25 +45,25 @@ const promptRecommendations = [
   {
     title: "Price alert",
     prompt: "If SOL drops below $150, send me a Telegram alert",
-    icon: TrendingDown,
+    icon: AnalyticsDownIcon,
     iconClassName: "bg-[#9945FF]/12 text-[#9945FF]",
   },
   {
     title: "Wallet watcher",
     prompt: "Notify me when my wallet balance changes by more than 1 SOL",
-    icon: Wallet,
+    icon: Wallet01Icon,
     iconClassName: "bg-[#14F195]/12 text-[#0faf6e] dark:text-[#14F195]",
   },
   {
     title: "Morning digest",
     prompt: "Every day at 9am, send a summary of my wallet activity to Telegram",
-    icon: Clock,
+    icon: Clock01Icon,
     iconClassName: "bg-[#FFB800]/14 text-[#b78300] dark:text-[#FFB800]",
   },
   {
     title: "Copy trading",
     prompt: "When a wallet I follow swaps tokens, mirror the trade within my limits",
-    icon: Repeat,
+    icon: CoinsSwapIcon,
     iconClassName: "bg-[#29d3ff]/12 text-[#0e9ac4] dark:text-[#29d3ff]",
   },
 ];
@@ -418,7 +425,11 @@ export function WorkflowChat({
                           recommendation.iconClassName
                         )}
                       >
-                        <recommendation.icon className="size-4" />
+                        <HugeiconsIcon
+                          className="size-4"
+                          icon={recommendation.icon}
+                          strokeWidth={1.8}
+                        />
                       </span>
                       <span className="flex min-w-0 flex-col gap-0.5">
                         <span className="text-sm font-medium text-black/85 dark:text-white/90">
