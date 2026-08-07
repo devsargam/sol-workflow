@@ -146,6 +146,14 @@ export function WorkflowChat({
   const placeholder = promptRecommendations[0]?.prompt;
   const isAwaitingQueuedPrompt = Boolean(pendingPrompt);
   const submitDisabled = isAwaitingQueuedPrompt || status === "submitted" || status === "streaming";
+  const lastMessage = messages[messages.length - 1];
+  const awaitingResponse =
+    (status === "submitted" || status === "streaming") &&
+    (!lastMessage ||
+      lastMessage.role === "user" ||
+      !lastMessage.parts.some(
+        (part) => (part.type === "text" && part.text.length > 0) || isToolUIPart(part)
+      ));
 
   const submitAuthenticatedMessage = useCallback(
     (text: string) => {
@@ -369,6 +377,7 @@ export function WorkflowChat({
               {messages.map((message, index) => (
                 <ChatMessage key={`${message.role}-${index}`} message={message} />
               ))}
+              {awaitingResponse ? <TypingIndicator /> : null}
               {error ? (
                 <Message from="assistant" className="max-w-full">
                   <MessageContent className="max-w-[82%] rounded-3xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm leading-6 text-destructive">
@@ -492,6 +501,24 @@ function ChatMessage({ message }: { message: UIMessage }) {
           ))}
         </div>
       ) : null}
+    </Message>
+  );
+}
+
+function TypingIndicator() {
+  return (
+    <Message from="assistant" className="max-w-full gap-3">
+      <MessageContent className="max-w-[82%] rounded-3xl border border-black/8 bg-white px-4 py-4 dark:border-white/10 dark:bg-white/[0.06]">
+        <div className="flex items-center gap-1.5" aria-label="Assistant is responding" role="status">
+          {[0, 1, 2].map((dot) => (
+            <span
+              className="size-1.5 animate-bounce rounded-full bg-black/35 dark:bg-white/45"
+              key={dot}
+              style={{ animationDelay: `${dot * 160}ms`, animationDuration: "1s" }}
+            />
+          ))}
+        </div>
+      </MessageContent>
     </Message>
   );
 }
