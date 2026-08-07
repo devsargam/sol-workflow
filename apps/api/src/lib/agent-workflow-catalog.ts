@@ -496,7 +496,7 @@ export function buildAgentWorkflowCapabilities() {
       copyTradingWebhook: {
         name: "Copy trading signal",
         description:
-          "Receives an authenticated trade signal, enforces lead-wallet and risk guardrails, then mirrors the approved swap route.",
+          "Receives an authenticated watched-wallet transfer signal, enforces wallet, size, token, and context checks, then mirrors the approved swap route.",
         graph: {
           nodes: [
             {
@@ -513,19 +513,29 @@ export function buildAgentWorkflowCapabilities() {
                   authHeaderValue: "Bearer replace-before-enable",
                   inputFormat: [
                     {
-                      name: "leadWallet",
+                      name: "sourceWallet",
                       type: "string",
-                      description: "Lead trader wallet or strategy identifier",
+                      description: "Wallet address that initiated the transfer",
+                    },
+                    {
+                      name: "tokenMint",
+                      type: "string",
+                      description: "SPL token mint moved by the watched wallet",
+                    },
+                    {
+                      name: "transferAmount",
+                      type: "number",
+                      description: "Raw token amount moved by the watched wallet",
                     },
                     {
                       name: "amountUsd",
                       type: "number",
-                      description: "Requested mirrored trade notional",
+                      description: "Estimated notional value of the wallet transfer",
                     },
                     {
-                      name: "confidence",
-                      type: "number",
-                      description: "Signal confidence from 0 to 1",
+                      name: "transferContext",
+                      type: "string",
+                      description: "Classified context such as swap, add_liquidity, bridge, or unknown",
                     },
                     {
                       name: "slippageBps",
@@ -547,16 +557,23 @@ export function buildAgentWorkflowCapabilities() {
               position: { x: 340, y: 0 },
               data: {
                 nodeType: "filter",
+                label: "Copy-wallet filter",
+                preset: "copy_wallet",
                 logic: "and",
                 conditions: [
                   {
-                    field: "trigger.input.leadWallet",
+                    field: "trigger.input.sourceWallet",
                     operator: "==",
                     value: "LeadTraderWallet111111111111111111111111",
                   },
+                  { field: "trigger.input.amountUsd", operator: ">=", value: 25 },
                   { field: "trigger.input.amountUsd", operator: "<=", value: 500 },
-                  { field: "trigger.input.confidence", operator: ">=", value: 0.8 },
-                  { field: "trigger.input.slippageBps", operator: "<=", value: 100 },
+                  {
+                    field: "trigger.input.tokenMint",
+                    operator: "==",
+                    value: "TokenMint11111111111111111111111111111111",
+                  },
+                  { field: "trigger.input.transferContext", operator: "==", value: "swap" },
                 ],
               },
             },
@@ -573,6 +590,8 @@ export function buildAgentWorkflowCapabilities() {
                   args: {
                     routePlan: "trigger.input.routePlan",
                     slippageBps: "trigger.input.slippageBps",
+                    tokenMint: "trigger.input.tokenMint",
+                    sourceWallet: "trigger.input.sourceWallet",
                   },
                 },
               },
@@ -588,7 +607,7 @@ export function buildAgentWorkflowCapabilities() {
                     notifyType: "telegram",
                     template: "detailed",
                     customMessage:
-                      "Copy trade was blocked or needs review before mirroring.",
+                      "Copy-wallet transfer was blocked. Review source wallet, size, token, or context before mirroring.",
                   },
                 ],
               },

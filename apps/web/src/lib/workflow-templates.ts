@@ -207,7 +207,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
     id: "copy-trading",
     name: "Copy Trading",
     description:
-      "Receive signed trade signals from a lead wallet, apply max-size and confidence guardrails, then mirror approved swaps.",
+      "Receive watched-wallet transfer signals, apply wallet, size, token, and context checks, then mirror approved swaps.",
     graph: {
       nodes: [
         {
@@ -226,29 +226,34 @@ export const workflowTemplates: WorkflowTemplate[] = [
               authHeaderValue: "Bearer change-me-before-activating",
               inputFormat: [
                 {
-                  name: "leadWallet",
+                  name: "sourceWallet",
                   type: "string",
-                  description: "Wallet or strategy identifier that produced the trade signal",
-                },
-                {
-                  name: "side",
-                  type: "string",
-                  description: "buy or sell",
+                  description: "Wallet address that initiated the transfer",
                 },
                 {
                   name: "tokenMint",
                   type: "string",
-                  description: "SPL token mint to mirror",
+                  description: "SPL token mint moved by the watched wallet",
+                },
+                {
+                  name: "tokenSymbol",
+                  type: "string",
+                  description: "Readable token symbol for review and reporting",
+                },
+                {
+                  name: "transferAmount",
+                  type: "number",
+                  description: "Raw token amount moved by the watched wallet",
                 },
                 {
                   name: "amountUsd",
                   type: "number",
-                  description: "Notional trade size requested by the source strategy",
+                  description: "Estimated notional value of the wallet transfer",
                 },
                 {
-                  name: "confidence",
-                  type: "number",
-                  description: "Signal confidence from 0 to 1",
+                  name: "transferContext",
+                  type: "string",
+                  description: "Classified context such as swap, add_liquidity, bridge, or unknown",
                 },
                 {
                   name: "slippageBps",
@@ -270,13 +275,19 @@ export const workflowTemplates: WorkflowTemplate[] = [
           position: { x: 430, y: 220 },
           data: {
             nodeType: "filter",
-            label: "Copy-trade guardrails",
+            label: "Copy-wallet filter",
+            preset: "copy_wallet",
             logic: "and",
             conditions: [
               {
-                field: "trigger.input.leadWallet",
+                field: "trigger.input.sourceWallet",
                 operator: "==",
                 value: "LeadTraderWallet111111111111111111111111",
+              },
+              {
+                field: "trigger.input.amountUsd",
+                operator: ">=",
+                value: 25,
               },
               {
                 field: "trigger.input.amountUsd",
@@ -284,14 +295,14 @@ export const workflowTemplates: WorkflowTemplate[] = [
                 value: 500,
               },
               {
-                field: "trigger.input.confidence",
-                operator: ">=",
-                value: 0.8,
+                field: "trigger.input.tokenMint",
+                operator: "==",
+                value: "TokenMint11111111111111111111111111111111",
               },
               {
-                field: "trigger.input.slippageBps",
-                operator: "<=",
-                value: 100,
+                field: "trigger.input.transferContext",
+                operator: "==",
+                value: "swap",
               },
             ],
           },
@@ -312,6 +323,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
                 source: "trigger.input.routePlan",
                 maxSlippageBps: "trigger.input.slippageBps",
                 tokenMint: "trigger.input.tokenMint",
+                sourceWallet: "trigger.input.sourceWallet",
               },
             },
           },
@@ -345,7 +357,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
                 notifyType: "telegram",
                 template: "detailed",
                 customMessage:
-                  "Copy trade was blocked by guardrails. Review lead wallet, size, confidence, or slippage settings.",
+                  "Copy-wallet transfer was blocked. Review source wallet, size, token, or context before mirroring.",
               },
             ],
           },

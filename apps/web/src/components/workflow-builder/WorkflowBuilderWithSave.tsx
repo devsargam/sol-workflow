@@ -185,6 +185,12 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, WorkflowBuild
               break;
             case "filter":
               baseNode.data.nodeType = "filter";
+              if (typeof n.data.label === "string" && n.data.label.trim()) {
+                baseNode.data.label = n.data.label;
+              }
+              if (n.data.preset === "copy_wallet") {
+                baseNode.data.preset = "copy_wallet";
+              }
               baseNode.data.conditions = n.data.conditions || [];
               baseNode.data.logic = n.data.logic || "and";
               break;
@@ -315,6 +321,7 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, WorkflowBuild
           if (node.type === "filter") {
             normalizedData.conditions = normalizedData.conditions || nestedData.conditions || [];
             normalizedData.logic = normalizedData.logic || nestedData.logic || "and";
+            normalizedData.preset = normalizedData.preset || nestedData.preset;
           }
 
           if (node.type === "notify") {
@@ -459,7 +466,10 @@ const WorkflowBuilderContentInner = forwardRef<WorkflowBuilderRef, WorkflowBuild
           id: `${type}-${Date.now()}`,
           type,
           position,
-          data: { label: type },
+          data:
+            type === "filter"
+              ? { label: "Condition", conditions: [], logic: "and" }
+              : { label: type },
         })
       );
     },

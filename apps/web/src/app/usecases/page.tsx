@@ -65,10 +65,10 @@ const useCases: UseCase[] = [
   },
   {
     title: "Copy Trading",
-    trigger: "Signed trade signal webhook",
-    filter: "Lead wallet + size guardrails",
+    trigger: "Watched wallet transfer webhook",
+    filter: "Wallet + size + token + context",
     action: "Mirror approved swap",
-    copy: "Mirror trusted trader signals with configurable limits before any route executes.",
+    copy: "Mirror trusted wallet moves only after configurable transfer checks pass.",
     imageSrc: "/usecases/copy-trading.png",
     imageTitle: "Copy signal",
     imageTone: "from-[#14f195]/22 via-[#facc15]/14 to-[#29d3ff]/20",

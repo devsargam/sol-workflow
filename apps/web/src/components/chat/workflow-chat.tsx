@@ -77,6 +77,7 @@ export function WorkflowChat({
   requireAuthBeforeSend = false,
 }: WorkflowChatProps) {
   const promptTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const chatBottomRef = useRef<HTMLDivElement | null>(null);
   const seededPromptRef = useRef(false);
   const restoredChatRef = useRef<string | null>(null);
   const pendingLoginRequestedRef = useRef(false);
@@ -250,6 +251,21 @@ export function WorkflowChat({
     textarea.setSelectionRange(seedPrompt.length, seedPrompt.length);
   }, [chatId, hasMessages, seedPrompt]);
 
+  useEffect(() => {
+    if (!hasMessages || isRestoringChat) {
+      return;
+    }
+
+    const frame = requestAnimationFrame(() => {
+      chatBottomRef.current?.scrollIntoView({
+        behavior: status === "streaming" ? "auto" : "smooth",
+        block: "end",
+      });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [error?.message, hasMessages, isRestoringChat, messages, status]);
+
   const submitMessage = useCallback(
     async (message: PromptInputMessage) => {
       const text = message.text.trim();
@@ -358,6 +374,7 @@ export function WorkflowChat({
               </PromptInputSubmit>
             </PromptInput>
           </div>
+          <div ref={chatBottomRef} className="h-8 shrink-0" aria-hidden="true" />
         </div>
       </section>
     </div>

@@ -93,6 +93,8 @@ export const TriggerNodeDataSchema = z.object({
 
 // Filter node data schema
 export const FilterNodeDataSchema = z.object({
+  label: z.string().optional(),
+  preset: z.enum(["copy_wallet"]).optional(),
   conditions: z.array(
     z.object({
       field: z.string(),

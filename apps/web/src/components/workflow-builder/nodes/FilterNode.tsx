@@ -13,6 +13,8 @@ const ACCENT = "#F97316";
 export const FilterNode = memo(({ data, selected }: NodeProps) => {
   const nodeData = data as FilterNodeData;
   const conditions = nodeData.conditions ?? [];
+  const title =
+    nodeData.label || (nodeData.preset === "copy_wallet" ? "Copy-wallet filter" : "Condition");
 
   const ifValue =
     conditions[0]
@@ -44,7 +46,7 @@ export const FilterNode = memo(({ data, selected }: NodeProps) => {
           <SlidersHorizontalIcon className="h-[14px] w-[14px] text-white" />
         </div>
         <span className="text-sm font-medium text-[var(--text-primary)] truncate leading-none">
-          Condition
+          {title}
         </span>
         {conditions.length > 0 && (
           <span className="ml-auto text-xs text-[var(--text-muted)] flex-shrink-0">

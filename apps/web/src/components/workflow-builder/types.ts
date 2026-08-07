@@ -45,11 +45,12 @@ export interface TriggerNodeData {
 
 export interface FilterNodeData {
   label?: string;
+  preset?: "copy_wallet";
   logic?: "and" | "or";
   conditions?: Array<{
     field: string;
     operator: string;
-    value: string;
+    value: string | number;
   }>;
 }
 

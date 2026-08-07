@@ -121,7 +121,15 @@ export function WorkflowBuilderContent() {
         y: event.clientY,
       }) ?? { x: 0, y: 0 };
       setNodes((nds) =>
-        nds.concat({ id: `${type}-${Date.now()}`, type, position, data: { label: type } })
+        nds.concat({
+          id: `${type}-${Date.now()}`,
+          type,
+          position,
+          data:
+            type === "filter"
+              ? { label: "Condition", conditions: [], logic: "and" }
+              : { label: type },
+        })
       );
     },
     [reactFlowInstance, setNodes]

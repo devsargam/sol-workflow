@@ -619,9 +619,37 @@ function TriggerEditor({
 // ─── Filter / Condition editor ────────────────────────────────
 
 const OPERATORS = ["==", "!=", ">", ">=", "<", "<=", "contains", "starts_with", "ends_with"];
-type Condition = { field: string; operator: string; value: string };
+type Condition = { field: string; operator: string; value: string | number };
 type ReferenceSuggestion = { value: string; label: string; hint: string };
 type WebhookInputField = NonNullable<NonNullable<TriggerNodeData["config"]>["inputFormat"]>[number];
+
+const COPY_WALLET_FILTER_CONDITIONS: Condition[] = [
+  {
+    field: "trigger.input.sourceWallet",
+    operator: "==",
+    value: "LeadWallet111111111111111111111111111111",
+  },
+  {
+    field: "trigger.input.amountUsd",
+    operator: ">=",
+    value: 25,
+  },
+  {
+    field: "trigger.input.amountUsd",
+    operator: "<=",
+    value: 500,
+  },
+  {
+    field: "trigger.input.tokenMint",
+    operator: "==",
+    value: "TokenMint11111111111111111111111111111111",
+  },
+  {
+    field: "trigger.input.transferContext",
+    operator: "==",
+    value: "swap",
+  },
+];
 
 const TRIGGER_REFERENCE_FIELDS: Record<string, string[]> = {
   balance_change: [
@@ -803,9 +831,36 @@ function FilterEditor({ id, data }: { id: string; data: FilterNodeData }) {
     setConditions(conditions.filter((_, idx) => idx !== i));
   const update = (i: number, patch: Partial<Condition>) =>
     setConditions(conditions.map((c, idx) => (idx === i ? { ...c, ...patch } : c)));
+  const applyCopyWalletPreset = () =>
+    updateNodeData(id, {
+      label: "Copy-wallet filter",
+      preset: "copy_wallet",
+      logic: "and",
+      conditions: COPY_WALLET_FILTER_CONDITIONS,
+    });
 
   return (
     <div className="space-y-3">
+      <div className="rounded-md border border-[var(--node-border)] bg-[var(--surface-3)] p-2.5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[12px] font-medium text-[var(--text-primary)]">
+              Copy-wallet filter
+            </p>
+            <p className="mt-1 text-[10px] leading-4 text-[var(--text-muted)]">
+              Follow a wallet only after source, size, token, and context checks pass.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={applyCopyWalletPreset}
+            className="shrink-0 rounded-md border border-[var(--node-border)] bg-[var(--surface-2)] px-2.5 py-1.5 text-[11px] font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--surface-4)]"
+          >
+            Apply
+          </button>
+        </div>
+      </div>
+
       <p className="text-xs text-[var(--text-muted)]">
         If all conditions match → <span className="font-medium text-[var(--text-secondary)]">if</span> path.
         Otherwise → <span className="font-medium text-[var(--text-secondary)]">else</span> path.
